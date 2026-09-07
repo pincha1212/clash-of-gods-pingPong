@@ -27,6 +27,8 @@
     padding: 0;
     box-sizing: border-box;
     user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -57,7 +59,9 @@ body {
     justify-content: center;
     align-items: center;
 
-    height: 100vh;
+    min-height: 100dvh;
+    height: 100dvh;
+
     overflow: hidden;
 
     transition:
@@ -65,12 +69,13 @@ body {
         background-color 0.5s ease-out;
 }
 
-/* -------------------------------- */
-/* AMBIENTE GENERAL */
-/* -------------------------------- */
+/* ========================================= */
+/* AMBIENTE */
+/* ========================================= */
 
 body::before {
     content: "";
+
     position: fixed;
     inset: 0;
 
@@ -96,7 +101,8 @@ body::before {
             transparent 85%
         );
 
-    opacity: 0.55;
+    opacity: 0.5;
+
     z-index: 0;
 }
 
@@ -118,24 +124,28 @@ body::after {
     z-index: 1;
 }
 
-/* -------------------------------- */
+/* ========================================= */
 /* PANTALLAS */
-/* -------------------------------- */
+/* ========================================= */
 
 .screen {
     position: absolute;
 
-    top: 0;
-    left: 0;
+    inset: 0;
 
     width: 100%;
     height: 100%;
+
+    min-height: 100dvh;
 
     display: flex;
     flex-direction: column;
 
     justify-content: center;
     align-items: center;
+
+    padding:
+        clamp(12px, 3vw, 30px);
 
     background:
         radial-gradient(
@@ -156,11 +166,15 @@ body::after {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+
     transform: scale(1.025);
 }
 
 #screen-game {
     background: transparent;
+
+    padding: 0;
+
     pointer-events: none;
 }
 
@@ -168,12 +182,19 @@ body::after {
     pointer-events: auto;
 }
 
-/* -------------------------------- */
+/* ========================================= */
 /* PANELES */
-/* -------------------------------- */
+/* ========================================= */
 
 .panel {
     position: relative;
+
+    width: min(600px, 100%);
+
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+
+    overflow-y: auto;
 
     background:
         linear-gradient(
@@ -188,20 +209,20 @@ body::after {
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 
-    padding: 2.2rem;
+    padding:
+        clamp(1.2rem, 4vw, 2.2rem);
 
-    border-radius: 18px;
+    border-radius:
+        clamp(12px, 3vw, 18px);
 
     text-align: center;
 
-    max-width: 92%;
-    width: 600px;
-
     box-shadow: var(--shadow-deep);
 
-    overflow: hidden;
+    overflow-x: hidden;
 
-    animation: panelEnter 0.45s ease both;
+    animation:
+        panelEnter 0.45s ease both;
 }
 
 .panel::before {
@@ -224,6 +245,8 @@ body::after {
         );
 
     opacity: 0.65;
+
+    pointer-events: none;
 }
 
 .panel::after {
@@ -250,46 +273,57 @@ body::after {
 @keyframes panelEnter {
     from {
         opacity: 0;
-        transform: translateY(15px) scale(0.985);
+        transform:
+            translateY(15px)
+            scale(0.985);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform:
+            translateY(0)
+            scale(1);
     }
 }
 
-/* -------------------------------- */
+/* ========================================= */
 /* TITULOS */
-/* -------------------------------- */
+/* ========================================= */
 
 h1,
 h2,
 h3 {
     text-transform: uppercase;
-    letter-spacing: 3px;
-    margin-bottom: 1.5rem;
+
+    letter-spacing:
+        clamp(1.5px, 0.6vw, 3px);
+
+    margin-bottom:
+        clamp(0.8rem, 2.5vw, 1.5rem);
 }
 
 h1 {
-    font-size: clamp(2.4rem, 7vw, 4.4rem);
+    font-size:
+        clamp(2.1rem, 9vw, 4.4rem);
 
     font-weight: 900;
+
+    line-height: 1;
 
     text-shadow:
         0 0 8px rgba(255, 255, 255, 0.3),
         0 0 25px rgba(255, 255, 255, 0.18);
-
-    line-height: 1;
 }
 
 h2 {
     color: #b9bec9;
 
     font-size:
-        clamp(1.15rem, 4vw, 2rem);
+        clamp(1rem, 4.5vw, 2rem);
 
     font-weight: 700;
+
+    line-height: 1.2;
 
     text-shadow:
         0 0 15px rgba(255, 255, 255, 0.08);
@@ -297,12 +331,45 @@ h2 {
 
 h3 {
     color: #aaa;
-    font-size: 1rem;
+
+    font-size:
+        clamp(0.8rem, 3vw, 1rem);
 }
 
-/* -------------------------------- */
+/* ========================================= */
+/* MENU */
+/* ========================================= */
+
+.menu-brand h1 {
+    margin-bottom: 0.5rem;
+}
+
+.menu-brand h2 {
+    color: #777d89;
+
+    font-size:
+        clamp(0.85rem, 3.5vw, 1.35rem);
+
+    letter-spacing:
+        clamp(2px, 1vw, 5px);
+}
+
+.menu-actions,
+.screen-actions,
+.pause-actions {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 4px;
+}
+
+/* ========================================= */
 /* BOTONES */
-/* -------------------------------- */
+/* ========================================= */
 
 .btn {
     position: relative;
@@ -320,11 +387,14 @@ h3 {
         1px solid rgba(255, 255, 255, 0.3);
 
     padding:
-        13px 25px;
+        12px 22px;
 
-    min-width: 130px;
+    min-height: 46px;
 
-    font-size: 1rem;
+    min-width: 125px;
+
+    font-size:
+        clamp(0.78rem, 2.8vw, 1rem);
 
     font-family: inherit;
 
@@ -334,7 +404,8 @@ h3 {
 
     text-transform: uppercase;
 
-    letter-spacing: 2px;
+    letter-spacing:
+        clamp(1px, 0.5vw, 2px);
 
     border-radius: 8px;
 
@@ -345,11 +416,13 @@ h3 {
         box-shadow var(--transition-fast),
         border-color var(--transition-fast);
 
-    margin: 10px;
+    margin: 5px;
 
     overflow: hidden;
 
     isolation: isolate;
+
+    touch-action: manipulation;
 }
 
 .btn::before {
@@ -384,7 +457,8 @@ h3 {
 }
 
 .btn:hover:not(:disabled) {
-    transform: translateY(-2px);
+    transform:
+        translateY(-2px);
 
     background:
         rgba(255, 255, 255, 0.08);
@@ -405,31 +479,85 @@ h3 {
 
 .btn:disabled {
     opacity: 0.45;
+
     cursor: not-allowed;
 }
 
 .btn.primary {
-    border-color: var(--c-p1);
-    color: var(--c-p1);
+    border-color:
+        var(--c-p1);
+
+    color:
+        var(--c-p1);
 
     box-shadow:
         inset 0 0 20px rgba(0, 255, 255, 0.025);
 }
 
 .btn.primary:hover:not(:disabled) {
-    background: var(--c-p1);
-    color: #000;
+    background:
+        var(--c-p1);
 
-    border-color: var(--c-p1);
+    color:
+        #000;
+
+    border-color:
+        var(--c-p1);
 
     box-shadow:
         0 0 12px var(--c-p1),
         0 0 35px rgba(0, 255, 255, 0.3);
 }
 
-/* -------------------------------- */
-/* SELECCION DE PERSONAJES */
-/* -------------------------------- */
+/* ========================================= */
+/* SELECCIÓN DE PERSONAJES */
+/* ========================================= */
+
+.character-select-panel {
+    width: min(800px, 100%);
+}
+
+.screen-heading {
+    margin-bottom: 1rem;
+}
+
+.screen-heading h2 {
+    margin-bottom: 0.5rem;
+}
+
+.player-label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size:
+        clamp(0.6rem, 2vw, 0.72rem);
+
+    font-weight: 700;
+
+    letter-spacing: 2px;
+
+    text-transform: uppercase;
+}
+
+.player-label-p1 {
+    color: var(--c-p1);
+
+    text-shadow:
+        0 0 10px rgba(0, 255, 255, 0.35);
+}
+
+.player-label-p2 {
+    color: var(--c-p2);
+
+    text-shadow:
+        0 0 10px rgba(85, 255, 85, 0.3);
+}
+
+.opponent-heading {
+    margin-top:
+        clamp(0.8rem, 3vw, 1.5rem);
+}
 
 .char-grid {
     display: grid;
@@ -437,12 +565,14 @@ h3 {
     grid-template-columns:
         repeat(
             auto-fit,
-            minmax(125px, 1fr)
+            minmax(120px, 1fr)
         );
 
-    gap: 15px;
+    gap:
+        clamp(8px, 2vw, 15px);
 
-    margin-bottom: 22px;
+    margin-bottom:
+        clamp(10px, 2vw, 20px);
 }
 
 .char-card {
@@ -452,9 +582,12 @@ h3 {
         1px solid rgba(255, 255, 255, 0.12);
 
     padding:
-        20px 12px 16px;
+        clamp(12px, 3vw, 20px)
+        8px
+        clamp(10px, 2vw, 16px);
 
-    min-height: 145px;
+    min-height:
+        clamp(115px, 20vw, 145px);
 
     border-radius: 13px;
 
@@ -474,6 +607,8 @@ h3 {
         );
 
     overflow: hidden;
+
+    touch-action: manipulation;
 }
 
 .char-card::before {
@@ -517,8 +652,14 @@ h3 {
         0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
+.char-card:active {
+    transform:
+        scale(0.97);
+}
+
 .char-card.selected-p1 {
-    border-color: var(--c-p1);
+    border-color:
+        var(--c-p1);
 
     box-shadow:
         0 0 15px rgba(0, 255, 255, 0.25),
@@ -526,7 +667,8 @@ h3 {
 }
 
 .char-card.selected-p2 {
-    border-color: var(--c-p2);
+    border-color:
+        var(--c-p2);
 
     box-shadow:
         0 0 15px rgba(85, 255, 85, 0.25),
@@ -534,9 +676,10 @@ h3 {
 }
 
 .char-icon {
-    font-size: 3rem;
+    font-size:
+        clamp(2.1rem, 9vw, 3rem);
 
-    margin-bottom: 11px;
+    margin-bottom: 8px;
 
     filter:
         drop-shadow(
@@ -562,25 +705,29 @@ h3 {
 .char-name {
     font-weight: 800;
 
-    font-size: 0.9rem;
+    font-size:
+        clamp(0.68rem, 2.7vw, 0.9rem);
 
-    letter-spacing: 1.5px;
+    letter-spacing:
+        clamp(0.7px, 0.4vw, 1.5px);
 }
 
 .char-stat {
-    font-size: 0.68rem;
+    font-size:
+        clamp(0.56rem, 2vw, 0.68rem);
 
     color: #9096a3;
 
-    margin-top: 7px;
+    margin-top: 6px;
 
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 .skill-desc {
     display: inline-block;
 
-    font-size: 0.64rem;
+    font-size:
+        clamp(0.5rem, 1.8vw, 0.64rem);
 
     color: #ff4ce7;
 
@@ -592,50 +739,13 @@ h3 {
         0 0 8px rgba(255, 0, 220, 0.25);
 }
 
-/* -------------------------------- */
-/* REGISTROS */
-/* -------------------------------- */
+/* ========================================= */
+/* CONFIGURACIÓN */
+/* ========================================= */
 
-.records-table {
-    width: 100%;
-
-    text-align: left;
-
-    margin-top: 15px;
-
-    border-collapse: collapse;
-
-    overflow: hidden;
+.config-panel {
+    width: min(600px, 100%);
 }
-
-.records-table th,
-.records-table td {
-    padding: 11px 10px;
-
-    border-bottom:
-        1px solid
-        rgba(255, 255, 255, 0.08);
-}
-
-.records-table th {
-    color: #858b98;
-
-    font-size: 0.7rem;
-
-    letter-spacing: 1px;
-}
-
-.records-table td {
-    color: #fff;
-
-    text-align: right;
-
-    font-weight: 700;
-}
-
-/* -------------------------------- */
-/* CONFIGURACION */
-/* -------------------------------- */
 
 .config-row {
     display: flex;
@@ -643,13 +753,13 @@ h3 {
     justify-content: space-between;
     align-items: center;
 
-    gap: 20px;
+    gap: 15px;
 
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 
     text-align: left;
 
-    padding: 13px;
+    padding: 12px;
 
     background:
         rgba(0, 0, 0, 0.28);
@@ -676,9 +786,11 @@ h3 {
 .config-row label {
     color: #c0c4cd;
 
-    font-size: 0.76rem;
+    font-size:
+        clamp(0.65rem, 2.5vw, 0.76rem);
 
-    letter-spacing: 0.6px;
+    letter-spacing:
+        0.4px;
 }
 
 .config-row select,
@@ -694,9 +806,13 @@ h3 {
         1px solid
         rgba(255, 255, 255, 0.15);
 
-    padding: 9px 10px;
+    padding:
+        9px 10px;
 
     font-family: inherit;
+
+    font-size:
+        clamp(0.65rem, 2.5vw, 0.8rem);
 
     border-radius: 7px;
 
@@ -709,34 +825,62 @@ h3 {
 
 .config-row select:focus,
 .config-row input:focus {
-    border-color: var(--c-p1);
+    border-color:
+        var(--c-p1);
 
     box-shadow:
         0 0 12px
         rgba(0, 255, 255, 0.12);
 }
 
-/* -------------------------------- */
-/* PAUSA */
-/* -------------------------------- */
+/* ========================================= */
+/* TABLA DE RÉCORDS */
+/* ========================================= */
 
-#screen-pause {
-    background:
-        radial-gradient(
-            circle at center,
-            rgba(30, 35, 50, 0.35),
-            rgba(0, 0, 0, 0.92)
-        );
+.records-table {
+    width: 100%;
 
-    backdrop-filter: blur(9px);
-    -webkit-backdrop-filter: blur(9px);
+    text-align: left;
 
-    z-index: 30;
+    margin-top: 15px;
+
+    border-collapse: collapse;
 }
 
-/* -------------------------------- */
-/* GAME UI */
-/* -------------------------------- */
+.records-table th,
+.records-table td {
+    padding:
+        10px 7px;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+}
+
+.records-table th {
+    color: #858b98;
+
+    font-size:
+        clamp(0.58rem, 2.2vw, 0.7rem);
+
+    letter-spacing:
+        0.5px;
+}
+
+.records-table td {
+    color: #fff;
+
+    text-align: right;
+
+    font-weight: 700;
+
+    font-size:
+        clamp(0.65rem, 2.5vw, 0.85rem);
+}
+
+/* ========================================= */
+/* HUD DE PARTIDA */
+/* ========================================= */
 
 #game-ui-layer {
     position: absolute;
@@ -748,7 +892,9 @@ h3 {
     height: 100%;
 
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
 
     pointer-events: none;
@@ -757,60 +903,71 @@ h3 {
 }
 
 .score-board {
-    position: relative;
+    position: absolute;
+
+    top:
+        max(8px, env(safe-area-inset-top));
+
+    left: 0;
+
+    width: 100%;
+
+    max-width: 900px;
 
     display: flex;
 
     justify-content: space-between;
 
-    width: 100%;
-    max-width: 800px;
-
-    margin-top: 1.5vh;
+    align-items: flex-start;
 
     padding:
-        0 5.5%;
+        0 clamp(14px, 5vw, 45px);
 }
 
-.score-board::before {
-    content: "";
+.player-hud {
+    display: flex;
 
-    position: absolute;
+    flex-direction: column;
 
-    left: 50%;
-    top: 18px;
+    align-items: center;
 
-    width: 42px;
-    height: 2px;
+    min-width:
+        clamp(65px, 15vw, 100px);
+}
 
-    transform:
-        translateX(-50%);
+.player-name {
+    font-size:
+        clamp(0.5rem, 2.3vw, 0.7rem);
 
-    background:
-        linear-gradient(
-            90deg,
-            var(--c-p1),
-            #fff,
-            var(--c-p2)
-        );
+    font-weight: 700;
 
-    opacity: 0.5;
+    letter-spacing:
+        clamp(1px, 0.6vw, 2px);
 
-    box-shadow:
-        0 0 12px rgba(255, 255, 255, 0.2);
+    opacity: 0.7;
+
+    margin-bottom: 3px;
+}
+
+.player-hud-p1 .player-name {
+    color: var(--c-p1);
+}
+
+.player-hud-p2 .player-name {
+    color: var(--c-p2);
 }
 
 .score {
     position: relative;
 
-    min-width: 90px;
+    min-width: 60px;
 
     font-size:
-        clamp(3rem, 10vw, 5rem);
+        clamp(2rem, 10vw, 5rem);
 
     font-weight: 900;
 
-    line-height: 1;
+    line-height: 0.9;
 
     transition:
         transform 0.1s ease,
@@ -841,21 +998,67 @@ h3 {
         brightness(1.35);
 }
 
-/* -------------------------------- */
+.arena-divider {
+    position: absolute;
+
+    left: 50%;
+
+    top: 15px;
+
+    transform:
+        translateX(-50%);
+
+    width:
+        clamp(25px, 8vw, 50px);
+
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--c-p1),
+            #fff,
+            var(--c-p2)
+        );
+
+    opacity: 0.5;
+
+    box-shadow:
+        0 0 12px rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================= */
 /* ARENA */
-/* -------------------------------- */
+/* ========================================= */
 
 #game-container {
-    position: relative;
+    position: absolute;
 
-    width: 100%;
-    max-width: 800px;
+    width:
+        min(
+            800px,
+            calc(100vw - 12px)
+        );
 
-    padding: 10px;
+    height: auto;
 
-    transition:
-        transform 0.06s linear,
-        filter 0.2s ease;
+    max-height:
+        calc(100dvh - 95px);
+
+    aspect-ratio: 8 / 5;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    padding: 5px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
 }
 
 #game-container::before {
@@ -863,7 +1066,7 @@ h3 {
 
     position: absolute;
 
-    inset: 4px;
+    inset: 0;
 
     border-radius: 13px;
 
@@ -883,12 +1086,13 @@ h3 {
     display: block;
 
     width: 100%;
+    height: 100%;
 
     aspect-ratio: 8 / 5;
 
     touch-action: none;
 
-    border-radius: 12px;
+    border-radius: 10px;
 
     border:
         2px solid
@@ -902,8 +1106,11 @@ h3 {
         0 0 90px rgba(0, 0, 0, 0.6),
         inset 0 0 35px rgba(255, 255, 255, 0.04);
 
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter:
+        blur(10px);
+
+    -webkit-backdrop-filter:
+        blur(10px);
 
     z-index: 5;
 
@@ -915,38 +1122,90 @@ h3 {
         filter 0.3s ease;
 }
 
-#gameCanvas:hover {
-    border-color:
-        rgba(255, 255, 255, 0.22);
+/* ========================================= */
+/* CONTROLES DE PARTIDA */
+/* ========================================= */
+
+.game-controls {
+    position: absolute;
+
+    left: 50%;
+
+    bottom:
+        max(5px, env(safe-area-inset-bottom));
+
+    transform:
+        translateX(-50%);
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+
+    pointer-events: none;
+
+    z-index: 15;
 }
 
-/* -------------------------------- */
-/* TEXTO INFERIOR DEL JUEGO */
-/* -------------------------------- */
+.controls-info {
+    color: #666b76;
 
-#screen-game > div[style*="bottom:5px"] {
-    opacity: 0.65;
+    font-size:
+        clamp(0.42rem, 1.8vw, 0.65rem);
 
-    letter-spacing: 0.5px;
+    letter-spacing:
+        0.3px;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+    opacity: 0.7;
 
     text-shadow:
-        0 0 8px rgba(255, 255, 255, 0.15);
-
-    transition:
-        opacity 0.2s ease;
+        0 0 8px rgba(255, 255, 255, 0.1);
 }
 
-#screen-game > div[style*="bottom:5px"]:hover {
-    opacity: 1;
+.controls-separator {
+    margin:
+        0 4px;
+
+    opacity: 0.5;
 }
 
-/* -------------------------------- */
-/* BOTON DE PAUSA EN PARTIDA */
-/* -------------------------------- */
+/* ========================================= */
+/* BOTÓN PAUSA */
+/* ========================================= */
 
-#screen-game > .btn[style*="bottom: 20px"] {
+.game-pause-btn {
+    position: absolute;
+
+    top:
+        max(8px, env(safe-area-inset-top));
+
+    right:
+        max(8px, env(safe-area-inset-right));
+
+    z-index: 20;
+
+    min-width: 0;
+
+    min-height: 36px;
+
+    margin: 0;
+
+    padding:
+        7px 12px;
+
+    font-size:
+        clamp(0.52rem, 2vw, 0.7rem);
+
+    letter-spacing:
+        1px;
+
     background:
-        rgba(0, 0, 0, 0.48);
+        rgba(0, 0, 0, 0.55);
 
     backdrop-filter:
         blur(8px);
@@ -957,27 +1216,53 @@ h3 {
     border-color:
         rgba(255, 255, 255, 0.2);
 
-    opacity: 0.65;
-
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease,
-        border-color 0.2s ease;
+    opacity: 0.7;
 }
 
-#screen-game > .btn[style*="bottom: 20px"]:hover {
+.game-pause-btn:hover {
     opacity: 1;
-
-    border-color:
-        rgba(255, 255, 255, 0.45);
-
-    transform:
-        translateY(-2px);
 }
 
-/* -------------------------------- */
+/* ========================================= */
+/* PAUSA */
+/* ========================================= */
+
+#screen-pause {
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(30, 35, 50, 0.35),
+            rgba(0, 0, 0, 0.92)
+        );
+
+    backdrop-filter:
+        blur(9px);
+
+    -webkit-backdrop-filter:
+        blur(9px);
+
+    z-index: 30;
+}
+
+.pause-kicker,
+.result-kicker {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #747b88;
+
+    font-size:
+        clamp(0.55rem, 2vw, 0.7rem);
+
+    letter-spacing: 2px;
+
+    text-transform: uppercase;
+}
+
+/* ========================================= */
 /* RESULTADO */
-/* -------------------------------- */
+/* ========================================= */
 
 #screen-result .panel {
     box-shadow:
@@ -985,160 +1270,12 @@ h3 {
         0 0 50px rgba(255, 255, 255, 0.04);
 }
 
-#result-title {
-    animation:
-        resultReveal 0.6s ease both;
-}
+.result-description {
+    margin-bottom: 20px;
 
-@keyframes resultReveal {
-    0% {
-        opacity: 0;
-        transform:
-            scale(0.8)
-            translateY(10px);
-        filter: blur(8px);
-    }
+    color: #aaa;
 
-    100% {
-        opacity: 1;
-        transform:
-            scale(1)
-            translateY(0);
-        filter: blur(0);
-    }
-}
+    font-size:
+        clamp(0.7rem, 2.7vw, 0.9rem);
 
-/* -------------------------------- */
-/* EFECTO GENERAL DE FOCO */
-/* -------------------------------- */
-
-button,
-select,
-input,
-.char-card {
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* -------------------------------- */
-/* RESPONSIVE */
-/* -------------------------------- */
-
-@media (max-width: 700px) {
-    .panel {
-        padding: 1.4rem;
-
-        border-radius: 14px;
-    }
-
-    .panel h1 {
-        font-size:
-            clamp(2rem, 10vw, 3rem);
-    }
-
-    .panel h2 {
-        margin-bottom: 1.1rem;
-    }
-
-    .char-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
-
-        gap: 10px;
-    }
-
-    .char-card {
-        min-height: 125px;
-
-        padding:
-            14px 8px 12px;
-    }
-
-    .char-icon {
-        font-size: 2.2rem;
-    }
-
-    .config-row {
-        flex-direction: column;
-
-        align-items: stretch;
-
-        gap: 8px;
-    }
-
-    .config-row select,
-    .config-row input {
-        width: 100%;
-        min-width: 0;
-    }
-
-    .score-board {
-        padding:
-            0 7%;
-    }
-
-    .score {
-        font-size:
-            clamp(2.5rem, 12vw, 4rem);
-    }
-
-    #game-container {
-        padding: 6px;
-    }
-
-    #screen-game > div[style*="bottom:5px"] {
-        font-size: 0.55rem !important;
-
-        max-width: 95%;
-
-        text-align: center;
-    }
-}
-
-@media (max-height: 650px) {
-    .panel {
-        padding: 1.2rem;
-
-        max-height: 94vh;
-
-        overflow-y: auto;
-    }
-
-    h1,
-    h2 {
-        margin-bottom: 0.9rem;
-    }
-
-    .char-grid {
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-
-    .char-card {
-        min-height: 105px;
-        padding: 10px;
-    }
-
-    .char-icon {
-        font-size: 2rem;
-        margin-bottom: 5px;
-    }
-
-    .config-row {
-        margin-bottom: 8px;
-    }
-}
-
-/* -------------------------------- */
-/* REDUCIR ANIMACIONES */
-/* -------------------------------- */
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
+    line-height: 1.6;
