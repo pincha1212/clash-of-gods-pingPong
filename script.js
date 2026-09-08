@@ -14,25 +14,25 @@ let tension = 0; let extraBalls = []; let floatTexts = [];
 function triggerFlash(color = '#fff', alpha = 0.35) { flashColor = color; flashAlpha = Math.max(flashAlpha, alpha); }
 
 function kickCamera(power = 8, zoom = 0.02, xBias = 0, yBias = 0) {
-    camera.targetX += (Math.random() - 0.5) * power + xBias; 
+    camera.targetX += (Math.random() - 0.5) * power + xBias;
     camera.targetY += (Math.random() - 0.5) * power + yBias;
     camera.targetZoom = Math.max(0.94, Math.min(1.08, camera.targetZoom + zoom));
 }
 
 function updateImmersiveEffects() {
-    arenaTime += 0.016; combatPulse *= 0.93; 
+    arenaTime += 0.016; combatPulse *= 0.93;
     tension = Math.min(1, rallyCount / 18 + (ball.currentSpeed - ball.baseSpeed) / 22);
-    
+
     camera.targetX *= 0.86; camera.targetY *= 0.86; camera.targetZoom += (1 - camera.targetZoom) * 0.08;
-    camera.x += (camera.targetX - camera.x) * 0.22; camera.y += (camera.targetY - camera.y) * 0.22; 
+    camera.x += (camera.targetX - camera.x) * 0.22; camera.y += (camera.targetY - camera.y) * 0.22;
     camera.zoom += (camera.targetZoom - camera.zoom) * 0.16;
-    
+
     flashAlpha *= 0.86; if (flashAlpha < 0.01) flashAlpha = 0;
 }
 
-function resetImmersiveEffects() { 
-    camera = { x: 0, y: 0, zoom: 1, targetX: 0, targetY: 0, targetZoom: 1 }; 
-    flashAlpha = 0; combatPulse = 0; tension = 0; 
+function resetImmersiveEffects() {
+    camera = { x: 0, y: 0, zoom: 1, targetX: 0, targetY: 0, targetZoom: 1 };
+    flashAlpha = 0; combatPulse = 0; tension = 0;
 }
 
 // --- GAME ENTITIES ---
@@ -40,8 +40,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 EffectsManager.initAmbientParticles(canvas.width, canvas.height);
 
-let paddle1 = { x: 20, y: 200, width: 12, height: 100, baseHeight: 100, speed: 8, baseSpeed: 8, color: '#fff', shield: false, timers: { titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 } };
-let paddle2 = { x: 768, y: 200, width: 12, height: 100, baseHeight: 100, speed: 6, baseSpeed: 6, color: '#fff', shield: false, timers: { titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 } };
+let paddle1 = { x: 20, y: 200, width: 12, height: 100, baseHeight: 100, speed: 8, baseSpeed: 8, color: '#fff', shield: false, trail: [], timers: { titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 } };
+let paddle2 = { x: 768, y: 200, width: 12, height: 100, baseHeight: 100, speed: 6, baseSpeed: 6, color: '#fff', shield: false, trail: [], timers: { titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 } };
 let ball = { x: 400, y: 250, radius: 10, vx: 0, vy: 0, baseSpeed: 7, currentSpeed: 7, maxSpeed: 22, color: '#fff', glowSize: 15, lastHitBy: null, trail: [], isVolatile: false, visible: true, volatileTimer: 0 };
 let powerUps = [];
 
@@ -51,7 +51,7 @@ function createImpact(x, y, color, intensity = 1) {
     EffectsManager.createExplosion(x, y, color, Math.min(Math.floor(20 * intensity), 30));
     EffectsManager.triggerShake(10 * intensity);
     kickCamera(6 + intensity * 5, 0.008 * intensity);
-    triggerFlash(color, Math.min(0.48, 0.12 + intensity * 0.08)); 
+    triggerFlash(color, Math.min(0.48, 0.12 + intensity * 0.08));
     combatPulse = Math.min(1, combatPulse + intensity * 0.2);
 }
 
@@ -72,7 +72,7 @@ function applyConfig() {
     paddle2.baseSpeed = c2.speed * diffMult; paddle2.speed = paddle2.baseSpeed;
 
     document.documentElement.style.setProperty('--c-p1', c1.color); document.documentElement.style.setProperty('--c-p2', c2.color);
-    score1 = 0; score2 = 0; dominance = 50; powerUps = []; 
+    score1 = 0; score2 = 0; dominance = 50; powerUps = [];
     EffectsManager.clearAll();
     resetImmersiveEffects();
     extraBalls = []; floatTexts = [];
@@ -93,36 +93,36 @@ function endGame() {
 
     if (winner) {
         playSound('victory', 1.2);
-        document.getElementById('result-title').innerText = `${winner.icon} ${winner.name} GANA!`; 
+        document.getElementById('result-title').innerText = `${winner.icon} ${winner.name} GANA!`;
         document.getElementById('result-title').style.color = winner.color;
         document.getElementById('result-desc').innerText = `Dominio absoluto en la arena.`;
-        
+
         let diff = Math.abs(score1 - score2);
         if (diff > records.maxDiff) records.maxDiff = diff;
         if (rallyCount > records.maxRally) records.maxRally = rallyCount;
         records.wins[winner.id] = (records.wins[winner.id] || 0) + 1;
         localStorage.setItem('clashGodsRec', JSON.stringify(records));
-    } else { 
-        document.getElementById('result-title').innerText = 'RENDICIÓN'; 
-        document.getElementById('result-title').style.color = '#fff'; 
-        document.getElementById('result-desc').innerText = 'Has abandonado la batalla.'; 
+    } else {
+        document.getElementById('result-title').innerText = 'RENDICIÓN';
+        document.getElementById('result-title').style.color = '#fff';
+        document.getElementById('result-desc').innerText = 'Has abandonado la batalla.';
     }
 }
 
 function launchBall(direction) {
-    ball.x = canvas.width / 2; ball.y = canvas.height / 2; ball.currentSpeed = ball.baseSpeed; ball.color = '#fff'; 
+    ball.x = canvas.width / 2; ball.y = canvas.height / 2; ball.currentSpeed = ball.baseSpeed; ball.color = '#fff';
     ball.glowSize = 15; ball.trail = []; ball.isVolatile = false; ball.visible = true; ball.volatileTimer = 0;
-    
+
     let angle = (Math.random() * Math.PI / 4) - Math.PI / 8;
     ball.vx = direction * ball.currentSpeed * Math.cos(angle); ball.vy = ball.currentSpeed * Math.sin(angle);
     rallyCount = 0; ball.lastHitBy = null; extraBalls = [];
-    
+
     if (window.MutationManager) window.MutationManager.init();
-    
+
     let resetTimers = () => ({ titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 });
     paddle1.timers = resetTimers(); paddle2.timers = resetTimers();
     paddle1.shield = false; paddle2.shield = false; paddle2.speed = paddle2.baseSpeed;
-    
+
     kickCamera(4, 0.004); triggerFlash('#fff', 0.1);
 }
 
@@ -132,17 +132,17 @@ function updateDominance() {
 }
 
 function scorePoint(player) {
-    const scoringColor = player === 1 ? paddle1.color : paddle2.color; 
+    const scoringColor = player === 1 ? paddle1.color : paddle2.color;
     playSound('score'); createImpact(canvas.width / 2, canvas.height / 2, scoringColor, 2.4);
     kickCamera(14, 0.025, player === 1 ? -2 : 2); triggerFlash(scoringColor, 0.3); combatPulse = 1;
-    
+
     if (rallyCount > records.maxRally) { records.maxRally = rallyCount; showMessage('¡NUEVO RÉCORD RALLY!', '#ff0'); }
-    
+
     let el = document.getElementById(player === 1 ? 'score1' : 'score2');
     player === 1 ? score1++ : score2++;
     el.innerText = player === 1 ? score1 : score2;
     el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
-    
+
     updateDominance();
     if (score1 >= config.winScore || score2 >= config.winScore) endGame(); else launchBall(player === 1 ? -1 : 1);
 }
@@ -152,7 +152,7 @@ function activateSkill(playerNum) {
     if (isPaused) return;
     let p = playerNum === 1 ? paddle1 : paddle2;
     let god = GODS[playerNum === 1 ? config.p1 : config.p2];
-    
+
     if (p.timers.skillCd > 0 || p.timers.skillDur > 0) return;
 
     if (window.MutationManager && window.MutationManager.active) {
@@ -161,19 +161,19 @@ function activateSkill(playerNum) {
     }
 
     p.timers.skillCd = god.skill.cd; p.timers.skillDur = god.skill.dur; playSound('skill', 1.5); triggerFlash(god.color, 0.18);
-    kickCamera(12, 0.02, p.x < canvas.width / 2 ? -2 : 2); 
+    kickCamera(12, 0.02, p.x < canvas.width / 2 ? -2 : 2);
     EffectsManager.addSpeedLines(p.x < canvas.width / 2 ? 90 : canvas.width - 90, p.y + p.height / 2, god.color, 18);
     showMessage(`¡${god.skill.name}!`, god.color, 90, p.x < canvas.width / 2 ? 150 : canvas.width - 150, p.y);
 
     if (god.id === 'fujin') {
-        [ball, ...extraBalls].forEach(b => { 
-            if ((playerNum === 1 && b.vx < 0) || (playerNum === 2 && b.vx > 0)) b.vx *= -1; 
-            b.vx += playerNum === 1 ? 5 : -5; 
+        [ball, ...extraBalls].forEach(b => {
+            if ((playerNum === 1 && b.vx < 0) || (playerNum === 2 && b.vx > 0)) b.vx *= -1;
+            b.vx += playerNum === 1 ? 5 : -5;
         });
-    } else if (god.id === 'amaterasu') { 
+    } else if (god.id === 'amaterasu') {
         if (window.MutationManager) window.MutationManager.blindTimer = god.skill.dur;
-    } else if (god.id === 'inari') { 
-        if (window.MutationManager) window.MutationManager.spawnHolograms(ball); 
+    } else if (god.id === 'inari') {
+        if (window.MutationManager) window.MutationManager.spawnHolograms(ball);
     }
 }
 
@@ -182,12 +182,12 @@ function predictBallY(b, targetX) {
     if ((simVx > 0 && simX > targetX) || (simVx < 0 && simX < targetX)) return canvas.height / 2;
     let steps = 0;
     while ((simVx > 0 && simX < targetX) || (simVx < 0 && simX > targetX)) {
-        let timeToX = Math.abs((targetX - simX) / simVx); 
+        let timeToX = Math.abs((targetX - simX) / simVx);
         let timeToY = simVy > 0 ? (canvas.height - simY) / simVy : -simY / simVy;
-        if (timeToY < timeToX) { 
-            simX += simVx * timeToY; simY += simVy * timeToY; simVy = -simVy; 
-        } else { 
-            simY += simVy * timeToX; break; 
+        if (timeToY < timeToX) {
+            simX += simVx * timeToY; simY += simVy * timeToY; simVy = -simVy;
+        } else {
+            simY += simVy * timeToX; break;
         }
         if (steps++ > 20) break;
     }
@@ -211,18 +211,21 @@ function update() {
         return;
     }
 
-    for (let i = floatTexts.length - 1; i >= 0; i--) { 
-        floatTexts[i].life--; floatTexts[i].y -= 0.5; 
-        if (floatTexts[i].life <= 0) floatTexts.splice(i, 1); 
+    for (let i = floatTexts.length - 1; i >= 0; i--) {
+        floatTexts[i].life--; floatTexts[i].y -= 0.5;
+        if (floatTexts[i].life <= 0) floatTexts.splice(i, 1);
     }
 
     [paddle1, paddle2].forEach(p => {
-        if (p.timers.titan > 0) { p.height = p.baseHeight * 1.8; p.timers.titan--; } 
-        else if (p.timers.hielo > 0) { p.height = p.baseHeight * 0.5; p.timers.hielo--; } 
+        if (p.timers.titan > 0) { p.height = p.baseHeight * 1.8; p.timers.titan--; }
+        else if (p.timers.hielo > 0) { p.height = p.baseHeight * 0.5; p.timers.hielo--; }
         else { p.height = p.baseHeight; }
-        
+
         ['ghost', 'invert', 'skillCd', 'skillDur', 'necrosis'].forEach(t => { if (p.timers[t] > 0) p.timers[t]--; });
         p.y = Math.max(0, Math.min(p.y, canvas.height - p.height));
+
+        p.trail.push(p.y);
+        if (p.trail.length > 6) p.trail.shift();
     });
 
     if (config.powerUps && powerUps.length < 2 && frameCount % 350 === 0 && Math.random() > 0.3) {
@@ -244,18 +247,18 @@ function update() {
         if (p2Dir === -1 && paddle2.y > 0) paddle2.y -= p2Speed; if (p2Dir === 1 && paddle2.y < canvas.height - paddle2.height) paddle2.y += p2Speed;
     } else {
         let targetY = canvas.height / 2;
-        if (ball.vx > 0) { 
-            let predictedY = (config.difficulty === 'hard' || config.difficulty === 'normal') ? predictBallY(ball, paddle2.x) : ball.y; 
-            targetY = predictedY - paddle2.height / 2; 
+        if (ball.vx > 0) {
+            let predictedY = (config.difficulty === 'hard' || config.difficulty === 'normal') ? predictBallY(ball, paddle2.x) : ball.y;
+            targetY = predictedY - paddle2.height / 2;
         } else {
-            targetY = canvas.height / 2 - paddle2.height / 2; 
+            targetY = canvas.height / 2 - paddle2.height / 2;
         }
 
-        let errorMargin = config.difficulty === 'easy' ? 40 : (config.difficulty === 'hard' ? 5 : 20); 
+        let errorMargin = config.difficulty === 'easy' ? 40 : (config.difficulty === 'hard' ? 5 : 20);
         errorMargin = Math.max(0, errorMargin - rallyCount);
-        
-        if (paddle2.timers.invert > 0) targetY = canvas.height - targetY - paddle2.height; 
-        
+
+        if (paddle2.timers.invert > 0) targetY = canvas.height - targetY - paddle2.height;
+
         let diffY = targetY - paddle2.y;
         if (Math.abs(diffY) > errorMargin) {
             paddle2.y += Math.sign(diffY) * Math.min(p2Speed, Math.abs(diffY) * 0.15 + p2Speed * 0.5);
@@ -270,12 +273,12 @@ function update() {
 
     let susaSlow = (paddle1.timers.skillDur > 0 && config.p1 === 'susanoo') || (paddle2.timers.skillDur > 0 && config.p2 === 'susanoo') ? 0.6 : 1;
     let allBalls = [ball, ...extraBalls];
-    
+
     if (window.MutationManager) window.MutationManager.update(allBalls, frameCount, canvas.width, canvas.height);
 
     for (let bIndex = allBalls.length - 1; bIndex >= 0; bIndex--) {
         let b = allBalls[bIndex];
-        b.x += b.vx * susaSlow; b.y += b.vy * susaSlow; 
+        b.x += b.vx * susaSlow; b.y += b.vy * susaSlow;
         b.trail.push({ x: b.x, y: b.y }); if (b.trail.length > 8) b.trail.shift();
 
         if (b.lastHitBy) {
@@ -284,15 +287,15 @@ function update() {
                 if (dist < b.radius + pu.radius) {
                     playSound('powerup'); let p = b.lastHitBy; let opp = p === paddle1 ? paddle2 : paddle1;
                     triggerFlash(p.color, 0.16); kickCamera(5, 0.008);
-                    
+
                     if (pu.type === 'titan') { p.timers.titan = 420; createImpact(pu.x, pu.y, '#ff0', 1.5); showMessage('TITÁN', '#ff0'); }
                     else if (pu.type === 'hielo') { opp.timers.hielo = 300; createImpact(pu.x, pu.y, '#08f', 1.5); showMessage('HIELO', '#08f'); }
                     else if (pu.type === 'ghost') { p.timers.ghost = 240; createImpact(pu.x, pu.y, '#aaa', 1.5); showMessage('FANTASMA', '#aaa'); }
                     else if (pu.type === 'invert') { opp.timers.invert = 240; createImpact(pu.x, pu.y, '#f0f', 1.5); showMessage('CAOS', '#f0f'); }
                     else if (pu.type === 'shield') { p.shield = true; createImpact(pu.x, pu.y, '#0ff', 1.5); showMessage('ESCUDO', '#0ff'); }
-                    else if (pu.type === 'multi') { 
-                        extraBalls.push({ x: b.x, y: b.y, radius: b.radius, vx: -b.vx, vy: -b.vy, baseSpeed: b.baseSpeed, currentSpeed: b.currentSpeed, maxSpeed: b.maxSpeed, color: b.color, glowSize: b.glowSize, lastHitBy: b.lastHitBy, trail: [], isVolatile: false, visible: true, volatileTimer: 0 }); 
-                        createImpact(pu.x, pu.y, '#fff', 2); showMessage('MULTIBOLA', '#fff'); 
+                    else if (pu.type === 'multi') {
+                        extraBalls.push({ x: b.x, y: b.y, radius: b.radius, vx: -b.vx, vy: -b.vy, baseSpeed: b.baseSpeed, currentSpeed: b.currentSpeed, maxSpeed: b.maxSpeed, color: b.color, glowSize: b.glowSize, lastHitBy: b.lastHitBy, trail: [], isVolatile: false, visible: true, volatileTimer: 0 });
+                        createImpact(pu.x, pu.y, '#fff', 2); showMessage('MULTIBOLA', '#fff');
                     }
                     powerUps.splice(i, 1);
                 }
@@ -301,8 +304,8 @@ function update() {
 
         if (b.y - b.radius < 0 || b.y + b.radius > canvas.height) {
             b.vy = -b.vy; b.y = b.y - b.radius < 0 ? b.radius : canvas.height - b.radius;
-            playSound('wall', 0.8); 
-            EffectsManager.createExplosion(b.x, b.y < 250 ? 0 : canvas.height, '#fff', 8); 
+            playSound('wall', 0.8);
+            EffectsManager.createExplosion(b.x, b.y < 250 ? 0 : canvas.height, '#fff', 8);
             kickCamera(2.5, 0); EffectsManager.addSpeedLines(b.x, b.y, b.color, 3);
         }
 
@@ -317,7 +320,7 @@ function update() {
             b.lastHitBy = pCol;
             if (bIndex === 0) rallyCount++;
             if (window.MutationManager && window.MutationManager.active) window.MutationManager.toxicCharge = Math.min(100, window.MutationManager.toxicCharge + 15);
-            
+
             let isHeavy = GODS[pCol === paddle1 ? config.p1 : config.p2].id === 'kagutsuchi';
             let intensity = Math.min(2, 1 + rallyCount * 0.1) * (isHeavy ? 1.5 : 1);
             let intersectY = b.y - (pCol.y + pCol.height / 2); let normalizedIntersectY = intersectY / (pCol.height / 2);
@@ -325,33 +328,33 @@ function update() {
 
             if (isCrit) { intensity *= 1.5; playSound('critical', intensity); showMessage('CRÍTICO', '#f00'); } else { playSound(pCol === paddle1 ? 'hit1' : 'hit2', intensity); }
             createImpact(b.x, b.y, pCol.color, intensity); EffectsManager.addSpeedLines(b.x, b.y, pCol.color, isCrit ? 14 : 7);
-            
+
             b.color = pCol.color; b.glowSize = Math.min(30, 15 + rallyCount * 1.5);
-            
+
             let bounceAngle = normalizedIntersectY * (Math.PI / 3); if (isCrit) bounceAngle *= 1.2;
-            let dir = pCol === paddle1 ? 1 : -1; 
-            
+            let dir = pCol === paddle1 ? 1 : -1;
+
             kickCamera(isCrit ? 8 : 3.5, isCrit ? 0.012 : 0.003, dir === 1 ? 1 : -1, normalizedIntersectY * 1.5);
-            
+
             b.currentSpeed = Math.min(b.maxSpeed, b.baseSpeed + (rallyCount * (isHeavy ? 0.8 : 0.5)) + (isCrit ? 2 : 0));
             paddle2.speed = Math.min(15, paddle2.baseSpeed + rallyCount * 0.3);
-            
-            b.vx = dir * b.currentSpeed * Math.cos(bounceAngle); 
+
+            b.vx = dir * b.currentSpeed * Math.cos(bounceAngle);
             b.vy = b.currentSpeed * Math.sin(bounceAngle);
             b.x = dir === 1 ? pCol.x + pCol.width + b.radius : pCol.x - b.radius;
-            
+
             if (rallyCount > 0 && rallyCount % 5 === 0 && bIndex === 0) showMessage(`¡Rally x${rallyCount}!`, '#fff');
         }
 
         if (b.x < -20) {
-            if (paddle1.shield) { 
-                paddle1.shield = false; b.vx *= -1; b.x = 20; showMessage('¡BLOQUEO!', '#0ff'); playSound('hit1', 2); 
-                triggerFlash('#0ff', 0.28); kickCamera(7, 0.012); createImpact(b.x, b.y, '#0ff', 1.4); 
+            if (paddle1.shield) {
+                paddle1.shield = false; b.vx *= -1; b.x = 20; showMessage('¡BLOQUEO!', '#0ff'); playSound('hit1', 2);
+                triggerFlash('#0ff', 0.28); kickCamera(7, 0.012); createImpact(b.x, b.y, '#0ff', 1.4);
             } else if (bIndex === 0) scorePoint(2); else extraBalls.splice(bIndex - 1, 1);
         } else if (b.x > canvas.width + 20) {
-            if (paddle2.shield) { 
-                paddle2.shield = false; b.vx *= -1; b.x = canvas.width - 20; showMessage('¡BLOQUEO!', '#0ff'); playSound('hit2', 2); 
-                triggerFlash('#0ff', 0.28); kickCamera(7, 0.012); createImpact(b.x, b.y, '#0ff', 1.4); 
+            if (paddle2.shield) {
+                paddle2.shield = false; b.vx *= -1; b.x = canvas.width - 20; showMessage('¡BLOQUEO!', '#0ff'); playSound('hit2', 2);
+                triggerFlash('#0ff', 0.28); kickCamera(7, 0.012); createImpact(b.x, b.y, '#0ff', 1.4);
             } else if (bIndex === 0) scorePoint(1); else extraBalls.splice(bIndex - 1, 1);
         }
     }
@@ -364,13 +367,13 @@ function drawPaddleStatus(p, isP1) {
     if (p.timers.ghost > 0) icons += '👻'; if (p.timers.invert > 0) icons += '🔄';
     if (p.timers.necrosis > 0) icons += '☠️'; if (p.shield) icons += '🛡️';
     if (icons !== '') { ctx.fillStyle = '#fff'; ctx.fillText(icons, x, p.y + yOffset); yOffset -= 12; }
-    
+
     let god = GODS[isP1 ? config.p1 : config.p2]; let pct = p.timers.skillCd / god.skill.cd;
-    if (p.timers.skillCd > 0) { 
-        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(x - 15, p.y + yOffset, 30, 4); 
-        ctx.fillStyle = god.color; ctx.fillRect(x - 15, p.y + yOffset, 30 * (1 - pct), 4); 
-    } else { 
-        ctx.fillStyle = god.color; ctx.fillText('SKILL', x, p.y + yOffset); 
+    if (p.timers.skillCd > 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(x - 15, p.y + yOffset, 30, 4);
+        ctx.fillStyle = god.color; ctx.fillRect(x - 15, p.y + yOffset, 30 * (1 - pct), 4);
+    } else {
+        ctx.fillStyle = god.color; ctx.fillText('SKILL', x, p.y + yOffset);
     }
     ctx.textAlign = 'left'; ctx.font = '10px sans-serif';
 }
@@ -380,7 +383,7 @@ function draw() {
     EffectsManager.applyShake(ctx);
 
     ctx.translate(canvas.width / 2, canvas.height / 2); ctx.scale(camera.zoom, camera.zoom); ctx.translate(-canvas.width / 2 + camera.x, -canvas.height / 2 + camera.y);
-    
+
     ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0, 0, 0, 0.32)'; ctx.fillRect(-30, -30, canvas.width + 60, canvas.height + 60);
 
     let grd = ctx.createLinearGradient(0, 0, canvas.width, 0);
@@ -394,7 +397,7 @@ function draw() {
 
     EffectsManager.drawAmbientParticles(ctx, tension);
     ctx.lineWidth = 1;
-    
+
     for (let y = 40; y < canvas.height; y += 40) { ctx.strokeStyle = `rgba(255,255,255,${0.025 + tension * 0.025})`; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
     for (let x = 40; x < canvas.width; x += 40) { ctx.strokeStyle = `rgba(255,255,255,${0.018 + tension * 0.018})`; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
 
@@ -407,21 +410,45 @@ function draw() {
 
     if (window.MutationManager) { window.MutationManager.drawSpores(ctx); window.MutationManager.drawHolograms(ctx); }
 
-    const drawPaddleGlow = (p, isP1) => {
-        const god = GODS[isP1 ? config.p1 : config.p2]; const active = p.timers.skillDur > 0;
-        ctx.shadowColor = p.timers.necrosis > 0 ? '#0f0' : p.color; ctx.shadowBlur = active ? 34 : 20;
-        ctx.fillStyle = p.timers.necrosis > 0 ? '#adff2f' : p.color; ctx.fillRect(p.x, p.y, p.width, p.height);
+const drawPaddleGlow = (p, isP1) => {
+        const god = GODS[isP1 ? config.p1 : config.p2];
+        const active = p.timers.skillDur > 0;
+        
+        if (p.trail && p.timers.ghost === 0) { 
+            p.trail.forEach((pastY, index) => {
+                let alpha = ((index + 1) / p.trail.length) * 0.18; 
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.timers.necrosis > 0 ? '#adff2f' : p.color;
+                ctx.fillRect(p.x, pastY, p.width, p.height);
+            });
+            ctx.globalAlpha = 1; 
+        }
+
+        ctx.shadowColor = p.timers.necrosis > 0 ? '#0f0' : p.color;
+        ctx.shadowBlur = active ? 34 : 20;
+        ctx.fillStyle = p.timers.necrosis > 0 ? '#adff2f' : p.color;
+        ctx.fillRect(p.x, p.y, p.width, p.height);
         
         if (active) { 
-            ctx.globalAlpha = 0.28; ctx.fillRect(p.x - 8, p.y - 8, p.width + 16, p.height + 16); 
-            ctx.globalAlpha = 0.12; ctx.fillStyle = god.color; ctx.beginPath(); ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.height * 0.8, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; 
+            ctx.globalAlpha = 0.28;
+            ctx.fillRect(p.x - 8, p.y - 8, p.width + 16, p.height + 16);
+            ctx.globalAlpha = 0.12;
+            ctx.fillStyle = god.color;
+            ctx.beginPath();
+            ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.height * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1; 
         }
         if (p.shield) { 
-            ctx.strokeStyle = '#0ff'; ctx.lineWidth = 3; ctx.shadowBlur = 20; ctx.beginPath(); 
-            const shieldX = isP1 ? p.x + p.width + 7 : p.x - 7; ctx.arc(shieldX, p.y + p.height / 2, p.height * 0.62, -Math.PI / 2, Math.PI / 2, !isP1); ctx.stroke(); 
+            ctx.strokeStyle = '#0ff';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 20;
+            ctx.beginPath();
+            const shieldX = isP1 ? p.x + p.width + 7 : p.x - 7;
+            ctx.arc(shieldX, p.y + p.height / 2, p.height * 0.62, -Math.PI / 2, Math.PI / 2, !isP1);
+            ctx.stroke(); 
         }
     };
-
     drawPaddleGlow(paddle1, true); drawPaddleGlow(paddle2, false);
     if (paddle1.timers.ghost > 0) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(paddle1.x, paddle1.y, paddle1.width, paddle1.height); }
     if (paddle2.timers.ghost > 0) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(paddle2.x, paddle2.y, paddle2.width, paddle2.height); }
@@ -432,7 +459,7 @@ function draw() {
         if (pu.type === 'titan') { c = '#ffff00'; icon = '⚡'; } else if (pu.type === 'hielo') { c = '#0088ff'; icon = '❄️'; }
         else if (pu.type === 'ghost') { c = '#aaaaaa'; icon = '👻'; } else if (pu.type === 'multi') { c = '#ffffff'; icon = '⚽'; }
         else if (pu.type === 'invert') { c = '#ff00ff'; icon = '🔄'; } else if (pu.type === 'shield') { c = '#00ffff'; icon = '🛡️'; }
-        
+
         ctx.globalAlpha = 0.14; ctx.fillStyle = c; ctx.beginPath(); ctx.arc(pu.x, pu.y, pu.radius * scale * 2.15, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1; ctx.shadowBlur = 18; ctx.shadowColor = c; ctx.fillStyle = c; ctx.beginPath(); ctx.arc(pu.x, pu.y, pu.radius * scale, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pu.x, pu.y, pu.radius * (1.35 + Math.sin(pu.pulse * 1.4) * 0.08), 0, Math.PI * 2); ctx.stroke();
@@ -440,16 +467,16 @@ function draw() {
     });
 
     [ball, ...extraBalls].forEach(b => {
-        if (!b.visible) return; 
+        if (!b.visible) return;
         let renderColor = b.isVolatile ? '#adff2f' : b.color;
-        
+
         if (b.trail.length > 0) {
             ctx.beginPath(); ctx.moveTo(b.trail[0].x, b.trail[0].y); for (let i = 1; i < b.trail.length; i++) ctx.lineTo(b.trail[i].x, b.trail[i].y); ctx.lineTo(b.x, b.y);
             ctx.strokeStyle = renderColor; ctx.lineWidth = b.radius * (0.75 + Math.min(1, Math.abs(b.currentSpeed - b.baseSpeed) / 12) * 0.8);
             ctx.lineCap = 'round'; ctx.globalAlpha = 0.36 + Math.min(0.34, Math.abs(b.currentSpeed - b.baseSpeed) / 30);
             ctx.shadowBlur = 12 + Math.abs(b.currentSpeed - b.baseSpeed) * 1.2; ctx.shadowColor = renderColor; ctx.stroke(); ctx.globalAlpha = 1;
         }
-        
+
         const speedFactor = Math.min(1, Math.abs(b.currentSpeed - b.baseSpeed) / 12);
         ctx.globalAlpha = 0.12 + speedFactor * 0.16; ctx.fillStyle = renderColor; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius * (2.5 + speedFactor * 2), 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1; ctx.shadowBlur = b.glowSize + speedFactor * 20; ctx.shadowColor = renderColor; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
@@ -457,17 +484,17 @@ function draw() {
 
     EffectsManager.updateAndDrawParticles(ctx);
 
-    ctx.shadowBlur = 0; 
-    floatTexts.forEach(ft => { 
-        ctx.globalAlpha = ft.life / ft.maxLife; ctx.fillStyle = ft.color; ctx.font = 'bold 20px Orbitron'; ctx.textAlign = 'center'; 
-        ctx.shadowBlur = 12; ctx.shadowColor = ft.color; ctx.fillText(ft.text, ft.x, ft.y); 
-    }); 
+    ctx.shadowBlur = 0;
+    floatTexts.forEach(ft => {
+        ctx.globalAlpha = ft.life / ft.maxLife; ctx.fillStyle = ft.color; ctx.font = 'bold 20px Orbitron'; ctx.textAlign = 'center';
+        ctx.shadowBlur = 12; ctx.shadowColor = ft.color; ctx.fillText(ft.text, ft.x, ft.y);
+    });
     ctx.globalAlpha = 1;
-    
+
     const vignette = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, canvas.height * 0.25, canvas.width / 2, canvas.height / 2, canvas.height * 0.78);
     vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, `rgba(0,0,0,${vignetteStrength + tension * 0.12 + combatPulse * 0.08})`);
     ctx.fillStyle = vignette; ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
-    
+
     if (flashAlpha > 0) { ctx.globalAlpha = flashAlpha; ctx.fillStyle = flashColor; ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40); ctx.globalAlpha = 1; }
 
     if (window.MutationManager) window.MutationManager.drawBlind(ctx, canvas.width, canvas.height);
@@ -484,14 +511,14 @@ function draw() {
     if (window.MutationManager && window.MutationManager.active && isPlaying && !countdownRunning) {
         let chargePct = window.MutationManager.toxicCharge / 100;
         let barW = 160; let barH = 8; let bx = canvas.width / 2 - barW / 2; let by = canvas.height - 25;
-        
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.fillRect(bx, by, barW, barH);
-        ctx.fillStyle = chargePct === 1 ? '#adff2f' : '#228b22'; 
-        ctx.shadowBlur = chargePct === 1 ? 15 : 0; ctx.shadowColor = '#adff2f'; 
+        ctx.fillStyle = chargePct === 1 ? '#adff2f' : '#228b22';
+        ctx.shadowBlur = chargePct === 1 ? 15 : 0; ctx.shadowColor = '#adff2f';
         ctx.fillRect(bx, by, barW * chargePct, barH); ctx.shadowBlur = 0;
-        
+
         ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, barW, barH);
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Orbitron'; ctx.textAlign = 'center'; 
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Orbitron'; ctx.textAlign = 'center';
         ctx.fillText(chargePct === 1 ? '¡MUTACIÓN LISTA!' : 'CARGA TÓXICA', canvas.width / 2, by - 6);
     }
 
