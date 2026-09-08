@@ -437,13 +437,31 @@ function update() {
         }
         paddle2.y = Math.max(0, Math.min(paddle2.y, canvas.height - paddle2.height));
 
-        // IA: Uso autónomo e inteligente de habilidades
-        if (paddle2.timers.skillCd === 0 && paddle2.timers.skillDur === 0) {
-            let ballIncoming = ball.vx > 0 && ball.x > canvas.width * 0.35;
-            let inDanger = ballIncoming && Math.abs((paddle2.y + paddle2.height / 2) - ball.y) > paddle2.height * 0.4;
-            
-            if (ballIncoming && (inDanger || Math.random() < 0.015)) {
-                activateSkill(2);
+        // RESET DE EVALUACIÓN: Se habilita para tomar una nueva decisión cuando la pelota va hacia P1
+        if (ball.vx <= 0) {
+            paddle2.skillEvaluatedThisRally = false;
+        }
+
+        // IA: Activación justa de habilidades por PROXIMIDAD y DIFICULTAD
+        if (config.godSkills && paddle2.timers.skillCd === 0 && paddle2.timers.skillDur === 0 && !paddle2.skillEvaluatedThisRally) {
+            const ballApproaching = ball.vx > 0;
+            const distanceToPaddle = Math.abs(paddle2.x - ball.x);
+            const inRange = distanceToPaddle < 280; // Rango de cercanía (280px)
+
+            if (ballApproaching && inRange) {
+                paddle2.skillEvaluatedThisRally = true; // Evalúa exactamente 1 vez por tiro hacia ella
+
+                const skillChances = {
+                    'easy': 0.20,    // 20% probabilidad en fácil
+                    'normal': 0.50,  // 50% probabilidad en normal
+                    'hard': 0.80     // 80% probabilidad en difícil
+                };
+
+                const currentChance = skillChances[config.difficulty] || 0.50;
+
+                if (Math.random() < currentChance) {
+                    activateSkill(2);
+                }
             }
         }
     }

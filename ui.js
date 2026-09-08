@@ -99,4 +99,40 @@ function applyPreset(presetType) {
     syncConfigUI();
 }
 
+function selectChip(groupId, element) {
+    const value = element.dataset.value;
+    const container = document.getElementById(groupId);
+    
+    if (container) {
+        container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        element.classList.add('active');
+    }
+    
+    // Mapeo directo a la configuración
+    if (groupId === 'group-players') config.is2P = (value === '2p');
+    if (groupId === 'group-diff') config.aiDifficulty = value;
+    if (groupId === 'group-arena') config.arenaMode = value;
+    if (groupId === 'group-ball-speed') config.ballSpeed = parseFloat(value);
+    if (groupId === 'group-skill-cd') config.skillCooldownMultiplier = parseFloat(value);
+}
+
+function applyPreset(presetType) {
+    if (presetType === 'competitive') {
+        config.ballSpeed = 8;
+        config.arenaMode = 'normal';
+    } else if (presetType === 'chaos') {
+        config.ballSpeed = 11;
+        config.arenaMode = 'mutation';
+    } else if (presetType === 'eclipse') {
+        config.ballSpeed = 8;
+        config.arenaMode = 'eclipse';
+    } else if (presetType === 'classic') {
+        config.ballSpeed = 6;
+        config.arenaMode = 'normal';
+    }
+    
+    const scoreInput = document.getElementById('cfg-score');
+    if (scoreInput) scoreInput.value = config.maxScore || 5;
+}
+
 buildCharSelect();
