@@ -1,176 +1,107 @@
-// --- GESTOR DE MODOS AVANZADOS (MUTACIÓN, ECLIPSE) ---
-window.MutationManager = {
-    // Flags de activación de modos (leídos desde la UI)
-    active: false,     
-    eclipse: false,    
-    
-    // Estados internos de Mutación
-    toxicCharge: 0,
-    spores: [],
-    
-    // Estados para habilidades de Dioses avanzados (Inari/Amaterasu)
-    ballHolograms: [],
-    blindTimer: 0,
+// eclipse.js
+window.EclipseManager = {
+    active: false,
+    maskCanvas: null,
+    maskCtx: null,
 
-    init: function() {
-        this.spores = [];
-        this.toxicCharge = 0;
-        this.ballHolograms = [];
-        this.blindTimer = 0;
-    },
-
-    trigger: function(playerNum, p1, p2, balls, canvasWidth, canvasHeight, showMessageCb) {
-        if (this.toxicCharge < 100) return false; // Requiere carga máxima
-
-        let mutationType = Math.floor(Math.random() * 3);
-        let opp = playerNum === 1 ? p2 : p1;
-        let caster = playerNum === 1 ? p1 : p2;
-
-        if (mutationType === 0) {
-            // 1. Necrosis: -40% velocidad rival por 180 frames (3 seg a 60fps)
-            opp.timers.necrosis = 180;
-            showMessageCb('¡NECROSIS!', '#0f0', 90, caster.x < canvasWidth / 2 ? 150 : canvasWidth - 150, caster.y);
-            
-        } else if (mutationType === 1) {
-            // 2. Esporas Corrosivas: Genera 3 zonas de gas en el campo
-            for (let i = 0; i < 3; i++) {
-                this.spores.push({
-                    x: canvasWidth / 4 + Math.random() * (canvasWidth / 2),
-                    y: Math.random() * canvasHeight,
-                    radius: 40 + Math.random() * 20,
-                    life: 300 // 5 segundos
-                });
-            }
-            showMessageCb('¡ESPORAS!', '#8f0', 90, caster.x < canvasWidth / 2 ? 150 : canvasWidth - 150, caster.y);
-
-        } else if (mutationType === 2) {
-            // 3. Ácido Volátil en las pelotas activas
-            balls.forEach(b => {
-                b.isVolatile = true;
-                b.volatileTimer = 240; // 4 segundos de locura
-            });
-            showMessageCb('¡ÁCIDO VOLÁTIL!', '#cf0', 90, caster.x < canvasWidth / 2 ? 150 : canvasWidth - 150, caster.y);
+    initCanvas: function(width, height) {
+        if (!this.maskCanvas) {
+            this.maskCanvas = document.createElement('canvas');
+            this.maskCtx = this.maskCanvas.getContext('2d');
         }
+        this.maskCanvas.width = width + 60;
+        this.maskCanvas.height = height + 60;
+    },
+
+    draw: function(ctx, canvasWidth, canvasHeight, p1, p2, balls) {
+        if (!this.active) return;
+
+        this.initCanvas(canvasWidth, canvasHeight);
+        const mCtx = this.maskCtx;
+        const time = typeof frameCount !== 'undefined' ? frameCount : Date.now() * 0.06;
+        const pUps = typeof powerUps !== 'undefined' ? powerUps : [];
+
+        // 1. Llenamos el canvas oculto de oscuridad
+        const darkOpacity = 0.94 + Math.sin(time * 0.05) * 0.04;
+        mCtx.globalCompositeOperation = 'source-over';
+        mCtx.clearRect(0, 0, this.maskCanvas.width, this.maskCanvas.height);
+        mCtx.fillStyle = `rgba(5, 5, 12, ${darkOpacity})`;
+        mCtx.fillRect(0, 0, this.maskCanvas.width, this.maskCanvas.height);
+
+        // 2. Perforamos las luces SOLO en el canvas oculto
+        mCtx.globalCompositeOperation = 'destination-out';
         
-        this.toxicCharge = 0; // Consumimos la carga
-        return true; 
-    },
-
-    spawnHolograms: function(baseBall) {
-        for (let i = 0; i < 5; i++) {
-            let angle = (Math.random() - 0.5) * Math.PI / 1.5;
-            let speed = baseBall.currentSpeed * (0.7 + Math.random() * 0.5);
-            this.ballHolograms.push({
-                x: baseBall.x, y: baseBall.y,
-                vx: Math.cos(angle) * speed * Math.sign(baseBall.vx),
-                vy: Math.sin(angle) * speed,
-                radius: baseBall.radius,
-                color: '#ff69b4',
-                life: 120 + Math.random() * 60
-            });
-        }
-    },
-
-    update: function(balls, frameCount, canvasWidth, canvasHeight) {
-        // Limpieza de memoria (Garbage collection)
-        this.spores = this.spores.filter(s => s.life > 0);
-        this.ballHolograms = this.ballHolograms.filter(h => h.life > 0);
-        
-        if (this.blindTimer > 0) this.blindTimer--;
-
-        // Física de Hologramas (Inari)
-        this.ballHolograms.forEach(h => {
-            h.x += h.vx; h.y += h.vy; h.life--;
-            if (h.y - h.radius < 0 || h.y + h.radius > canvasHeight) h.vy *= -1; 
-        });
-
-        // Física del Ácido Volátil y Esporas
-        balls.forEach(b => {
-            if (b.volatileTimer > 0) {
-                b.volatileTimer--;
-                b.radius = 10 + Math.sin(frameCount * 0.2) * 5; 
-                b.visible = (frameCount % 10) > 3; 
-                
-                if (b.volatileTimer <= 0) {
-                    b.radius = 10;
-                    b.visible = true;
-                    b.isVolatile = false;
-                }
-            }
-
-            // Colisión con esporas (Perturbación del ángulo)
-            this.spores.forEach(s => {
-                s.life--;
-                let dist = Math.hypot(b.x - s.x, b.y - s.y);
-                if (dist < b.radius + s.radius) {
-                    b.vy += (Math.random() - 0.5) * 1.5; 
-                }
-            });
-        });
-    },
-
-    drawSpores: function(ctx) {
-        this.spores.forEach(s => {
-            let alpha = Math.min(1, s.life / 60) * 0.4;
-            let sporeGlow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.radius);
-            sporeGlow.addColorStop(0, `rgba(50, 255, 50, ${alpha})`);
-            sporeGlow.addColorStop(1, 'rgba(0, 20, 0, 0)');
-            
-            ctx.fillStyle = sporeGlow;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-            ctx.fill();
-        });
-    },
-
-    drawHolograms: function(ctx) {
-        this.ballHolograms.forEach(h => {
-            ctx.globalAlpha = Math.min(1, h.life / 60) * 0.5;
-            ctx.fillStyle = h.color;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = h.color;
-            ctx.beginPath();
-            ctx.arc(h.x, h.y, h.radius, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-        ctx.shadowBlur = 0;
-    },
-
-    drawBlind: function(ctx, canvasWidth, canvasHeight) {
-        if (this.blindTimer > 0) {
-            let alpha = Math.min(1, this.blindTimer / 30);
-            ctx.fillStyle = `rgba(255, 250, 240, ${alpha * 0.95})`; 
-            ctx.fillRect(-50, -50, canvasWidth + 100, canvasHeight + 100);
-        }
-    },
-
-    drawEclipse: function(ctx, canvasWidth, canvasHeight, p1, p2, balls) {
-        if (!this.eclipse) return;
-
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
-        ctx.fillRect(-30, -30, canvasWidth + 60, canvasHeight + 60);
-
-        // Sistema de máscaras para luces circulares optimizado
-        ctx.globalCompositeOperation = 'destination-out';
-        
-        const revealLight = (x, y, radius) => {
-            let mask = ctx.createRadialGradient(x, y, radius * 0.2, x, y, radius);
-            mask.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        const revealLight = (x, y, radius, intensity = 1) => {
+            let mx = x + 30; // Ajuste por el offset de -30
+            let my = y + 30;
+            let mask = mCtx.createRadialGradient(mx, my, radius * 0.15, mx, my, radius);
+            mask.addColorStop(0, `rgba(255, 255, 255, ${intensity})`);
+            mask.addColorStop(0.5, `rgba(255, 255, 255, ${intensity * 0.5})`);
             mask.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = mask; 
-            ctx.beginPath(); 
-            ctx.arc(x, y, radius, 0, Math.PI * 2); 
-            ctx.fill();
+            mCtx.fillStyle = mask; 
+            mCtx.beginPath(); mCtx.arc(mx, my, radius, 0, Math.PI * 2); mCtx.fill();
         };
 
         balls.forEach(b => {
-            if (b.visible) revealLight(b.x, b.y, 120);
+            if (b.visible) {
+                let speedBonus = Math.max(0, (b.currentSpeed - b.baseSpeed) * 5);
+                revealLight(b.x, b.y, 110 + speedBonus + (b.isVolatile ? Math.random() * 15 : 0));
+            }
         });
-        revealLight(p1.x, p1.y + p1.height / 2, 100);
-        revealLight(p2.x, p2.y + p2.height / 2, 100);
         
+        const getPlayerRadius = (p) => {
+            let r = 100;
+            if (p.timers.skillDur > 0) r += 70 + Math.sin(time * 0.2) * 15;
+            if (p.timers.titan > 0) r += 40;
+            if (p.timers.hielo > 0) r -= 30; 
+            return r;
+        };
+        revealLight(p1.x + p1.width / 2, p1.y + p1.height / 2, getPlayerRadius(p1));
+        revealLight(p2.x + p2.width / 2, p2.y + p2.height / 2, getPlayerRadius(p2));
+
+        // --- LÓGICA AJUSTADA: Power-Ups Reactivos ---
+        pUps.forEach(pu => {
+            let maxIntensity = 0;
+            
+            balls.forEach(b => {
+                if (b.visible) {
+                    let dist = Math.hypot(b.x - pu.x, b.y - pu.y);
+                    let threshold = 110; // ¡Reducido a 110px! Mucho más tenso.
+                    
+                    if (dist < threshold) {
+                        // Multiplicamos un poco para que alcance la intensidad máxima más rápido
+                        let intensity = (1 - (dist / threshold)) * 1.5; 
+                        if (intensity > maxIntensity) maxIntensity = Math.min(1, intensity);
+                    }
+                }
+            });
+
+            if (maxIntensity > 0.05) {
+                let pulse = Math.sin(time * 0.15) * 8;
+                // Reduje un poco el radio de luz del power up para que sea más sutil
+                revealLight(pu.x, pu.y, 50 + pulse, maxIntensity);
+            }
+        });
+
+        // 3. Imprimimos la máscara sobre el juego principal
+        ctx.save();
+        ctx.drawImage(this.maskCanvas, -30, -30);
+
+        // 4. Capa superior: Auras de Color
+        ctx.globalCompositeOperation = 'lighter';
+        const addAura = (x, y, radius, color, alpha) => {
+            let aura = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            aura.addColorStop(0, color);
+            aura.addColorStop(1, 'transparent');
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = aura;
+            ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+        };
+
+        balls.forEach(b => { if (b.visible) addAura(b.x, b.y, 90, b.color, 0.3); });
+        if (p1.timers.skillDur > 0) addAura(p1.x, p1.y + p1.height/2, 140, p1.color, 0.45);
+        if (p2.timers.skillDur > 0) addAura(p2.x, p2.y + p2.height/2, 140, p2.color, 0.45);
+
         ctx.restore(); 
     }
 };
