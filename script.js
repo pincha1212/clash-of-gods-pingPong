@@ -1,6 +1,7 @@
-// script.js
+// script_2.js
 // --- ESTADO DEL JUEGO ---
 let isPlaying = false; let isPaused = false;
+let hitstopTimer = 0;
 let score1 = 0; let score2 = 0; let rallyCount = 0;
 let dominance = 50; let frameCount = 0; let animationId;
 
@@ -45,7 +46,12 @@ let paddle2 = { x: 768, y: 200, width: 12, height: 100, baseHeight: 100, speed: 
 let ball = { x: 400, y: 250, radius: 10, vx: 0, vy: 0, baseSpeed: 7, currentSpeed: 7, maxSpeed: 22, color: '#fff', glowSize: 15, lastHitBy: null, trail: [], isVolatile: false, visible: true, volatileTimer: 0 };
 let powerUps = [];
 
-function showMessage(text, color, duration = 60, x = canvas.width / 2, y = canvas.height / 4) { floatTexts.push({ text, color, x, y, life: duration, maxLife: duration }); }
+function showMessage(text, color, duration = 60, x = canvas.width / 2, y = canvas.height / 4) {
+    let isSpam = floatTexts.some(ft => ft.text === text && ft.life > duration - 15);
+    if (isSpam) return;
+
+    floatTexts.push({ text: text, color: color, x: x, y: y, life: duration, maxLife: duration });
+}
 
 function createImpact(x, y, color, intensity = 1) {
     EffectsManager.createExplosion(x, y, color, Math.min(Math.floor(20 * intensity), 30));
@@ -63,11 +69,23 @@ function applyConfig() {
     config.powerUps = document.getElementById('cfg-power').value === 'on';
     config.mode = document.getElementById('cfg-mode').value;
 
-    if (window.MutationManager) window.MutationManager.active = document.getElementById('cfg-mutation')?.value === 'on';
-    if (window.EclipseManager) window.EclipseManager.active = document.getElementById('cfg-eclipse')?.value === 'on';
+    if (window.MutationManager) window.MutationManager.active = false;
+    if (window.EclipseManager) window.EclipseManager.active = false;
+
+    let mutationToggle = document.getElementById('cfg-mutation')?.value === 'on';
+    let eclipseToggle = document.getElementById('cfg-eclipse')?.value === 'on';
+
+    if (mutationToggle && window.MutationManager) {
+        window.MutationManager.active = true;
+        window.MutationManager.init(true);
+    } else if (eclipseToggle && window.EclipseManager) {
+        window.EclipseManager.active = true;
+        if (typeof window.EclipseManager.init === 'function') window.EclipseManager.init();
+    }
 
     paddle1.color = c1.color; paddle1.baseHeight = c1.height; paddle1.baseSpeed = c1.speed; paddle1.speed = c1.speed;
     paddle2.color = c2.color; paddle2.baseHeight = c2.height;
+
     let diffMult = config.difficulty === 'easy' ? 0.7 : (config.difficulty === 'hard' ? 1.3 : 1);
     paddle2.baseSpeed = c2.speed * diffMult; paddle2.speed = paddle2.baseSpeed;
 
@@ -117,8 +135,9 @@ function launchBall(direction) {
     ball.vx = direction * ball.currentSpeed * Math.cos(angle); ball.vy = ball.currentSpeed * Math.sin(angle);
     rallyCount = 0; ball.lastHitBy = null; extraBalls = [];
 
-    if (window.MutationManager) window.MutationManager.init();
-
+    if (window.MutationManager && window.MutationManager.active) {
+        window.MutationManager.resetRound(paddle1, paddle2);
+    }
     let resetTimers = () => ({ titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 });
     paddle1.timers = resetTimers(); paddle2.timers = resetTimers();
     paddle1.shield = false; paddle2.shield = false; paddle2.speed = paddle2.baseSpeed;
@@ -197,6 +216,12 @@ function predictBallY(b, targetX) {
 // --- MAIN UPDATE ---
 function update() {
     if (!isPlaying || isPaused) return;
+
+    if (hitstopTimer > 0) {
+        hitstopTimer--;
+        return;
+    }
+
     frameCount++; updateImmersiveEffects();
 
     if (countdownRunning) {
@@ -274,7 +299,9 @@ function update() {
     let susaSlow = (paddle1.timers.skillDur > 0 && config.p1 === 'susanoo') || (paddle2.timers.skillDur > 0 && config.p2 === 'susanoo') ? 0.6 : 1;
     let allBalls = [ball, ...extraBalls];
 
-    if (window.MutationManager) window.MutationManager.update(allBalls, frameCount, canvas.width, canvas.height);
+    if (window.MutationManager && window.MutationManager.active) {
+        window.MutationManager.update(1/60, paddle2, ball);
+    }
 
     for (let bIndex = allBalls.length - 1; bIndex >= 0; bIndex--) {
         let b = allBalls[bIndex];
@@ -319,18 +346,21 @@ function update() {
         if (pCol) {
             b.lastHitBy = pCol;
             if (bIndex === 0) rallyCount++;
-            if (window.MutationManager && window.MutationManager.active) window.MutationManager.toxicCharge = Math.min(100, window.MutationManager.toxicCharge + 15);
+
+            if (window.MutationManager && window.MutationManager.active) {
+                window.MutationManager.addPoison(15, paddle2, showMessage);
+            }
 
             let isHeavy = GODS[pCol === paddle1 ? config.p1 : config.p2].id === 'kagutsuchi';
             let intensity = Math.min(2, 1 + rallyCount * 0.1) * (isHeavy ? 1.5 : 1);
             let intersectY = b.y - (pCol.y + pCol.height / 2); let normalizedIntersectY = intersectY / (pCol.height / 2);
             let isCrit = Math.abs(normalizedIntersectY) > 0.85;
 
+            if (isCrit) { hitstopTimer = 6; } else if (rallyCount > 5) { hitstopTimer = 3; }
+
             if (isCrit) { intensity *= 1.5; playSound('critical', intensity); showMessage('CRÍTICO', '#f00'); } else { playSound(pCol === paddle1 ? 'hit1' : 'hit2', intensity); }
-            createImpact(b.x, b.y, pCol.color, intensity); EffectsManager.addSpeedLines(b.x, b.y, pCol.color, isCrit ? 14 : 7);
 
             b.color = pCol.color; b.glowSize = Math.min(30, 15 + rallyCount * 1.5);
-
             let bounceAngle = normalizedIntersectY * (Math.PI / 3); if (isCrit) bounceAngle *= 1.2;
             let dir = pCol === paddle1 ? 1 : -1;
 
@@ -344,6 +374,15 @@ function update() {
             b.x = dir === 1 ? pCol.x + pCol.width + b.radius : pCol.x - b.radius;
 
             if (rallyCount > 0 && rallyCount % 5 === 0 && bIndex === 0) showMessage(`¡Rally x${rallyCount}!`, '#fff');
+
+            // --- FÍSICAS DE MUTACIÓN ENCAPSULADAS (Ahora en el lugar correcto) ---
+            if (window.MutationManager && window.MutationManager.active) {
+                let mutEffects = window.MutationManager.handleCollision(b, pCol, dir, extraBalls, typeof showMessage === 'function' ? showMessage : null, paddle1, paddle2);
+                if (mutEffects.hitstopMod > 0) hitstopTimer = mutEffects.hitstopMod;
+                if (mutEffects.shakeMod > 0) kickCamera(mutEffects.shakeMod, 0.02, dir, 0);
+                if (mutEffects.triggerFlash) triggerFlash('#adff2f', 0.2);
+            }
+            // --- FIN FÍSICAS DE MUTACIÓN ---
         }
 
         if (b.x < -20) {
@@ -382,18 +421,37 @@ function draw() {
     ctx.save();
     EffectsManager.applyShake(ctx);
 
-    ctx.translate(canvas.width / 2, canvas.height / 2); ctx.scale(camera.zoom, camera.zoom); ctx.translate(-canvas.width / 2 + camera.x, -canvas.height / 2 + camera.y);
+    let corruption = (window.MutationManager && window.MutationManager.active) ? window.MutationManager.toxicCharge / 100 : 0;
+    let tiltAngle = Math.sin(arenaTime * 2) * (0.05 * corruption);
 
-    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0, 0, 0, 0.32)'; ctx.fillRect(-30, -30, canvas.width + 60, canvas.height + 60);
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(camera.zoom, camera.zoom);
+    ctx.rotate(tiltAngle);
+    ctx.translate(-canvas.width / 2 + camera.x, -canvas.height / 2 + camera.y);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+    ctx.fillRect(-30, -30, canvas.width + 60, canvas.height + 60);
 
     let grd = ctx.createLinearGradient(0, 0, canvas.width, 0);
-    const leftAlpha = Math.min(0.72, 0.18 + dominance / 150 + tension * 0.14); const rightAlpha = Math.min(0.72, 0.18 + (100 - dominance) / 150 + tension * 0.14);
-    grd.addColorStop(0, `${paddle1.color}${Math.floor(leftAlpha * 255).toString(16).padStart(2, '0')}`); grd.addColorStop(0.5, `rgba(0,0,0,${Math.max(0.45, 0.72 - tension * 0.12)})`); grd.addColorStop(1, `${paddle2.color}${Math.floor(rightAlpha * 255).toString(16).padStart(2, '0')}`);
-    ctx.fillStyle = grd; ctx.fillRect(-30, -30, canvas.width + 60, canvas.height + 60);
+    const leftAlpha = Math.min(0.72, 0.18 + dominance / 150 + tension * 0.14);
+    const rightAlpha = Math.min(0.72, 0.18 + (100 - dominance) / 150 + tension * 0.14);
+
+    let p1RenderColor = corruption > 0.5 ? '#adff2f' : paddle1.color;
+    let p2RenderColor = corruption > 0.5 ? '#adff2f' : paddle2.color;
+
+    grd.addColorStop(0, `${p1RenderColor}${Math.floor(leftAlpha * 255).toString(16).padStart(2, '0')}`);
+    grd.addColorStop(0.5, `rgba(0,0,0,${Math.max(0.45, 0.72 - tension * 0.12)})`);
+    grd.addColorStop(1, `${p2RenderColor}${Math.floor(rightAlpha * 255).toString(16).padStart(2, '0')}`);
+
+    ctx.fillStyle = grd;
+    ctx.fillRect(-30, -30, canvas.width + 60, canvas.height + 60);
 
     const glow = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 40, canvas.width / 2, canvas.height / 2, 420);
-    glow.addColorStop(0, `rgba(255,255,255,${0.04 + tension * 0.1 + combatPulse * 0.06})`); glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = glow; ctx.fillRect(-30, -30, canvas.width + 60, canvas.height + 60);
+    glow.addColorStop(0, `rgba(255,255,255,${0.04 + tension * 0.1 + combatPulse * 0.06})`);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(-30, -30, canvas.width + 60, canvas.height + 60);
 
     EffectsManager.drawAmbientParticles(ctx, tension);
     ctx.lineWidth = 1;
@@ -410,26 +468,26 @@ function draw() {
 
     if (window.MutationManager) { window.MutationManager.drawSpores(ctx); window.MutationManager.drawHolograms(ctx); }
 
-const drawPaddleGlow = (p, isP1) => {
+    const drawPaddleGlow = (p, isP1) => {
         const god = GODS[isP1 ? config.p1 : config.p2];
         const active = p.timers.skillDur > 0;
-        
-        if (p.trail && p.timers.ghost === 0) { 
+
+        if (p.trail && p.timers.ghost === 0) {
             p.trail.forEach((pastY, index) => {
-                let alpha = ((index + 1) / p.trail.length) * 0.18; 
+                let alpha = ((index + 1) / p.trail.length) * 0.18;
                 ctx.globalAlpha = alpha;
                 ctx.fillStyle = p.timers.necrosis > 0 ? '#adff2f' : p.color;
                 ctx.fillRect(p.x, pastY, p.width, p.height);
             });
-            ctx.globalAlpha = 1; 
+            ctx.globalAlpha = 1;
         }
 
         ctx.shadowColor = p.timers.necrosis > 0 ? '#0f0' : p.color;
         ctx.shadowBlur = active ? 34 : 20;
         ctx.fillStyle = p.timers.necrosis > 0 ? '#adff2f' : p.color;
         ctx.fillRect(p.x, p.y, p.width, p.height);
-        
-        if (active) { 
+
+        if (active) {
             ctx.globalAlpha = 0.28;
             ctx.fillRect(p.x - 8, p.y - 8, p.width + 16, p.height + 16);
             ctx.globalAlpha = 0.12;
@@ -437,16 +495,16 @@ const drawPaddleGlow = (p, isP1) => {
             ctx.beginPath();
             ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.height * 0.8, 0, Math.PI * 2);
             ctx.fill();
-            ctx.globalAlpha = 1; 
+            ctx.globalAlpha = 1;
         }
-        if (p.shield) { 
+        if (p.shield) {
             ctx.strokeStyle = '#0ff';
             ctx.lineWidth = 3;
             ctx.shadowBlur = 20;
             ctx.beginPath();
             const shieldX = isP1 ? p.x + p.width + 7 : p.x - 7;
             ctx.arc(shieldX, p.y + p.height / 2, p.height * 0.62, -Math.PI / 2, Math.PI / 2, !isP1);
-            ctx.stroke(); 
+            ctx.stroke();
         }
     };
     drawPaddleGlow(paddle1, true); drawPaddleGlow(paddle2, false);
@@ -468,18 +526,40 @@ const drawPaddleGlow = (p, isP1) => {
 
     [ball, ...extraBalls].forEach(b => {
         if (!b.visible) return;
-        let renderColor = b.isVolatile ? '#adff2f' : b.color;
+
+        let isToxic = corruption > 0.3;
+        let currentRadius = isToxic ? b.radius + (Math.sin(arenaTime * 10) * 3 * corruption) : b.radius;
+        let renderColor = isToxic ? '#adff2f' : (b.isVolatile ? '#adff2f' : b.color);
 
         if (b.trail.length > 0) {
-            ctx.beginPath(); ctx.moveTo(b.trail[0].x, b.trail[0].y); for (let i = 1; i < b.trail.length; i++) ctx.lineTo(b.trail[i].x, b.trail[i].y); ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = renderColor; ctx.lineWidth = b.radius * (0.75 + Math.min(1, Math.abs(b.currentSpeed - b.baseSpeed) / 12) * 0.8);
-            ctx.lineCap = 'round'; ctx.globalAlpha = 0.36 + Math.min(0.34, Math.abs(b.currentSpeed - b.baseSpeed) / 30);
-            ctx.shadowBlur = 12 + Math.abs(b.currentSpeed - b.baseSpeed) * 1.2; ctx.shadowColor = renderColor; ctx.stroke(); ctx.globalAlpha = 1;
+            ctx.beginPath(); ctx.moveTo(b.trail[0].x, b.trail[0].y);
+            for (let i = 1; i < b.trail.length; i++) ctx.lineTo(b.trail[i].x, b.trail[i].y);
+            ctx.lineTo(b.x, b.y);
+
+            ctx.strokeStyle = renderColor;
+            ctx.lineWidth = currentRadius * (isToxic ? 1.5 : 0.75 + Math.min(1, Math.abs(b.currentSpeed - b.baseSpeed) / 12) * 0.8);
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = 0.36 + Math.min(0.34, Math.abs(b.currentSpeed - b.baseSpeed) / 30);
+            ctx.shadowBlur = 12 + Math.abs(b.currentSpeed - b.baseSpeed) * 1.2;
+            ctx.shadowColor = renderColor;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
         }
 
         const speedFactor = Math.min(1, Math.abs(b.currentSpeed - b.baseSpeed) / 12);
-        ctx.globalAlpha = 0.12 + speedFactor * 0.16; ctx.fillStyle = renderColor; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius * (2.5 + speedFactor * 2), 0, Math.PI * 2); ctx.fill();
-        ctx.globalAlpha = 1; ctx.shadowBlur = b.glowSize + speedFactor * 20; ctx.shadowColor = renderColor; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 0.12 + speedFactor * 0.16;
+        ctx.fillStyle = renderColor;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, currentRadius * (2.5 + speedFactor * 2), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = b.glowSize + speedFactor * 20;
+        ctx.shadowColor = renderColor;
+        ctx.fillStyle = isToxic ? '#000' : '#fff';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, currentRadius, 0, Math.PI * 2);
+        ctx.fill();
     });
 
     EffectsManager.updateAndDrawParticles(ctx);
