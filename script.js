@@ -69,18 +69,20 @@ function applyConfig() {
     config.powerUps = document.getElementById('cfg-power').value === 'on';
     config.mode = document.getElementById('cfg-mode').value;
 
+    // 1. Apagamos ambos gestores por defecto
     if (window.MutationManager) window.MutationManager.active = false;
     if (window.EclipseManager) window.EclipseManager.active = false;
 
-    let mutationToggle = document.getElementById('cfg-mutation')?.value === 'on';
-    let eclipseToggle = document.getElementById('cfg-eclipse')?.value === 'on';
+    // 2. Detectamos si activaste los modos (soporta selectbox o checkbox)
+    let isMutation = config.mode === 'mutation' || document.getElementById('cfg-mutation')?.value === 'on';
+    let isEclipse = config.mode === 'eclipse' || document.getElementById('cfg-eclipse')?.value === 'on';
 
-    if (mutationToggle && window.MutationManager) {
-        window.MutationManager.active = true;
+    // 3. Inicializamos el modo correcto con sus variables
+    if (isMutation && window.MutationManager) {
         window.MutationManager.init(true);
-    } else if (eclipseToggle && window.EclipseManager) {
-        window.EclipseManager.active = true;
-        if (typeof window.EclipseManager.init === 'function') window.EclipseManager.init();
+    } else if (isEclipse && window.EclipseManager) {
+        // AQUÍ ESTABA EL ERROR: Ahora sí le pasamos el ancho, el alto y lo activamos.
+        window.EclipseManager.init(canvas.width, canvas.height, true);
     }
 
     paddle1.color = c1.color; paddle1.baseHeight = c1.height; paddle1.baseSpeed = c1.speed; paddle1.speed = c1.speed;
@@ -299,8 +301,12 @@ function update() {
     let susaSlow = (paddle1.timers.skillDur > 0 && config.p1 === 'susanoo') || (paddle2.timers.skillDur > 0 && config.p2 === 'susanoo') ? 0.6 : 1;
     let allBalls = [ball, ...extraBalls];
 
+    // --- MANTENIMIENTO DE MODOS ---
     if (window.MutationManager && window.MutationManager.active) {
         window.MutationManager.update(1/60, paddle2, ball);
+    }
+    if (window.EclipseManager && window.EclipseManager.active) {
+        window.EclipseManager.update(allBalls, paddle1, paddle2);
     }
 
     for (let bIndex = allBalls.length - 1; bIndex >= 0; bIndex--) {
@@ -334,6 +340,11 @@ function update() {
             playSound('wall', 0.8);
             EffectsManager.createExplosion(b.x, b.y < 250 ? 0 : canvas.height, '#fff', 8);
             kickCamera(2.5, 0); EffectsManager.addSpeedLines(b.x, b.y, b.color, 3);
+
+            // Genera Eco de Luz al rebotar en paredes si el modo Eclipse está activo
+            if (window.EclipseManager && window.EclipseManager.active) {
+                window.EclipseManager.addLightEcho(b.x, b.y);
+            }
         }
 
         let isHittingP1 = b.x - b.radius < paddle1.x + paddle1.width && b.x + b.radius > paddle1.x && b.y + b.radius > paddle1.y && b.y - b.radius < paddle1.y + paddle1.height;
@@ -375,14 +386,13 @@ function update() {
 
             if (rallyCount > 0 && rallyCount % 5 === 0 && bIndex === 0) showMessage(`¡Rally x${rallyCount}!`, '#fff');
 
-            // --- FÍSICAS DE MUTACIÓN ENCAPSULADAS (Ahora en el lugar correcto) ---
+            // --- FÍSICAS DE MUTACIÓN ENCAPSULADAS ---
             if (window.MutationManager && window.MutationManager.active) {
                 let mutEffects = window.MutationManager.handleCollision(b, pCol, dir, extraBalls, typeof showMessage === 'function' ? showMessage : null, paddle1, paddle2);
                 if (mutEffects.hitstopMod > 0) hitstopTimer = mutEffects.hitstopMod;
                 if (mutEffects.shakeMod > 0) kickCamera(mutEffects.shakeMod, 0.02, dir, 0);
                 if (mutEffects.triggerFlash) triggerFlash('#adff2f', 0.2);
             }
-            // --- FIN FÍSICAS DE MUTACIÓN ---
         }
 
         if (b.x < -20) {
@@ -507,10 +517,14 @@ function draw() {
             ctx.stroke();
         }
     };
-    drawPaddleGlow(paddle1, true); drawPaddleGlow(paddle2, false);
+    
+    drawPaddleGlow(paddle1, true); 
+    drawPaddleGlow(paddle2, false);
+    
     if (paddle1.timers.ghost > 0) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(paddle1.x, paddle1.y, paddle1.width, paddle1.height); }
     if (paddle2.timers.ghost > 0) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(paddle2.x, paddle2.y, paddle2.width, paddle2.height); }
-    drawPaddleStatus(paddle1, true); drawPaddleStatus(paddle2, false);
+    drawPaddleStatus(paddle1, true); 
+    drawPaddleStatus(paddle2, false);
 
     powerUps.forEach(pu => {
         pu.pulse += 0.1; let scale = 1 + Math.sin(pu.pulse) * 0.15; let c = '#fff'; let icon = '?';
@@ -564,6 +578,12 @@ function draw() {
 
     EffectsManager.updateAndDrawParticles(ctx);
 
+    // ---> ESTA ES LA CAPA NEGRA DEL MODO ECLIPSE (Justo encima del juego, pero debajo del UI) <---
+    if (window.EclipseManager && window.EclipseManager.active) {
+        window.EclipseManager.draw(ctx, canvas.width, canvas.height, paddle1, paddle2, [ball, ...extraBalls]);
+    }
+
+    // --- INTERFAZ, MARCADORES Y TEXTOS FLOTANTES ---
     ctx.shadowBlur = 0;
     floatTexts.forEach(ft => {
         ctx.globalAlpha = ft.life / ft.maxLife; ctx.fillStyle = ft.color; ctx.font = 'bold 20px Orbitron'; ctx.textAlign = 'center';
@@ -578,7 +598,6 @@ function draw() {
     if (flashAlpha > 0) { ctx.globalAlpha = flashAlpha; ctx.fillStyle = flashColor; ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40); ctx.globalAlpha = 1; }
 
     if (window.MutationManager) window.MutationManager.drawBlind(ctx, canvas.width, canvas.height);
-    if (window.EclipseManager) window.EclipseManager.draw(ctx, canvas.width, canvas.height, paddle1, paddle2, [ball, ...extraBalls]);
 
     if (countdownRunning) {
         const pulse = 1 + Math.sin(frameCount * 0.3) * 0.06;
@@ -604,7 +623,6 @@ function draw() {
 
     ctx.restore();
 }
-
 // --- GAME LOOP ---
 function gameLoop() {
     if (isPlaying && !isPaused) { update(); draw(); } else if (!isPlaying) { draw(); }
