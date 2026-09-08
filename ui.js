@@ -55,4 +55,48 @@ function buildCharSelect() {
         grid2.appendChild(createCard(false));
     });
 }
+
+// --- CONFIGURACIÓN & PRESETS ---
+
+function showConfig() {
+    syncConfigUI();
+    navTo('screen-config');
+}
+
+function syncConfigUI() {
+    // Sincronizar inputs con el objeto config actual
+    const maxScoreInput = document.getElementById('cfg-max-score');
+    if (maxScoreInput) maxScoreInput.value = config.maxScore || 5;
+
+    // Actualizar estado de Chips / Botones visuales
+    document.querySelectorAll('.chip').forEach(chip => {
+        const key = chip.dataset.key;
+        const val = chip.dataset.value;
+        if (key && config[key] !== undefined) {
+            chip.classList.toggle('active', String(config[key]) === String(val));
+        }
+    });
+}
+
+function setChipValue(key, value, element) {
+    config[key] = value;
+    // Remueve clase active de los hermanos y se la asigna al seleccionado
+    element.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    element.classList.add('active');
+}
+
+function applyPreset(presetType) {
+    if (presetType === 'fast') {
+        config.ballSpeed = 1.4;
+        config.maxScore = 3;
+    } else if (presetType === 'classic') {
+        config.ballSpeed = 1.0;
+        config.maxScore = 5;
+    } else if (presetType === 'chaos') {
+        config.ballSpeed = 1.8;
+        config.maxScore = 10;
+    }
+    syncConfigUI();
+}
+
 buildCharSelect();

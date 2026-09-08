@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    <title>Clash of Gods - Epic Pong</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clash of Gods - Epic Pong</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <!-- ========================================= -->
@@ -32,14 +35,38 @@
                 <h2>Salón de la Fama</h2>
             </div>
             <table class="records-table">
-                <tr><th>Máxima Diferencia</th><td id="rec-diff">0</td></tr>
-                <tr><th>Rally Más Largo</th><td id="rec-rally">0</td></tr>
-                <tr><th>Victorias Raijin</th><td id="rec-win-raijin">0</td></tr>
-                <tr><th>Victorias Fujin</th><td id="rec-win-fujin">0</td></tr>
-                <tr><th>Victorias Kagutsuchi</th><td id="rec-win-kagu">0</td></tr>
-                <tr><th>Victorias Susanoo</th><td id="rec-win-susa">0</td></tr>
-                <tr><th>Victorias Amaterasu</th><td id="rec-win-ama">0</td></tr>
-                <tr><th>Victorias Inari</th><td id="rec-win-inari">0</td></tr>
+                <tr>
+                    <th>Máxima Diferencia</th>
+                    <td id="rec-diff">0</td>
+                </tr>
+                <tr>
+                    <th>Rally Más Largo</th>
+                    <td id="rec-rally">0</td>
+                </tr>
+                <tr>
+                    <th>Victorias Raijin</th>
+                    <td id="rec-win-raijin">0</td>
+                </tr>
+                <tr>
+                    <th>Victorias Fujin</th>
+                    <td id="rec-win-fujin">0</td>
+                </tr>
+                <tr>
+                    <th>Victorias Kagutsuchi</th>
+                    <td id="rec-win-kagu">0</td>
+                </tr>
+                <tr>
+                    <th>Victorias Susanoo</th>
+                    <td id="rec-win-susa">0</td>
+                </tr>
+                <tr>
+                    <th>Victorias Amaterasu</th>
+                    <td id="rec-win-ama">0</td>
+                </tr>
+                <tr>
+                    <th>Victorias Inari</th>
+                    <td id="rec-win-inari">0</td>
+                </tr>
             </table>
             <div class="screen-actions">
                 <button class="btn primary" onclick="navTo('screen-menu')">Volver</button>
@@ -76,64 +103,110 @@
     <!-- ========================================= -->
     <div id="screen-config" class="screen hidden">
         <div class="panel config-panel">
-            <div class="screen-heading">
-                <h2>Configuración</h2>
+            <h1 class="config-title">AJUSTES DE BATALLA</h1>
+
+            <!-- PRESETS RÁPIDOS -->
+            <div class="config-section">
+                <label class="section-label">MODOS RÁPIDOS</label>
+                <div class="preset-buttons">
+                    <button type="button" class="btn-preset" onclick="applyPreset('competitive')">⚔️ Competitivo</button>
+                    <button type="button" class="btn-preset" onclick="applyPreset('chaos')">🔥 Caos Divino</button>
+                    <button type="button" class="btn-preset" onclick="applyPreset('eclipse')">🌑 Eclipse Total</button>
+                    <button type="button" class="btn-preset" onclick="applyPreset('classic')">🏓 Clásico Pong</button>
+                </div>
             </div>
 
-            <div class="config-row">
-                <label for="cfg-mode">Modo de Juego</label>
-                <select id="cfg-mode">
-                    <option value="cpu" selected>1 Jugador (vs CPU)</option>
-                    <option value="2p">2 Jugadores (Local)</option>
-                </select>
+            <!-- MODO DE JUEGO Y ARENA -->
+            <div class="config-grid">
+                <div class="config-card">
+                    <h3>TIPO DE ENFRENTAMIENTO</h3>
+                    <div class="chip-group" id="group-players">
+                        <button type="button" class="chip active" data-value="1p" onclick="selectChip('group-players', this)">1P vs IA</button>
+                        <button type="button" class="chip" data-value="2p" onclick="selectChip('group-players', this)">2P Local</button>
+                    </div>
+
+                    <div id="ai-diff-container" class="sub-setting">
+                        <label>Dificultad IA:</label>
+                        <div class="chip-group" id="group-diff">
+                            <button type="button" class="chip" data-value="easy" onclick="selectChip('group-diff', this)">Fácil</button>
+                            <button type="button" class="chip active" data-value="normal" onclick="selectChip('group-diff', this)">Normal</button>
+                            <button type="button" class="chip" data-value="hard" onclick="selectChip('group-diff', this)">Difícil</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-card">
+                    <h3>ARENA DE BATALLA</h3>
+                    <div class="chip-group" id="group-arena">
+                        <button type="button" class="chip active" data-value="normal" onclick="selectChip('group-arena', this)">Normal</button>
+                        <button type="button" class="chip" data-value="eclipse" onclick="selectChip('group-arena', this)">🌑 Eclipse</button>
+                        <button type="button" class="chip" data-value="mutation" onclick="selectChip('group-arena', this)">☣️ Mutación</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="config-row">
-                <label for="cfg-score">Puntos para ganar</label>
-                <select id="cfg-score">
-                    <option value="5">5 Puntos</option>
-                    <option value="10" selected>10 Puntos (Clásico)</option>
-                    <option value="15">15 Puntos (Largo)</option>
-                    <option value="21">21 Puntos (Épico)</option>
-                </select>
+            <!-- AJUSTES DE REGLAS -->
+            <div class="config-section">
+                <label class="section-label">REGLAS Y FÍSICAS</label>
+                <div class="config-grid">
+                    <div class="setting-item">
+                        <span>Puntos para Ganar:</span>
+                        <input type="number" id="cfg-score" value="5" min="1" max="20" class="input-number">
+                    </div>
+                    <div class="setting-item">
+                        <span>Velocidad de Bola:</span>
+                        <div class="chip-group" id="group-ball-speed">
+                            <button type="button" class="chip" data-value="6" onclick="selectChip('group-ball-speed', this)">Lenta</button>
+                            <button type="button" class="chip active" data-value="8" onclick="selectChip('group-ball-speed', this)">Normal</button>
+                            <button type="button" class="chip" data-value="11" onclick="selectChip('group-ball-speed', this)">Rápida</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="config-row">
-                <label for="cfg-diff">Dificultad IA</label>
-                <select id="cfg-diff">
-                    <option value="easy">Fácil</option>
-                    <option value="normal" selected>Normal</option>
-                    <option value="hard">Imposible</option>
-                </select>
-            </div>
+            <!-- HABILIDADES Y POWER-UPS -->
+            <div class="config-section">
+                <label class="section-label">PODERES Y OBJETOS</label>
+                <div class="config-grid">
+                    <!-- Toggle Habilidades de Dioses -->
+                    <div class="config-card flex-row">
+                        <div>
+                            <h4>Habilidades de Dioses</h4>
+                            <small>Permite usar el poder especial del personaje</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="cfg-god-skills" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
 
-            <div class="config-row">
-                <label for="cfg-power">Power-Ups Especiales</label>
-                <select id="cfg-power">
-                    <option value="on" selected>Activados</option>
-                    <option value="off">Desactivados</option>
-                </select>
-            </div>
+                    <!-- Recarga Habilidades -->
+                    <div class="config-card">
+                        <h4>Enfriamiento de Poderes</h4>
+                        <div class="chip-group" id="group-skill-cd">
+                            <button type="button" class="chip" data-value="0.5" onclick="selectChip('group-skill-cd', this)">Rápido (-50%)</button>
+                            <button type="button" class="chip active" data-value="1" onclick="selectChip('group-skill-cd', this)">Normal</button>
+                            <button type="button" class="chip" data-value="2" onclick="selectChip('group-skill-cd', this)">Lento (+100%)</button>
+                        </div>
+                    </div>
 
-            <div class="config-row">
-                <label for="cfg-mutation">Modo Mutación (Veneno)</label>
-                <select id="cfg-mutation">
-                    <option value="off" selected>Desactivado</option>
-                    <option value="on">Activado</option>
-                </select>
-            </div>
-
-            <div class="config-row">
-                <label for="cfg-eclipse">Modo Eclipse (Oscuridad)</label>
-                <select id="cfg-eclipse">
-                    <option value="off" selected>Desactivado</option>
-                    <option value="on">Activado</option>
-                </select>
+                    <!-- Toggle Power-Ups Arena -->
+                    <div class="config-card flex-row">
+                        <div>
+                            <h4>Power-Ups en Arena</h4>
+                            <small>Genera orbes (Titán, Hielo, Escudo, etc.)</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="cfg-powerups" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <div class="screen-actions">
-                <button class="btn" onclick="navTo('screen-select')">Atrás</button>
-                <button class="btn primary" onclick="startGame()">¡A LA BATALLA!</button>
+                <button type="button" class="btn" onclick="navTo('screen-select')">Volver</button>
+                <button type="button" class="btn primary" onclick="startGame()">¡COMENZAR BATALLA!</button>
             </div>
         </div>
     </div>
@@ -215,7 +288,7 @@
     <!-- JAVASCRIPT -->
     <!-- ========================================= -->
     <script src="config.js"></script>
-    <script src="mobile.js"></script>    
+    <script src="mobile.js"></script>
     <script src="audio.js"></script>
     <script src="ui.js"></script>
     <script src="input.js"></script>
@@ -225,4 +298,5 @@
     <script src="script.js"></script>
 
 </body>
+
 </html>

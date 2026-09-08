@@ -743,94 +743,174 @@ h3 {
 /* CONFIGURACIÓN */
 /* ========================================= */
 
-.config-panel {
-    width: min(600px, 100%);
+/* --- CONFIG MENU STYLING --- */
+.config-title {
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-.config-row {
-    display: flex;
+.config-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
 
+.section-label {
+    display: block;
+    font-size: 11px;
+    font-family: 'Orbitron', sans-serif;
+    color: #888;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.config-card {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.config-card.flex-row {
+    display: flex;
     justify-content: space-between;
     align-items: center;
+}
 
+.config-card h3, .config-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    font-family: 'Orbitron', sans-serif;
+    color: #ddd;
+}
+
+.config-card small {
+    color: #777;
+    font-size: 10px;
+    display: block;
+}
+
+/* CHIPS / SELECTORES VISUALES */
+.chip-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.chip {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ccc;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s ease;
+}
+
+.chip:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.chip.active {
+    background: #fff;
+    color: #000;
+    font-weight: bold;
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+/* PRESETS */
+.preset-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-preset {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: 0.2s;
+}
+
+.btn-preset:hover {
+    border-color: #0ff;
+    color: #0ff;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+}
+
+/* INPUTS Y SWITCHES */
+.input-number {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    width: 60px;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #333; transition: .3s; border-radius: 22px;
+}
+
+.slider:before {
+    position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+    background-color: white; transition: .3s; border-radius: 50%;
+}
+
+input:checked + .slider { background-color: #00ffcc; }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* Pantalla de Configuración Integrada */
+#screen-config {
+    z-index: 100;
+    overflow-y: auto;
+}
+
+#screen-config .panel {
+    width: min(800px, 100%);
+}
+/* Cuando la pantalla está activa */
+#screen-config.active {
+    display: block;
+}
+
+/* Botones de acción al final */
+.config-actions {
+    display: flex;
+    justify-content: center;
     gap: 15px;
-
-    margin-bottom: 12px;
-
-    text-align: left;
-
-    padding: 12px;
-
-    background:
-        rgba(0, 0, 0, 0.28);
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.055);
-
-    border-radius: 10px;
-
-    transition:
-        border-color 0.2s ease,
-        background 0.2s ease;
-}
-
-.config-row:hover {
-    background:
-        rgba(255, 255, 255, 0.025);
-
-    border-color:
-        rgba(255, 255, 255, 0.12);
-}
-
-.config-row label {
-    color: #c0c4cd;
-
-    font-size:
-        clamp(0.65rem, 2.5vw, 0.76rem);
-
-    letter-spacing:
-        0.4px;
-}
-
-.config-row select,
-.config-row input {
-    min-width: 150px;
-
-    background:
-        rgba(8, 10, 15, 0.95);
-
-    color: white;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.15);
-
-    padding:
-        9px 10px;
-
-    font-family: inherit;
-
-    font-size:
-        clamp(0.65rem, 2.5vw, 0.8rem);
-
-    border-radius: 7px;
-
-    outline: none;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.config-row select:focus,
-.config-row input:focus {
-    border-color:
-        var(--c-p1);
-
-    box-shadow:
-        0 0 12px
-        rgba(0, 255, 255, 0.12);
+    margin-top: 25px;
+    padding-bottom: 20px;
 }
 
 /* ========================================= */
@@ -908,11 +988,15 @@ h3 {
     top:
         max(8px, env(safe-area-inset-top));
 
-    left: 0;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
 
     width: 100%;
 
-    max-width: 900px;
+    max-width:
+        min(800px, calc(100vw - 12px));
 
     display: flex;
 
@@ -920,8 +1004,7 @@ h3 {
 
     align-items: flex-start;
 
-    padding:
-        0 clamp(14px, 5vw, 45px);
+    padding: 0 10px;
 }
 
 .player-hud {
