@@ -2,508 +2,220 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Clash of Gods - Epic Pong</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <!-- ========================================= -->
     <!-- MENÚ PRINCIPAL -->
     <!-- ========================================= -->
-
     <div id="screen-menu" class="screen">
         <div class="panel main-menu-panel">
-
             <div class="menu-brand">
                 <h1>Clash of Gods</h1>
                 <h2>Epic Pong</h2>
             </div>
-
             <div class="menu-actions">
-                <button
-                    class="btn primary"
-                    onclick="navTo('screen-select')"
-                >
-                    Jugar
-                </button>
-
-                <button
-                    class="btn"
-                    onclick="showRecords()"
-                >
-                    Récords
-                </button>
+                <button class="btn primary" onclick="navTo('screen-select')">Jugar</button>
+                <button class="btn" onclick="showRecords()">Récords</button>
             </div>
-
         </div>
     </div>
-
 
     <!-- ========================================= -->
     <!-- SALÓN DE LA FAMA -->
     <!-- ========================================= -->
-
     <div id="screen-records" class="screen hidden">
-
         <div class="panel records-panel">
-
             <div class="screen-heading">
                 <h2>Salón de la Fama</h2>
             </div>
-
             <table class="records-table">
-
-                <tr>
-                    <th>Máxima Diferencia</th>
-                    <td id="rec-diff">0</td>
-                </tr>
-
-                <tr>
-                    <th>Rally Más Largo</th>
-                    <td id="rec-rally">0</td>
-                </tr>
-
-                <tr>
-                    <th>Victorias Raijin</th>
-                    <td id="rec-win-raijin">0</td>
-                </tr>
-
-                <tr>
-                    <th>Victorias Fujin</th>
-                    <td id="rec-win-fujin">0</td>
-                </tr>
-
-                <tr>
-                    <th>Victorias Kagutsuchi</th>
-                    <td id="rec-win-kagu">0</td>
-                </tr>
-
-                <tr>
-                    <th>Victorias Susanoo</th>
-                    <td id="rec-win-susa">0</td>
-                </tr>
-
+                <tr><th>Máxima Diferencia</th><td id="rec-diff">0</td></tr>
+                <tr><th>Rally Más Largo</th><td id="rec-rally">0</td></tr>
+                <tr><th>Victorias Raijin</th><td id="rec-win-raijin">0</td></tr>
+                <tr><th>Victorias Fujin</th><td id="rec-win-fujin">0</td></tr>
+                <tr><th>Victorias Kagutsuchi</th><td id="rec-win-kagu">0</td></tr>
+                <tr><th>Victorias Susanoo</th><td id="rec-win-susa">0</td></tr>
+                <tr><th>Victorias Amaterasu</th><td id="rec-win-ama">0</td></tr>
+                <tr><th>Victorias Inari</th><td id="rec-win-inari">0</td></tr>
             </table>
-
             <div class="screen-actions">
-                <button
-                    class="btn primary"
-                    onclick="navTo('screen-menu')"
-                >
-                    Volver
-                </button>
+                <button class="btn primary" onclick="navTo('screen-menu')">Volver</button>
             </div>
-
         </div>
     </div>
-
 
     <!-- ========================================= -->
     <!-- SELECCIÓN DE PERSONAJES -->
     <!-- ========================================= -->
-
     <div id="screen-select" class="screen hidden">
-
         <div class="panel character-select-panel">
-
             <div class="screen-heading">
-                <span class="player-label player-label-p1">
-                    Jugador 1
-                </span>
-
+                <span class="player-label player-label-p1">Jugador 1</span>
                 <h2>Elige tu Dios</h2>
             </div>
-
-            <div
-                class="char-grid"
-                id="grid-p1"
-            ></div>
-
+            <div class="char-grid" id="grid-p1"></div>
 
             <div class="screen-heading opponent-heading">
-                <span class="player-label player-label-p2">
-                    Oponente
-                </span>
-
+                <span class="player-label player-label-p2">Oponente</span>
                 <h2>Elige Dios</h2>
             </div>
-
-            <div
-                class="char-grid"
-                id="grid-p2"
-            ></div>
-
+            <div class="char-grid" id="grid-p2"></div>
 
             <div class="screen-actions">
-
-                <button
-                    class="btn"
-                    onclick="navTo('screen-menu')"
-                >
-                    Volver
-                </button>
-
-                <button
-                    class="btn primary"
-                    onclick="navTo('screen-config')"
-                >
-                    Siguiente
-                </button>
-
+                <button class="btn" onclick="navTo('screen-menu')">Volver</button>
+                <button class="btn primary" onclick="navTo('screen-config')">Siguiente</button>
             </div>
-
         </div>
     </div>
-
 
     <!-- ========================================= -->
     <!-- CONFIGURACIÓN DE PARTIDA -->
     <!-- ========================================= -->
-
     <div id="screen-config" class="screen hidden">
-
         <div class="panel config-panel">
-
             <div class="screen-heading">
                 <h2>Configuración</h2>
             </div>
 
-
             <div class="config-row">
-
-                <label for="cfg-mode">
-                    Modo de Juego
-                </label>
-
+                <label for="cfg-mode">Modo de Juego</label>
                 <select id="cfg-mode">
-
-                    <option
-                        value="cpu"
-                        selected
-                    >
-                        1 Jugador (vs CPU)
-                    </option>
-
-                    <option value="2p">
-                        2 Jugadores (Local)
-                    </option>
-
+                    <option value="cpu" selected>1 Jugador (vs CPU)</option>
+                    <option value="2p">2 Jugadores (Local)</option>
                 </select>
-
             </div>
 
-
             <div class="config-row">
-
-                <label for="cfg-score">
-                    Puntos para ganar
-                </label>
-
+                <label for="cfg-score">Puntos para ganar</label>
                 <select id="cfg-score">
-
-                    <option value="5">
-                        5 Puntos
-                    </option>
-
-                    <option
-                        value="10"
-                        selected
-                    >
-                        10 Puntos (Clásico)
-                    </option>
-
-                    <option value="15">
-                        15 Puntos (Largo)
-                    </option>
-
-                    <option value="21">
-                        21 Puntos (Épico)
-                    </option>
-
+                    <option value="5">5 Puntos</option>
+                    <option value="10" selected>10 Puntos (Clásico)</option>
+                    <option value="15">15 Puntos (Largo)</option>
+                    <option value="21">21 Puntos (Épico)</option>
                 </select>
-
             </div>
 
-
             <div class="config-row">
-
-                <label for="cfg-diff">
-                    Dificultad IA
-                </label>
-
+                <label for="cfg-diff">Dificultad IA</label>
                 <select id="cfg-diff">
-
-                    <option value="easy">
-                        Fácil
-                    </option>
-
-                    <option
-                        value="normal"
-                        selected
-                    >
-                        Normal
-                    </option>
-
-                    <option value="hard">
-                        Imposible
-                    </option>
-
+                    <option value="easy">Fácil</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="hard">Imposible</option>
                 </select>
-
             </div>
-
 
             <div class="config-row">
-
-                <label for="cfg-power">
-                    Power-Ups Especiales
-                </label>
-
+                <label for="cfg-power">Power-Ups Especiales</label>
                 <select id="cfg-power">
-
-                    <option
-                        value="on"
-                        selected
-                    >
-                        Activados
-                    </option>
-
-                    <option value="off">
-                        Desactivados
-                    </option>
-
+                    <option value="on" selected>Activados</option>
+                    <option value="off">Desactivados</option>
                 </select>
-
             </div>
 
+            <div class="config-row">
+                <label for="cfg-mutation">Modo Mutación (Veneno)</label>
+                <select id="cfg-mutation">
+                    <option value="off" selected>Desactivado</option>
+                    <option value="on">Activado</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label for="cfg-eclipse">Modo Eclipse (Oscuridad)</label>
+                <select id="cfg-eclipse">
+                    <option value="off" selected>Desactivado</option>
+                    <option value="on">Activado</option>
+                </select>
+            </div>
 
             <div class="screen-actions">
-
-                <button
-                    class="btn"
-                    onclick="navTo('screen-select')"
-                >
-                    Atrás
-                </button>
-
-                <button
-                    class="btn primary"
-                    onclick="startGame()"
-                >
-                    ¡A LA BATALLA!
-                </button>
-
+                <button class="btn" onclick="navTo('screen-select')">Atrás</button>
+                <button class="btn primary" onclick="startGame()">¡A LA BATALLA!</button>
             </div>
-
         </div>
     </div>
-
 
     <!-- ========================================= -->
     <!-- PARTIDA -->
     <!-- ========================================= -->
-
-    <div
-        id="screen-game"
-        class="screen hidden"
-    >
-
+    <div id="screen-game" class="screen hidden">
         <!-- HUD -->
         <div id="game-ui-layer">
-
             <div class="score-board">
-
                 <div class="player-hud player-hud-p1">
-
-                    <span class="player-name">
-                        P1
-                    </span>
-
-                    <span
-                        class="score p1"
-                        id="score1"
-                    >
-                        0
-                    </span>
-
+                    <span class="player-name">P1</span>
+                    <span class="score p1" id="score1">0</span>
                 </div>
-
-
-                <div class="arena-divider">
-                    <span></span>
-                </div>
-
-
+                <div class="arena-divider"><span></span></div>
                 <div class="player-hud player-hud-p2">
-
-                    <span class="player-name">
-                        P2
-                    </span>
-
-                    <span
-                        class="score p2"
-                        id="score2"
-                    >
-                        0
-                    </span>
-
+                    <span class="player-name">P2</span>
+                    <span class="score p2" id="score2">0</span>
                 </div>
-
             </div>
-
         </div>
 
-
         <!-- BOTÓN DE PAUSA -->
-        <button
-            class="btn game-pause-btn"
-            onclick="togglePause()"
-            aria-label="Pausar partida"
-        >
+        <button class="btn game-pause-btn" onclick="togglePause()" aria-label="Pausar partida">
             Pausa
         </button>
 
-
         <!-- ARENA -->
         <div id="game-container">
-
-            <canvas
-                id="gameCanvas"
-                width="800"
-                height="500"
-            ></canvas>
-
+            <canvas id="gameCanvas" width="800" height="500"></canvas>
         </div>
-
 
         <!-- CONTROLES -->
         <div class="game-controls">
-
             <div class="controls-info">
-                P1: W/S
-                <span class="controls-separator">|</span>
-                P2: Flechas
-                <span class="controls-separator">|</span>
-                Habilidades:
-                Espacio / Enter
-                <span class="controls-separator">|</span>
+                P1: W/S <span class="controls-separator">|</span>
+                P2: Flechas <span class="controls-separator">|</span>
+                Habilidades: Espacio / Enter <span class="controls-separator">|</span>
                 Pausa: P / Esc
             </div>
-
         </div>
-
     </div>
-
 
     <!-- ========================================= -->
     <!-- PAUSA -->
     <!-- ========================================= -->
-
-    <div
-        id="screen-pause"
-        class="screen hidden"
-    >
-
+    <div id="screen-pause" class="screen hidden">
         <div class="panel pause-panel">
-
             <div class="screen-heading">
-
-                <span class="pause-kicker">
-                    Combate interrumpido
-                </span>
-
+                <span class="pause-kicker">Combate interrumpido</span>
                 <h1>PAUSA</h1>
-
             </div>
-
-
             <div class="pause-actions">
-
-                <button
-                    class="btn primary"
-                    onclick="togglePause()"
-                >
-                    Reanudar
-                </button>
-
-                <button
-                    class="btn"
-                    onclick="restartGame()"
-                >
-                    Reiniciar Batalla
-                </button>
-
-                <button
-                    class="btn"
-                    onclick="quitToMenu()"
-                >
-                    Abandonar
-                </button>
-
+                <button class="btn primary" onclick="togglePause()">Reanudar</button>
+                <button class="btn" onclick="restartGame()">Reiniciar Batalla</button>
+                <button class="btn" onclick="quitToMenu()">Abandonar</button>
             </div>
-
         </div>
-
     </div>
-
 
     <!-- ========================================= -->
     <!-- RESULTADO -->
     <!-- ========================================= -->
-
-    <div
-        id="screen-result"
-        class="screen hidden"
-    >
-
+    <div id="screen-result" class="screen hidden">
         <div class="panel result-panel">
-
             <div class="result-content">
-
-                <span class="result-kicker">
-                    Combate finalizado
-                </span>
-
-                <h1 id="result-title">
-                    ¡VICTORIA!
-                </h1>
-
-                <p
-                    id="result-desc"
-                    class="result-description"
-                ></p>
-
+                <span class="result-kicker">Combate finalizado</span>
+                <h1 id="result-title">¡VICTORIA!</h1>
+                <p id="result-desc" class="result-description"></p>
             </div>
-
-
             <div class="screen-actions">
-
-                <button
-                    class="btn primary"
-                    onclick="navTo('screen-menu')"
-                >
-                    Menú Principal
-                </button>
-
+                <button class="btn primary" onclick="navTo('screen-menu')">Menú Principal</button>
             </div>
-
         </div>
-
     </div>
-
 
     <!-- ========================================= -->
     <!-- JAVASCRIPT -->
     <!-- ========================================= -->
-
+    <script src="mutation.js"></script>
     <script src="script.js"></script>
-
 </body>
 </html>
