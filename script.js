@@ -43,7 +43,19 @@ EffectsManager.initAmbientParticles(canvas.width, canvas.height);
 
 let paddle1 = { x: 20, y: 200, width: 12, height: 100, baseHeight: 100, speed: 8, baseSpeed: 8, color: '#fff', shield: false, trail: [], timers: { titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 } };
 let paddle2 = { x: 768, y: 200, width: 12, height: 100, baseHeight: 100, speed: 6, baseSpeed: 6, color: '#fff', shield: false, trail: [], timers: { titan: 0, hielo: 0, ghost: 0, invert: 0, skillCd: 0, skillDur: 0, necrosis: 0 } };
-let ball = { x: 400, y: 250, radius: 10, vx: 0, vy: 0, baseSpeed: 7, currentSpeed: 7, maxSpeed: 22, color: '#fff', glowSize: 15, lastHitBy: null, trail: [], isVolatile: false, visible: true, volatileTimer: 0 };
+let ball = {
+    x: 400, y: 250, radius: 10,
+    vx: 0, vy: 0,
+    baseSpeed: 7, currentSpeed: 7, maxSpeed: 22,
+    color: '#fff', glowSize: 15,
+    lastHitBy: null,
+    trail: [],
+    isVolatile: false,
+    visible: true,
+    volatileTimer: 0,
+    isLaunching: false,
+    _launched: false      
+};
 let powerUps = [];
 
 function showMessage(text, color, duration = 60, x = canvas.width / 2, y = canvas.height / 4) {
@@ -201,7 +213,8 @@ function endGame() {
 function launchBall(direction) {
     ball.x = canvas.width / 2; ball.y = canvas.height / 2; ball.currentSpeed = ball.baseSpeed; ball.color = '#fff';
     ball.glowSize = 15; ball.trail = []; ball.isVolatile = false; ball.visible = true; ball.volatileTimer = 0;
-
+    ball.isLaunching = false; 
+    ball._launched = false;    
     let angle = (Math.random() * Math.PI / 4) - Math.PI / 8;
     ball.vx = direction * ball.currentSpeed * Math.cos(angle); ball.vy = ball.currentSpeed * Math.sin(angle);
     rallyCount = 0; ball.lastHitBy = null; extraBalls = [];
@@ -239,16 +252,29 @@ function scorePoint(player) {
 
 // --- SKILLS ---
 function activateSkill(playerNum) {
-    if (isPaused || !config.godSkills) return;
+    // 1. No se puede activar si el juego está en pausa, las habilidades están desactivadas,
+    //    o si estamos en la cuenta atrás inicial.
+    if (isPaused || !config.godSkills || countdownRunning) return;
 
+    // 2. Obtener el jugador que activa y su dios.
     let p = playerNum === 1 ? paddle1 : paddle2;
     let god = GODS[playerNum === 1 ? config.p1 : config.p2];
 
+    // 3. El propio jugador no puede tener habilidad en curso ni en cooldown.
     if (p.timers.skillCd > 0 || p.timers.skillDur > 0) return;
 
+    // 4. 🔒 NUEVO: El rival tampoco puede tener una habilidad activa.
+    let rival = playerNum === 1 ? paddle2 : paddle1;
+    if (rival.timers.skillDur > 0) {
+        // Opcional: mostrar un mensaje para que el jugador sepa por qué no activa.
+        showMessage('¡Espera a que termine la habilidad rival!', '#ff0', 45);
+        return;
+    }
+
+    // 5. Calcular cooldown final.
     let finalCd = god.skill.cd * (config.skillCdMult || 1);
 
-    // Si el modo Mutación está activo, intenta disparar la inyección tóxica
+    // 6. Modo Mutación (inyección tóxica).
     if (window.MutationManager && window.MutationManager.active) {
         let triggered = window.MutationManager.trigger(
             playerNum,
@@ -268,12 +294,12 @@ function activateSkill(playerNum) {
         }
     }
 
-    // Asignar cooldown y duración (Fujin tiene duración extendida)
+    // 7. Asignar cooldown y duración (Fujin tiene duración extendida).
     p.timers.skillCd = finalCd;
     let duration = (god.id === 'fujin') ? 300 : god.skill.dur;
     p.timers.skillDur = duration;
 
-    // Efectos comunes al activar cualquier habilidad
+    // 8. Efectos comunes al activar.
     playSound('skill', 1.5);
     triggerFlash(god.color, 0.18);
     kickCamera(12, 0.02, p.x < canvas.width / 2 ? -2 : 2);
@@ -285,11 +311,10 @@ function activateSkill(playerNum) {
     );
     showMessage(`¡${god.skill.name}!`, god.color, 90, p.x < canvas.width / 2 ? 150 : canvas.width - 150, p.y);
 
-    // --- Llamada genérica a la activación de cada dios ---
+    // 9. Llamada a la lógica específica del dios.
     if (Skills[god.id] && Skills[god.id].activate) {
         Skills[god.id].activate(playerNum, p, god, ball, extraBalls);
     } else {
-        // Fallback por si falta algún dios
         console.warn('Habilidad no implementada para', god.id);
     }
 }
@@ -312,7 +337,7 @@ function predictBallY(b, targetX) {
 }
 
 // --- MAIN UPDATE ---
-// --- MAIN UPDATE (versión refactorizada con Skills) ---
+// --- MAIN UPDATE (versión final con Fujin mejorado) ---
 function update() {
     if (!isPlaying || isPaused) return;
 
@@ -324,7 +349,7 @@ function update() {
     frameCount++;
     updateImmersiveEffects();
 
-    // --- Cuenta atrás inicial ---
+    // --- Cuenta atrás ---
     if (countdownRunning) {
         countdownFrames--;
         const nextValue = Math.ceil(countdownFrames / 50);
@@ -352,7 +377,7 @@ function update() {
         if (floatTexts[i].life <= 0) floatTexts.splice(i, 1);
     }
 
-    // --- Actualización de paletas (temporizadores, altura, trail) ---
+    // --- Paletas (temporizadores, altura, trail) ---
     [paddle1, paddle2].forEach(p => {
         if (p.timers.titan > 0) {
             p.height = p.baseHeight * 1.8;
@@ -368,12 +393,11 @@ function update() {
             if (p.timers[t] > 0) p.timers[t]--;
         });
         p.y = Math.max(0, Math.min(p.y, canvas.height - p.height));
-
         p.trail.push(p.y);
         if (p.trail.length > 6) p.trail.shift();
     });
 
-    // --- Generación de Power-ups ---
+    // --- Power-ups ---
     if (config.powerUps && powerUps.length < 2 && frameCount % 350 === 0 && Math.random() > 0.3) {
         const types = ['titan', 'hielo', 'ghost', 'multi', 'invert', 'shield'];
         const weights = [0.25, 0.25, 0.1, 0.15, 0.15, 0.1];
@@ -393,7 +417,7 @@ function update() {
         });
     }
 
-    // --- Movimiento del Jugador 1 ---
+    // --- Movimiento P1 ---
     let necrosisMult1 = paddle1.timers.necrosis > 0 ? 0.4 : 1;
     let p1Speed = (paddle1.timers.hielo > 0 ? paddle1.baseSpeed * 0.4 : paddle1.baseSpeed) * necrosisMult1;
     let p1Dir = 0;
@@ -403,7 +427,7 @@ function update() {
     if (p1Dir === -1 && paddle1.y > 0) paddle1.y -= p1Speed;
     if (p1Dir === 1 && paddle1.y < canvas.height - paddle1.height) paddle1.y += p1Speed;
 
-    // --- Movimiento del Jugador 2 (2P o IA) ---
+    // --- Movimiento P2 ---
     let necrosisMult2 = paddle2.timers.necrosis > 0 ? 0.4 : 1;
     let p2Speed = (paddle2.timers.hielo > 0 ? paddle2.speed * 0.4 : paddle2.speed) * necrosisMult2;
 
@@ -437,7 +461,6 @@ function update() {
         }
         paddle2.y = Math.max(0, Math.min(paddle2.y, canvas.height - paddle2.height));
 
-        // IA usa habilidad si procede
         if (ball.vx <= 0) paddle2.skillEvaluatedThisRally = false;
         if (config.godSkills && paddle2.timers.skillCd === 0 && paddle2.timers.skillDur === 0 && !paddle2.skillEvaluatedThisRally) {
             if (ball.vx > 0 && Math.abs(paddle2.x - ball.x) < 280) {
@@ -448,14 +471,10 @@ function update() {
         }
     }
 
-    // --- Preparar lista de todas las bolas ---
+    // --- Todas las bolas ---
     let allBalls = [ball, ...extraBalls];
 
-    // ============================================================
-    //  APLICACIÓN DE HABILIDADES DE DIOSES (refactorizado)
-    // ============================================================
-
-    // --- RAIJIN ---
+    // --- Habilidades de dioses (update) ---
     if (config.p1 === 'raijin' && paddle1.timers.skillDur > 0) {
         Skills.raijin.update(paddle1, paddle2, 1, allBalls, frameCount);
     }
@@ -463,7 +482,6 @@ function update() {
         Skills.raijin.update(paddle2, paddle1, -1, allBalls, frameCount);
     }
 
-    // --- FUJIN ---
     if (config.p1 === 'fujin' && paddle1.timers.skillDur > 0) {
         Skills.fujin.update(paddle1, paddle2, 1, allBalls, frameCount);
     }
@@ -471,7 +489,6 @@ function update() {
         Skills.fujin.update(paddle2, paddle1, -1, allBalls, frameCount);
     }
 
-    // --- KAGUTSUCHI ---
     if (config.p1 === 'kagutsuchi' && paddle1.timers.skillDur > 0) {
         Skills.kagutsuchi.update(paddle1, paddle2, 1, allBalls, frameCount);
     }
@@ -479,7 +496,6 @@ function update() {
         Skills.kagutsuchi.update(paddle2, paddle1, -1, allBalls, frameCount);
     }
 
-    // --- SUSANOO ---
     if (config.p1 === 'susanoo' && paddle1.timers.skillDur > 0) {
         Skills.susanoo.update(paddle1, paddle2, 1, allBalls, frameCount);
     }
@@ -487,7 +503,6 @@ function update() {
         Skills.susanoo.update(paddle2, paddle1, -1, allBalls, frameCount);
     }
 
-    // --- AMATERASU (sin efecto continuo, pero se llama por si acaso) ---
     if (config.p1 === 'amaterasu' && paddle1.timers.skillDur > 0) {
         Skills.amaterasu.update(paddle1, paddle2, 1, allBalls, frameCount);
     }
@@ -495,7 +510,6 @@ function update() {
         Skills.amaterasu.update(paddle2, paddle1, -1, allBalls, frameCount);
     }
 
-    // --- INARI (sin efecto continuo) ---
     if (config.p1 === 'inari' && paddle1.timers.skillDur > 0) {
         Skills.inari.update(paddle1, paddle2, 1, allBalls, frameCount);
     }
@@ -503,11 +517,11 @@ function update() {
         Skills.inari.update(paddle2, paddle1, -1, allBalls, frameCount);
     }
 
-    // --- Efecto de Susanoo: ralentización global ---
+    // --- Susanoo ralentiza ---
     let susaSlow = (paddle1.timers.skillDur > 0 && config.p1 === 'susanoo') ||
                    (paddle2.timers.skillDur > 0 && config.p2 === 'susanoo') ? 0.6 : 1;
 
-    // --- Actualización de Mutation y Eclipse ---
+    // --- Mutation y Eclipse ---
     if (window.MutationManager && window.MutationManager.active) {
         window.MutationManager.update(1 / 60, paddle2, ball);
     }
@@ -515,26 +529,20 @@ function update() {
         window.EclipseManager.update(allBalls, paddle1, paddle2);
     }
 
-    // ============================================================
-    //  BUCLE DE FÍSICA Y COLISIONES
-    // ============================================================
-
-    // Bandera para evitar colisiones durante la espiral de Fujin
+    // --- Bandera: Fujin activo? ---
     let fujinActive = (config.p1 === 'fujin' && paddle1.timers.skillDur > 0) ||
                       (config.p2 === 'fujin' && paddle2.timers.skillDur > 0);
 
+    // --- Bucle de física ---
     for (let bIndex = allBalls.length - 1; bIndex >= 0; bIndex--) {
         let b = allBalls[bIndex];
 
-        // Movimiento con posible ralentización de Susanoo
         b.x += b.vx * susaSlow;
         b.y += b.vy * susaSlow;
-
-        // Actualizar trail
         b.trail.push({ x: b.x, y: b.y });
         if (b.trail.length > 8) b.trail.shift();
 
-        // --- Colisión con power-ups (solo si la bola tiene un dueño) ---
+        // Power-ups
         if (b.lastHitBy) {
             for (let i = powerUps.length - 1; i >= 0; i--) {
                 let pu = powerUps[i];
@@ -579,7 +587,8 @@ function update() {
                             trail: [],
                             isVolatile: false,
                             visible: true,
-                            volatileTimer: 0
+                            volatileTimer: 0,
+                            isLaunching: false   // ← Añadir
                         });
                         createImpact(pu.x, pu.y, '#fff', 2);
                         showMessage('MULTIBOLA', '#fff');
@@ -589,7 +598,7 @@ function update() {
             }
         }
 
-        // --- Rebote en paredes superior/inferior (solo si NO está activo Fujin) ---
+        // --- Rebote paredes (solo si NO hay Fujin activo) ---
         if (!fujinActive) {
             if (b.y - b.radius < 0 || b.y + b.radius > canvas.height) {
                 b.vy = -b.vy;
@@ -604,95 +613,136 @@ function update() {
             }
         }
 
-        // --- Colisión con paletas (solo si NO está activo Fujin) ---
-        if (!fujinActive) {
-            let isHittingP1 = b.x - b.radius < paddle1.x + paddle1.width &&
-                              b.x + b.radius > paddle1.x &&
-                              b.y + b.radius > paddle1.y &&
-                              b.y - b.radius < paddle1.y + paddle1.height;
+        // --- Colisión con paletas ---
+        let isHittingP1 = b.x - b.radius < paddle1.x + paddle1.width &&
+                          b.x + b.radius > paddle1.x &&
+                          b.y + b.radius > paddle1.y &&
+                          b.y - b.radius < paddle1.y + paddle1.height;
 
-            let isHittingP2 = b.x - b.radius < paddle2.x + paddle2.width &&
-                              b.x + b.radius > paddle2.x &&
-                              b.y + b.radius > paddle2.y &&
-                              b.y - b.radius < paddle2.y + paddle2.height;
+        let isHittingP2 = b.x - b.radius < paddle2.x + paddle2.width &&
+                          b.x + b.radius > paddle2.x &&
+                          b.y + b.radius > paddle2.y &&
+                          b.y - b.radius < paddle2.y + paddle2.height;
 
-            let pCol = null;
+        let pCol = null;
+
+        // --- LÓGICA DE COLISIÓN CON FUJIN (mejorada) ---
+        if (fujinActive) {
+            let fujinPaddle = config.p1 === 'fujin' ? paddle1 : paddle2;
+            let rivalPaddle = config.p1 === 'fujin' ? paddle2 : paddle1;
+
+            // La paleta de Fujin siempre puede golpear (si no está fantasma)
+            if (isHittingP1 && paddle1 === fujinPaddle && paddle1.timers.ghost === 0 && b.vx < 0) {
+                pCol = paddle1;
+            } else if (isHittingP2 && paddle2 === fujinPaddle && paddle2.timers.ghost === 0 && b.vx > 0) {
+                pCol = paddle2;
+            }
+
+            // Si la pelota está en modo lanzamiento, el rival también puede golpearla
+            if (b.isLaunching) {
+                if (isHittingP1 && paddle1 === rivalPaddle && paddle1.timers.ghost === 0 && b.vx < 0) {
+                    pCol = paddle1;
+                } else if (isHittingP2 && paddle2 === rivalPaddle && paddle2.timers.ghost === 0 && b.vx > 0) {
+                    pCol = paddle2;
+                }
+
+                // Si el rival la golpea, desactivamos la habilidad de Fujin y restauramos la pelota
+                if (pCol === rivalPaddle) {
+                    // Desactivar la habilidad de Fujin
+                    if (config.p1 === 'fujin') {
+                        paddle1.timers.skillDur = 0;
+                    } else if (config.p2 === 'fujin') {
+                        paddle2.timers.skillDur = 0;
+                    }
+                    // Restaurar la pelota a estado normal
+                    b.isLaunching = false;
+                    b._launched = false;
+                    b.color = '#fff';
+                    b.glowSize = 15;
+                    showMessage('¡BLOQUEO DE VENTISCA!', '#aaddff', 45);
+                    // NOTA: El rebote se calculará más abajo con el código común,
+                    // pero ahora pCol es la paleta rival y el rebote se hará normalmente.
+                }
+            }
+        } else {
+            // Comportamiento normal (sin Fujin activo)
             if (isHittingP1 && paddle1.timers.ghost === 0 && b.vx < 0) pCol = paddle1;
             else if (isHittingP2 && paddle2.timers.ghost === 0 && b.vx > 0) pCol = paddle2;
+        }
 
-            if (pCol) {
-                let attackerPaddle = pCol === paddle1 ? paddle2 : paddle1;
-                let attackerGod = pCol === paddle1 ? config.p2 : config.p1;
+        // --- Si hay colisión con una paleta ---
+        if (pCol) {
+            let attackerPaddle = pCol === paddle1 ? paddle2 : paddle1;
+            let attackerGod = pCol === paddle1 ? config.p2 : config.p1;
 
-                // Efectos especiales de algunos dioses al golpear
-                if (attackerGod === 'raijin' && attackerPaddle.timers.skillDur > 0) {
-                    pCol.timers.necrosis = 90;
-                    showMessage('¡ELECTROCUTADO!', '#ffff00', 45, pCol.x, pCol.y);
-                    createImpact(pCol.x, pCol.y + pCol.height / 2, '#ffff00', 1.8);
-                }
-                if (attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0) {
-                    b.color = pCol.color; // Restauramos color al golpear con Fujin
-                }
+            // Efectos especiales de algunos dioses al golpear
+            if (attackerGod === 'raijin' && attackerPaddle.timers.skillDur > 0) {
+                pCol.timers.necrosis = 90;
+                showMessage('¡ELECTROCUTADO!', '#ffff00', 45, pCol.x, pCol.y);
+                createImpact(pCol.x, pCol.y + pCol.height / 2, '#ffff00', 1.8);
+            }
+            if (attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0) {
+                b.color = pCol.color;
+            }
 
-                b.lastHitBy = pCol;
-                if (bIndex === 0) rallyCount++;
+            b.lastHitBy = pCol;
+            if (bIndex === 0) rallyCount++;
 
-                if (window.MutationManager && window.MutationManager.active) {
-                    window.MutationManager.addPoison(15, paddle2, showMessage);
-                }
+            if (window.MutationManager && window.MutationManager.active) {
+                window.MutationManager.addPoison(15, paddle2, showMessage);
+            }
 
-                let isHeavy = GODS[pCol === paddle1 ? config.p1 : config.p2].id === 'kagutsuchi';
-                let intensity = Math.min(2, 1 + rallyCount * 0.1) * (isHeavy ? 1.5 : 1);
-                let intersectY = b.y - (pCol.y + pCol.height / 2);
-                let normalizedIntersectY = intersectY / (pCol.height / 2);
-                let isCrit = Math.abs(normalizedIntersectY) > 0.85;
+            let isHeavy = GODS[pCol === paddle1 ? config.p1 : config.p2].id === 'kagutsuchi';
+            let intensity = Math.min(2, 1 + rallyCount * 0.1) * (isHeavy ? 1.5 : 1);
+            let intersectY = b.y - (pCol.y + pCol.height / 2);
+            let normalizedIntersectY = intersectY / (pCol.height / 2);
+            let isCrit = Math.abs(normalizedIntersectY) > 0.85;
 
-                if (isCrit) hitstopTimer = 6;
-                else if (rallyCount > 5) hitstopTimer = 3;
+            if (isCrit) hitstopTimer = 6;
+            else if (rallyCount > 5) hitstopTimer = 3;
 
-                if (isCrit) {
-                    intensity *= 1.5;
-                    playSound('critical', intensity);
-                    showMessage('CRÍTICO', '#f00');
-                } else {
-                    playSound(pCol === paddle1 ? 'hit1' : 'hit2', intensity);
-                }
+            if (isCrit) {
+                intensity *= 1.5;
+                playSound('critical', intensity);
+                showMessage('CRÍTICO', '#f00');
+            } else {
+                playSound(pCol === paddle1 ? 'hit1' : 'hit2', intensity);
+            }
 
-                if (!(attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0)) {
-                    b.color = pCol.color;
-                }
-                b.glowSize = Math.min(30, 15 + rallyCount * 1.5);
-                let bounceAngle = normalizedIntersectY * (Math.PI / 3);
-                if (isCrit) bounceAngle *= 1.2;
-                let dir = pCol === paddle1 ? 1 : -1;
+            if (!(attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0)) {
+                b.color = pCol.color;
+            }
+            b.glowSize = Math.min(30, 15 + rallyCount * 1.5);
+            let bounceAngle = normalizedIntersectY * (Math.PI / 3);
+            if (isCrit) bounceAngle *= 1.2;
+            let dir = pCol === paddle1 ? 1 : -1;
 
-                kickCamera(isCrit ? 8 : 3.5, isCrit ? 0.012 : 0.003, dir === 1 ? 1 : -1, normalizedIntersectY * 1.5);
+            kickCamera(isCrit ? 8 : 3.5, isCrit ? 0.012 : 0.003, dir === 1 ? 1 : -1, normalizedIntersectY * 1.5);
 
-                b.currentSpeed = Math.min(b.maxSpeed, b.baseSpeed + (rallyCount * (isHeavy ? 0.8 : 0.5)) + (isCrit ? 2 : 0));
-                paddle2.speed = Math.min(15, paddle2.baseSpeed + rallyCount * 0.3);
+            b.currentSpeed = Math.min(b.maxSpeed, b.baseSpeed + (rallyCount * (isHeavy ? 0.8 : 0.5)) + (isCrit ? 2 : 0));
+            paddle2.speed = Math.min(15, paddle2.baseSpeed + rallyCount * 0.3);
 
-                b.vx = dir * b.currentSpeed * Math.cos(bounceAngle);
-                b.vy = b.currentSpeed * Math.sin(bounceAngle);
-                b.x = dir === 1 ? pCol.x + pCol.width + b.radius : pCol.x - b.radius;
+            b.vx = dir * b.currentSpeed * Math.cos(bounceAngle);
+            b.vy = b.currentSpeed * Math.sin(bounceAngle);
+            b.x = dir === 1 ? pCol.x + pCol.width + b.radius : pCol.x - b.radius;
 
-                if (rallyCount > 0 && rallyCount % 5 === 0 && bIndex === 0) {
-                    showMessage(`¡Rally x${rallyCount}!`, '#fff');
-                }
+            if (rallyCount > 0 && rallyCount % 5 === 0 && bIndex === 0) {
+                showMessage(`¡Rally x${rallyCount}!`, '#fff');
+            }
 
-                if (window.MutationManager && window.MutationManager.active) {
-                    let mutEffects = window.MutationManager.handleCollision(
-                        b, pCol, dir, extraBalls,
-                        typeof showMessage === 'function' ? showMessage : null,
-                        paddle1, paddle2
-                    );
-                    if (mutEffects.hitstopMod > 0) hitstopTimer = mutEffects.hitstopMod;
-                    if (mutEffects.shakeMod > 0) kickCamera(mutEffects.shakeMod, 0.02, dir, 0);
-                    if (mutEffects.triggerFlash) triggerFlash('#adff2f', 0.2);
-                }
+            if (window.MutationManager && window.MutationManager.active) {
+                let mutEffects = window.MutationManager.handleCollision(
+                    b, pCol, dir, extraBalls,
+                    typeof showMessage === 'function' ? showMessage : null,
+                    paddle1, paddle2
+                );
+                if (mutEffects.hitstopMod > 0) hitstopTimer = mutEffects.hitstopMod;
+                if (mutEffects.shakeMod > 0) kickCamera(mutEffects.shakeMod, 0.02, dir, 0);
+                if (mutEffects.triggerFlash) triggerFlash('#adff2f', 0.2);
             }
         }
 
-        // --- Gol fuera (sin cambios) ---
+        // --- Gol fuera ---
         if (b.x < -20) {
             if (paddle1.shield) {
                 paddle1.shield = false;
