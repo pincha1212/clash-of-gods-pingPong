@@ -337,7 +337,6 @@ function predictBallY(b, targetX) {
 }
 
 // --- MAIN UPDATE ---
-// --- MAIN UPDATE (versión final con Fujin mejorado) ---
 function update() {
     if (!isPlaying || isPaused) return;
 
@@ -529,9 +528,7 @@ function update() {
         window.EclipseManager.update(allBalls, paddle1, paddle2);
     }
 
-    // --- Bandera: Fujin activo? ---
-    let fujinActive = (config.p1 === 'fujin' && paddle1.timers.skillDur > 0) ||
-                      (config.p2 === 'fujin' && paddle2.timers.skillDur > 0);
+    // --- (Eliminada variable fujinActive) ---
 
     // --- Bucle de física ---
     for (let bIndex = allBalls.length - 1; bIndex >= 0; bIndex--) {
@@ -588,7 +585,7 @@ function update() {
                             isVolatile: false,
                             visible: true,
                             volatileTimer: 0,
-                            isLaunching: false   // ← Añadir
+                            isLaunching: false
                         });
                         createImpact(pu.x, pu.y, '#fff', 2);
                         showMessage('MULTIBOLA', '#fff');
@@ -598,22 +595,20 @@ function update() {
             }
         }
 
-        // --- Rebote paredes (solo si NO hay Fujin activo) ---
-        if (!fujinActive) {
-            if (b.y - b.radius < 0 || b.y + b.radius > canvas.height) {
-                b.vy = -b.vy;
-                b.y = b.y - b.radius < 0 ? b.radius : canvas.height - b.radius;
-                playSound('wall', 0.8);
-                EffectsManager.createExplosion(b.x, b.y < 250 ? 0 : canvas.height, '#fff', 8);
-                kickCamera(2.5, 0);
-                EffectsManager.addSpeedLines(b.x, b.y, b.color, 3);
-                if (window.EclipseManager && window.EclipseManager.active) {
-                    window.EclipseManager.addLightEcho(b.x, b.y);
-                }
+        // --- Rebote paredes ---
+        if (b.y - b.radius < 0 || b.y + b.radius > canvas.height) {
+            b.vy = -b.vy;
+            b.y = b.y - b.radius < 0 ? b.radius : canvas.height - b.radius;
+            playSound('wall', 0.8);
+            EffectsManager.createExplosion(b.x, b.y < 250 ? 0 : canvas.height, '#fff', 8);
+            kickCamera(2.5, 0);
+            EffectsManager.addSpeedLines(b.x, b.y, b.color, 3);
+            if (window.EclipseManager && window.EclipseManager.active) {
+                window.EclipseManager.addLightEcho(b.x, b.y);
             }
         }
 
-        // --- Colisión con paletas ---
+        // --- Colisión con paletas (comportamiento normal) ---
         let isHittingP1 = b.x - b.radius < paddle1.x + paddle1.width &&
                           b.x + b.radius > paddle1.x &&
                           b.y + b.radius > paddle1.y &&
@@ -626,48 +621,11 @@ function update() {
 
         let pCol = null;
 
-        // --- LÓGICA DE COLISIÓN CON FUJIN (mejorada) ---
-        if (fujinActive) {
-            let fujinPaddle = config.p1 === 'fujin' ? paddle1 : paddle2;
-            let rivalPaddle = config.p1 === 'fujin' ? paddle2 : paddle1;
-
-            // La paleta de Fujin siempre puede golpear (si no está fantasma)
-            if (isHittingP1 && paddle1 === fujinPaddle && paddle1.timers.ghost === 0 && b.vx < 0) {
-                pCol = paddle1;
-            } else if (isHittingP2 && paddle2 === fujinPaddle && paddle2.timers.ghost === 0 && b.vx > 0) {
-                pCol = paddle2;
-            }
-
-            // Si la pelota está en modo lanzamiento, el rival también puede golpearla
-            if (b.isLaunching) {
-                if (isHittingP1 && paddle1 === rivalPaddle && paddle1.timers.ghost === 0 && b.vx < 0) {
-                    pCol = paddle1;
-                } else if (isHittingP2 && paddle2 === rivalPaddle && paddle2.timers.ghost === 0 && b.vx > 0) {
-                    pCol = paddle2;
-                }
-
-                // Si el rival la golpea, desactivamos la habilidad de Fujin y restauramos la pelota
-                if (pCol === rivalPaddle) {
-                    // Desactivar la habilidad de Fujin
-                    if (config.p1 === 'fujin') {
-                        paddle1.timers.skillDur = 0;
-                    } else if (config.p2 === 'fujin') {
-                        paddle2.timers.skillDur = 0;
-                    }
-                    // Restaurar la pelota a estado normal
-                    b.isLaunching = false;
-                    b._launched = false;
-                    b.color = '#fff';
-                    b.glowSize = 15;
-                    showMessage('¡BLOQUEO DE VENTISCA!', '#aaddff', 45);
-                    // NOTA: El rebote se calculará más abajo con el código común,
-                    // pero ahora pCol es la paleta rival y el rebote se hará normalmente.
-                }
-            }
-        } else {
-            // Comportamiento normal (sin Fujin activo)
-            if (isHittingP1 && paddle1.timers.ghost === 0 && b.vx < 0) pCol = paddle1;
-            else if (isHittingP2 && paddle2.timers.ghost === 0 && b.vx > 0) pCol = paddle2;
+        // Colisión normal (sin restricciones especiales)
+        if (isHittingP1 && paddle1.timers.ghost === 0 && b.vx < 0) {
+            pCol = paddle1;
+        } else if (isHittingP2 && paddle2.timers.ghost === 0 && b.vx > 0) {
+            pCol = paddle2;
         }
 
         // --- Si hay colisión con una paleta ---

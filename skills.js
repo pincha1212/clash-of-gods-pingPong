@@ -48,116 +48,66 @@ const Skills = {
     // ============================
     fujin: {
         activate: function (playerNum, p, god, ball, extraBalls) {
-            EffectsManager.createExplosion(ball.x, ball.y, '#aaddff', 60);
-            kickCamera(12, 0.03);
-            for (let i = 0; i < 30; i++) {
+            let dir = playerNum === 1 ? 1 : -1;
+            // Efecto visual de ráfaga
+            for (let i = 0; i < 40; i++) {
                 let angle = Math.random() * Math.PI * 2;
-                let radius = 40 + Math.random() * 60;
+                let radius = 20 + Math.random() * 70;
                 let x = ball.x + Math.cos(angle) * radius;
                 let y = ball.y + Math.sin(angle) * radius;
-                EffectsManager.createExplosion(x, y, '#88ddff', 2);
+                EffectsManager.createExplosion(x, y, '#aaddff', 3);
             }
+            kickCamera(10, 0.03);
             showMessage('¡VENTISCA!', '#aaddff', 90);
-            ball.vx *= 0.1;
-            ball.vy *= 0.1;
+
+            // Aceleración brutal hacia el rival
+            let speed = ball.maxSpeed * 1.8;
+            let angleToRival = Math.atan2(
+                (playerNum === 1 ? paddle2.y + paddle2.height / 2 : paddle1.y + paddle1.height / 2) - ball.y,
+                (playerNum === 1 ? paddle2.x : paddle1.x) - ball.x
+            );
+            // Añadir un pequeño ángulo aleatorio para que no sea perfectamente recto
+            angleToRival += (Math.random() - 0.5) * 0.4; // ±0.2 radianes
+            ball.vx = speed * Math.cos(angleToRival);
+            ball.vy = speed * Math.sin(angleToRival);
+            ball.currentSpeed = speed;
             ball.color = '#aaddff';
-            ball.glowSize = 30;
-            // Reiniciar flags de lanzamiento
-            ball._launched = false;
-            ball.isLaunching = false;
+            ball.glowSize = 40;
+            // Marcar que la pelota tiene efecto de viento (para desviarse)
+            ball.windEffect = true;
+            ball.windTimer = 60; // duración del efecto (1 segundo)
         },
         update: function (p, rival, dir, allBalls, frameCount) {
-            let totalDur = 300;
-            let elapsed = totalDur - p.timers.skillDur;
-
+            // Este update se ejecuta mientras la habilidad está activa (skillDur > 0)
+            // pero en esta versión no necesitamos hacer nada continuo, 
+            // ya que el efecto principal ocurrió en activate.
+            // Solo mantenemos el color y brillo mientras dure el temporizador.
             allBalls.forEach(b => {
-                b.color = '#aaddff';
-                b.glowSize = 35;
-
-                if (elapsed < 20) {
-                    let targetX = p.x + p.width / 2;
-                    let targetY = p.y + p.height / 2;
-                    let dx = targetX - b.x;
-                    let dy = targetY - b.y;
-                    let dist = Math.hypot(dx, dy);
-                    if (dist > 10) {
-                        let pull = 0.04;
-                        b.vx += dx * pull * 0.1;
-                        b.vy += dy * pull * 0.1;
-                    } else {
-                        b.vx *= 0.9;
-                        b.vy *= 0.9;
+                if (b.windEffect && b.windTimer > 0) {
+                    b.color = '#aaddff';
+                    b.glowSize = 40;
+                    b.windTimer--;
+                    // Pequeña turbulencia: desvío aleatorio suave
+                    if (frameCount % 3 === 0) {
+                        b.vx += (Math.random() - 0.5) * 0.4;
+                        b.vy += (Math.random() - 0.5) * 0.4;
+                        // Limitar velocidad para que no se dispare
+                        let sp = Math.hypot(b.vx, b.vy);
+                        if (sp > b.maxSpeed * 2) {
+                            b.vx = (b.vx / sp) * b.maxSpeed * 2;
+                            b.vy = (b.vy / sp) * b.maxSpeed * 2;
+                        }
                     }
-                    EffectsManager.createExplosion(b.x, b.y, '#aaddff', 1);
-                    EffectsManager.addSpeedLines(b.x, b.y, '#88ddff', 2);
-                    return;
-                }
-
-                let spiralElapsed = elapsed - 20;
-                let maxSpiral = totalDur - 20;
-                let progress = Math.min(1, spiralElapsed / maxSpiral);
-
-                let radius = 30 + 100 * progress;
-                const totalAngle = 6 * Math.PI;
-                let angularSpeed = totalAngle / maxSpiral;
-                let angle = spiralElapsed * angularSpeed;
-
-                let startX = p.x + p.width / 2 + dir * 20;
-                let endX = rival.x + rival.width / 2 - dir * 20;
-                let centerX = startX + (endX - startX) * progress;
-
-                let centerY = p.y + p.height / 2 +
-                    (rival.y + rival.height / 2 - (p.y + p.height / 2)) * progress * 0.5;
-
-                let targetX = centerX + radius * Math.cos(angle);
-                let targetY = centerY + radius * Math.sin(angle);
-
-                b.vx = (targetX - b.x) * 0.15;
-                b.vy = (targetY - b.y) * 0.15;
-
-                if (frameCount % 2 === 0) {
-                    for (let i = 0; i < 3; i++) {
-                        let a = Math.random() * Math.PI * 2;
-                        let d = 5 + Math.random() * 15;
-                        let px = b.x + Math.cos(a) * d;
-                        let py = b.y + Math.sin(a) * d;
-                        EffectsManager.createExplosion(px, py, '#88ddff', 1);
+                    // Efectos visuales
+                    if (frameCount % 2 === 0) {
+                        EffectsManager.createExplosion(b.x + (Math.random() - 0.5) * 30, b.y + (Math.random() - 0.5) * 30, '#aaddff', 1);
+                        EffectsManager.addSpeedLines(b.x, b.y, '#88ddff', 2);
                     }
-                }
-
-                for (let j = 0; j < 10; j++) {
-                    let heightOffset = j * -10;
-                    let ringRadius = 15 + j * 10;
-                    let vAngle = frameCount * 0.05 + j * 0.5;
-                    let tx = b.x + Math.cos(vAngle) * ringRadius;
-                    let ty = b.y + heightOffset + Math.sin(vAngle) * ringRadius * 0.15;
-                    EffectsManager.addSpeedLines(tx, ty, '#aaddff', 1.5);
-                    if (Math.random() > 0.9) {
-                        EffectsManager.createExplosion(tx, ty, '#88ddff', 0.5);
-                    }
-                }
-
-                // Lanzamiento final (una sola vez)
-                if (angle >= 6 * Math.PI && !b._launched) {
-                    b._launched = true;
-                    b.isLaunching = true;
-                    let launchSpeed = b.maxSpeed * 1.8;
-                    let angleToRival = Math.atan2(
-                        rival.y + rival.height / 2 - b.y,
-                        rival.x - b.x
-                    );
-                    b.vx = launchSpeed * Math.cos(angleToRival);
-                    b.vy = launchSpeed * Math.sin(angleToRival);
-                    EffectsManager.createExplosion(b.x, b.y, '#aaddff', 40);
-                    for (let i = 0; i < 20; i++) {
-                        let angleOff = Math.random() * Math.PI * 2;
-                        let distOff = 20 + Math.random() * 40;
-                        let px = b.x + Math.cos(angleOff) * distOff;
-                        let py = b.y + Math.sin(angleOff) * distOff;
-                        EffectsManager.createExplosion(px, py, '#88ddff', 2);
-                    }
-                    rival.timers.hielo = Math.max(rival.timers.hielo, 60);
-                    showMessage('¡VENTISCA ARRASADORA!', '#b0e0ff', 90);
+                } else if (b.windEffect) {
+                    // Cuando el temporizador termina, quitar el efecto
+                    b.windEffect = false;
+                    b.color = '#fff';
+                    b.glowSize = 15;
                 }
             });
         }
