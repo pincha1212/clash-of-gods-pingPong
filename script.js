@@ -248,8 +248,17 @@ function activateSkill(playerNum) {
 
     let finalCd = god.skill.cd * (config.skillCdMult || 1);
 
+    // Si el modo Mutación está activo, intenta disparar la inyección tóxica
     if (window.MutationManager && window.MutationManager.active) {
-        let triggered = window.MutationManager.trigger(playerNum, paddle1, paddle2, [ball, ...extraBalls], canvas.width, canvas.height, showMessage);
+        let triggered = window.MutationManager.trigger(
+            playerNum,
+            paddle1,
+            paddle2,
+            [ball, ...extraBalls],
+            canvas.width,
+            canvas.height,
+            showMessage
+        );
         if (triggered) {
             p.timers.skillCd = finalCd;
             playSound('skill', 1.5);
@@ -259,62 +268,29 @@ function activateSkill(playerNum) {
         }
     }
 
+    // Asignar cooldown y duración (Fujin tiene duración extendida)
     p.timers.skillCd = finalCd;
-    let duration = (god.id === 'fujin') ? 400 : god.skill.dur;
+    let duration = (god.id === 'fujin') ? 300 : god.skill.dur;
     p.timers.skillDur = duration;
 
+    // Efectos comunes al activar cualquier habilidad
     playSound('skill', 1.5);
     triggerFlash(god.color, 0.18);
     kickCamera(12, 0.02, p.x < canvas.width / 2 ? -2 : 2);
-    EffectsManager.addSpeedLines(p.x < canvas.width / 2 ? 90 : canvas.width - 90, p.y + p.height / 2, god.color, 18);
+    EffectsManager.addSpeedLines(
+        p.x < canvas.width / 2 ? 90 : canvas.width - 90,
+        p.y + p.height / 2,
+        god.color,
+        18
+    );
     showMessage(`¡${god.skill.name}!`, god.color, 90, p.x < canvas.width / 2 ? 150 : canvas.width - 150, p.y);
 
-    if (god.id === 'raijin') {
-        let dir = playerNum === 1 ? 1 : -1;
-        ball.vx = dir * ball.maxSpeed;
-        ball.vy = (Math.random() - 0.5) * 8;
-        EffectsManager.createExplosion(ball.x, ball.y, '#ffff00', 20);
-        kickCamera(10, 0.02);
-    } else if (god.id === 'fujin') {
-        // Ventisca: efecto de congelación inicial
-        EffectsManager.createExplosion(ball.x, ball.y, '#aaddff', 60);
-        kickCamera(12, 0.03);
-        // Cambiamos el color de la pelota a tono hielo
-        ball.color = '#aaddff';
-        // Añadimos partículas de hielo alrededor
-        for (let i = 0; i < 30; i++) {
-            let angle = Math.random() * Math.PI * 2;
-            let radius = 40 + Math.random() * 60;
-            let x = ball.x + Math.cos(angle) * radius;
-            let y = ball.y + Math.sin(angle) * radius;
-            EffectsManager.createExplosion(x, y, '#88ddff', 2);
-        }
-        // Mensaje más épico
-        showMessage('¡VENTISCA!', '#aaddff', 90, p.x < canvas.width / 2 ? 150 : canvas.width - 150, p.y);
-
-        // Estallido de presión baja (ojo del huracán)
-        EffectsManager.createExplosion(ball.x, ball.y, '#ffffff', 50);
-        kickCamera(12, 0.03);
-        ball.vx *= 0.1;
-        ball.vy *= 0.1;
-        ball.color = '#00ffff';  // cian brillante
-        ball.glowSize = 30;
-        showMessage('¡TORNADO!', '#00ffff', 60);
-    } else if (god.id === 'amaterasu') {
-        let opp = playerNum === 1 ? paddle2 : paddle1;
-        opp.timers.invert = god.skill.dur;
-        if (window.MutationManager && window.MutationManager.active) {
-            window.MutationManager.blindTimer = god.skill.dur;
-        }
-    } else if (god.id === 'inari') {
-        if (window.MutationManager && window.MutationManager.active) {
-            window.MutationManager.spawnHolograms(ball);
-        } else {
-            extraBalls.push({
-                x: ball.x, y: ball.y, radius: ball.radius, vx: -ball.vx, vy: -ball.vy, baseSpeed: ball.baseSpeed, currentSpeed: ball.currentSpeed, maxSpeed: ball.maxSpeed, color: god.color, glowSize: 20, lastHitBy: p, trail: [], isVolatile: false, visible: true, volatileTimer: 0
-            });
-            showMessage('¡SEÑUELO LUNAR!', god.color);
-        }
+    // --- Llamada genérica a la activación de cada dios ---
+    if (Skills[god.id] && Skills[god.id].activate) {
+        Skills[god.id].activate(playerNum, p, god, ball, extraBalls);
+    } else {
+        // Fallback por si falta algún dios
+        console.warn('Habilidad no implementada para', god.id);
     }
 }
 
@@ -336,6 +312,7 @@ function predictBallY(b, targetX) {
 }
 
 // --- MAIN UPDATE ---
+// --- MAIN UPDATE (versión refactorizada con Skills) ---
 function update() {
     if (!isPlaying || isPaused) return;
 
@@ -347,6 +324,7 @@ function update() {
     frameCount++;
     updateImmersiveEffects();
 
+    // --- Cuenta atrás inicial ---
     if (countdownRunning) {
         countdownFrames--;
         const nextValue = Math.ceil(countdownFrames / 50);
@@ -367,24 +345,35 @@ function update() {
         return;
     }
 
+    // --- Textos flotantes ---
     for (let i = floatTexts.length - 1; i >= 0; i--) {
         floatTexts[i].life--;
         floatTexts[i].y -= 0.5;
         if (floatTexts[i].life <= 0) floatTexts.splice(i, 1);
     }
 
+    // --- Actualización de paletas (temporizadores, altura, trail) ---
     [paddle1, paddle2].forEach(p => {
-        if (p.timers.titan > 0) { p.height = p.baseHeight * 1.8; p.timers.titan--; }
-        else if (p.timers.hielo > 0) { p.height = p.baseHeight * 0.5; p.timers.hielo--; }
-        else { p.height = p.baseHeight; }
+        if (p.timers.titan > 0) {
+            p.height = p.baseHeight * 1.8;
+            p.timers.titan--;
+        } else if (p.timers.hielo > 0) {
+            p.height = p.baseHeight * 0.5;
+            p.timers.hielo--;
+        } else {
+            p.height = p.baseHeight;
+        }
 
-        ['ghost', 'invert', 'skillCd', 'skillDur', 'necrosis'].forEach(t => { if (p.timers[t] > 0) p.timers[t]--; });
+        ['ghost', 'invert', 'skillCd', 'skillDur', 'necrosis'].forEach(t => {
+            if (p.timers[t] > 0) p.timers[t]--;
+        });
         p.y = Math.max(0, Math.min(p.y, canvas.height - p.height));
 
         p.trail.push(p.y);
         if (p.trail.length > 6) p.trail.shift();
     });
 
+    // --- Generación de Power-ups ---
     if (config.powerUps && powerUps.length < 2 && frameCount % 350 === 0 && Math.random() > 0.3) {
         const types = ['titan', 'hielo', 'ghost', 'multi', 'invert', 'shield'];
         const weights = [0.25, 0.25, 0.1, 0.15, 0.15, 0.1];
@@ -395,10 +384,16 @@ function update() {
             acc += weights[i];
             if (rand <= acc) { type = types[i]; break; }
         }
-        powerUps.push({ x: 250 + Math.random() * 300, y: 100 + Math.random() * 300, radius: 18, type, pulse: 0 });
+        powerUps.push({
+            x: 250 + Math.random() * 300,
+            y: 100 + Math.random() * 300,
+            radius: 18,
+            type,
+            pulse: 0
+        });
     }
 
-    // Movimiento Jugadores
+    // --- Movimiento del Jugador 1 ---
     let necrosisMult1 = paddle1.timers.necrosis > 0 ? 0.4 : 1;
     let p1Speed = (paddle1.timers.hielo > 0 ? paddle1.baseSpeed * 0.4 : paddle1.baseSpeed) * necrosisMult1;
     let p1Dir = 0;
@@ -408,6 +403,7 @@ function update() {
     if (p1Dir === -1 && paddle1.y > 0) paddle1.y -= p1Speed;
     if (p1Dir === 1 && paddle1.y < canvas.height - paddle1.height) paddle1.y += p1Speed;
 
+    // --- Movimiento del Jugador 2 (2P o IA) ---
     let necrosisMult2 = paddle2.timers.necrosis > 0 ? 0.4 : 1;
     let p2Speed = (paddle2.timers.hielo > 0 ? paddle2.speed * 0.4 : paddle2.speed) * necrosisMult2;
 
@@ -423,207 +419,122 @@ function update() {
         let nearestPowerUp = powerUps.find(pu => pu.x > canvas.width * 0.5);
         let shouldHuntPowerUp = nearestPowerUp && ball.vx < 0 && config.powerUps;
 
-        if (shouldHuntPowerUp) targetY = nearestPowerUp.y - paddle2.height / 2;
-        else if (ball.vx > 0) targetY = ((config.difficulty === 'hard' || config.difficulty === 'normal') ? predictBallY(ball, paddle2.x) : ball.y) - paddle2.height / 2;
+        if (shouldHuntPowerUp) {
+            targetY = nearestPowerUp.y - paddle2.height / 2;
+        } else if (ball.vx > 0) {
+            targetY = ((config.difficulty === 'hard' || config.difficulty === 'normal')
+                ? predictBallY(ball, paddle2.x)
+                : ball.y) - paddle2.height / 2;
+        }
 
         let errorMargin = config.difficulty === 'easy' ? 40 : (config.difficulty === 'hard' ? 5 : 20);
         errorMargin = Math.max(0, errorMargin - rallyCount);
         if (paddle2.timers.invert > 0) targetY = canvas.height - targetY - paddle2.height;
 
         let diffY = targetY - paddle2.y;
-        if (Math.abs(diffY) > errorMargin) paddle2.y += Math.sign(diffY) * Math.min(p2Speed, Math.abs(diffY) * 0.15 + p2Speed * 0.5);
+        if (Math.abs(diffY) > errorMargin) {
+            paddle2.y += Math.sign(diffY) * Math.min(p2Speed, Math.abs(diffY) * 0.15 + p2Speed * 0.5);
+        }
         paddle2.y = Math.max(0, Math.min(paddle2.y, canvas.height - paddle2.height));
 
+        // IA usa habilidad si procede
         if (ball.vx <= 0) paddle2.skillEvaluatedThisRally = false;
-
         if (config.godSkills && paddle2.timers.skillCd === 0 && paddle2.timers.skillDur === 0 && !paddle2.skillEvaluatedThisRally) {
             if (ball.vx > 0 && Math.abs(paddle2.x - ball.x) < 280) {
                 paddle2.skillEvaluatedThisRally = true;
-                if (Math.random() < ({ 'easy': 0.20, 'normal': 0.50, 'hard': 0.80 }[config.difficulty] || 0.50)) activateSkill(2);
+                let prob = { 'easy': 0.20, 'normal': 0.50, 'hard': 0.80 }[config.difficulty] || 0.50;
+                if (Math.random() < prob) activateSkill(2);
             }
         }
     }
 
+    // --- Preparar lista de todas las bolas ---
     let allBalls = [ball, ...extraBalls];
 
-    // RAIJIN
-    let isRaijin1 = paddle1.timers.skillDur > 0 && config.p1 === 'raijin';
-    let isRaijin2 = paddle2.timers.skillDur > 0 && config.p2 === 'raijin';
-    if (isRaijin1 || isRaijin2) {
-        let p = isRaijin1 ? paddle1 : paddle2;
-        let totalDur = 90;
-        let elapsed = totalDur - p.timers.skillDur;
-        let dir = isRaijin1 ? 1 : -1;
+    // ============================================================
+    //  APLICACIÓN DE HABILIDADES DE DIOSES (refactorizado)
+    // ============================================================
 
-        if (elapsed < 14) {
-            ball.vx *= 0.15; ball.vy *= 0.15; ball.color = '#ffff00';
-            if (frameCount % 2 === 0) EffectsManager.createExplosion(ball.x, ball.y, '#ffff00', 4);
-        } else {
-            let progress = Math.min(1, (elapsed - 14) / (totalDur - 14));
-            let currentRampSpeed = ball.baseSpeed + (ball.maxSpeed - ball.baseSpeed) * progress;
-            ball.currentSpeed = currentRampSpeed;
-            ball.color = '#ffff00';
-            let step = Math.floor((elapsed - 14) / 4);
-            ball.vx = dir * currentRampSpeed * 0.65;
-            ball.vy = ((step % 2 === 0) ? 1 : -1) * currentRampSpeed * 0.95;
-
-            if ((elapsed - 14) % 4 === 0) {
-                EffectsManager.createExplosion(ball.x, ball.y, '#ffff00', 8);
-                EffectsManager.addSpeedLines(ball.x, ball.y, '#ffff00', 5);
-            }
-        }
+    // --- RAIJIN ---
+    if (config.p1 === 'raijin' && paddle1.timers.skillDur > 0) {
+        Skills.raijin.update(paddle1, paddle2, 1, allBalls, frameCount);
+    }
+    if (config.p2 === 'raijin' && paddle2.timers.skillDur > 0) {
+        Skills.raijin.update(paddle2, paddle1, -1, allBalls, frameCount);
     }
 
-    // FUJIN: TORNADO LITERAL EN CAMINO DE RESORTE
-    let isFujin1 = paddle1.timers.skillDur > 0 && config.p1 === 'fujin';
-    let isFujin2 = paddle2.timers.skillDur > 0 && config.p2 === 'fujin';
-
-    // --- FUJIN: VENTISCA ESPIRAL CON EFECTO HIELO ---
-    if (isFujin1 || isFujin2) {
-        let p = isFujin1 ? paddle1 : paddle2;
-        let rival = isFujin1 ? paddle2 : paddle1;
-        let dir = isFujin1 ? 1 : -1;
-        let totalDur = 300;               // 5 segundos
-        let elapsed = totalDur - p.timers.skillDur;
-
-        // Desactivamos colisiones para todas las pelotas mientras dure Fujin
-        // (Esto se hace en las secciones de colisión, pero también podemos forzar aquí)
-
-        allBalls.forEach(b => {
-            // Color y resplandor de hielo
-            b.color = '#aaddff';
-            b.glowSize = 35;
-
-            // Estela de partículas de hielo (cada frame)
-            if (frameCount % 1 === 0) {
-                // Partículas que siguen a la pelota
-                for (let i = 0; i < 3; i++) {
-                    let angle = Math.random() * Math.PI * 2;
-                    let dist = 5 + Math.random() * 15;
-                    let px = b.x + Math.cos(angle) * dist;
-                    let py = b.y + Math.sin(angle) * dist;
-                    EffectsManager.createExplosion(px, py, '#88ddff', 1 + Math.random());
-                }
-            }
-
-            if (elapsed < 40) {
-                // Fase de succión: la pelota se acerca al centro de Fujin
-                let targetX = p.x + p.width / 2;
-                let targetY = p.y + p.height / 2;
-                let dx = targetX - b.x;
-                let dy = targetY - b.y;
-                let dist = Math.hypot(dx, dy);
-                if (dist > 5) {
-                    let pull = 0.08;
-                    b.vx += dx * pull * 0.1;
-                    b.vy += dy * pull * 0.1;
-                    if (dist < 30) {
-                        b.vx *= 0.9;
-                        b.vy *= 0.9;
-                    }
-                }
-                // Efectos de viento frío
-                EffectsManager.createExplosion(b.x, b.y, '#aaddff', 1.5);
-                EffectsManager.addSpeedLines(b.x, b.y, '#88ddff', 3);
-            } else {
-                // Fase espiral: 3 vueltas completas (6π)
-                let spiralElapsed = elapsed - 40;
-                let maxSpiral = totalDur - 40; // 260 frames
-                let progress = Math.min(1, spiralElapsed / maxSpiral);
-
-                // Radio crece de 30 a 130
-                let radius = 30 + 100 * progress;
-                const totalAngle = 6 * Math.PI; // 3 vueltas
-                let angularSpeed = totalAngle / maxSpiral;
-                let angle = spiralElapsed * angularSpeed;
-
-                // Centro se mueve hacia el rival
-                let centerX = p.x + p.width / 2 + dir * (60 + 120 * progress);
-                let centerY = rival.y + rival.height / 2 + (rival.y - (p.y + p.height / 2)) * progress * 0.3;
-
-                // Posición objetivo en la espiral
-                let targetX = centerX + radius * Math.cos(angle);
-                let targetY = centerY + radius * Math.sin(angle);
-
-                // Velocidad suave
-                b.vx = (targetX - b.x) * 0.12;
-                b.vy = (targetY - b.y) * 0.12;
-
-                // Efecto visual de ventisca: nube de partículas girando alrededor
-                for (let j = 0; j < 15; j++) {
-                    let particleAngle = angle + j * (Math.PI * 2 / 15) + frameCount * 0.02;
-                    let particleRadius = radius * 0.9 + Math.sin(frameCount * 0.1 + j) * 10;
-                    let px = centerX + particleRadius * Math.cos(particleAngle);
-                    let py = centerY + particleRadius * Math.sin(particleAngle) * 0.6; // achatado
-                    // Partículas de hielo
-                    EffectsManager.createExplosion(px, py, '#aaddff', 0.8);
-                    // Líneas de viento
-                    EffectsManager.addSpeedLines(px, py, '#88ddff', 1.5);
-                }
-
-                // Anillos de hielo alrededor de la pelota (tornado)
-                for (let j = 0; j < 12; j++) {
-                    let heightOffset = j * -10;
-                    let ringRadius = 15 + j * 10;
-                    let vAngle = frameCount * 0.05 + j * 0.5;
-                    let tx = b.x + Math.cos(vAngle) * ringRadius;
-                    let ty = b.y + heightOffset + Math.sin(vAngle) * ringRadius * 0.15;
-                    EffectsManager.addSpeedLines(tx, ty, '#aaddff', 1.5);
-                    if (Math.random() > 0.9) {
-                        EffectsManager.createExplosion(tx, ty, '#88ddff', 0.5);
-                    }
-                }
-
-                // Lanzamiento final al completar la 3ª vuelta
-                if (angle >= 6 * Math.PI) {
-                    let launchSpeed = b.maxSpeed * 1.4;
-                    let angleToRival = Math.atan2(rival.y + rival.height / 2 - b.y, rival.x - b.x);
-                    b.vx = launchSpeed * Math.cos(angleToRival);
-                    b.vy = launchSpeed * Math.sin(angleToRival);
-                    // Explosión de hielo al lanzar
-                    EffectsManager.createExplosion(b.x, b.y, '#aaddff', 40);
-                    // Y se añade un efecto de estela de hielo detrás
-                    for (let i = 0; i < 20; i++) {
-                        let angleOff = Math.random() * Math.PI * 2;
-                        let distOff = 20 + Math.random() * 40;
-                        let px = b.x + Math.cos(angleOff) * distOff;
-                        let py = b.y + Math.sin(angleOff) * distOff;
-                        EffectsManager.createExplosion(px, py, '#88ddff', 2);
-                    }
-                    // Forzamos que la habilidad termine (opcional)
-                    // p.timers.skillDur = 0;
-                }
-
-                // Generar estela de hielo persistente (trail)
-                if (frameCount % 2 === 0) {
-                    // Pequeñas partículas congeladas que se quedan atrás
-                    for (let i = 0; i < 2; i++) {
-                        let angle = Math.random() * Math.PI * 2;
-                        let dist = 5 + Math.random() * 20;
-                        let px = b.x + Math.cos(angle) * dist;
-                        let py = b.y + Math.sin(angle) * dist;
-                        EffectsManager.createExplosion(px, py, '#ffffff', 0.8);
-                    }
-                }
-            }
-        });
+    // --- FUJIN ---
+    if (config.p1 === 'fujin' && paddle1.timers.skillDur > 0) {
+        Skills.fujin.update(paddle1, paddle2, 1, allBalls, frameCount);
     }
-    // KAGUTSUCHI
-    if (paddle1.timers.skillDur > 0 && config.p1 === 'kagutsuchi') { ball.color = '#f50'; if (frameCount % 3 === 0) EffectsManager.createExplosion(ball.x, ball.y, '#f50', 2); }
-    if (paddle2.timers.skillDur > 0 && config.p2 === 'kagutsuchi') { ball.color = '#f50'; if (frameCount % 3 === 0) EffectsManager.createExplosion(ball.x, ball.y, '#f50', 2); }
+    if (config.p2 === 'fujin' && paddle2.timers.skillDur > 0) {
+        Skills.fujin.update(paddle2, paddle1, -1, allBalls, frameCount);
+    }
 
-    let susaSlow = (paddle1.timers.skillDur > 0 && config.p1 === 'susanoo') || (paddle2.timers.skillDur > 0 && config.p2 === 'susanoo') ? 0.6 : 1;
+    // --- KAGUTSUCHI ---
+    if (config.p1 === 'kagutsuchi' && paddle1.timers.skillDur > 0) {
+        Skills.kagutsuchi.update(paddle1, paddle2, 1, allBalls, frameCount);
+    }
+    if (config.p2 === 'kagutsuchi' && paddle2.timers.skillDur > 0) {
+        Skills.kagutsuchi.update(paddle2, paddle1, -1, allBalls, frameCount);
+    }
 
-    if (window.MutationManager && window.MutationManager.active) window.MutationManager.update(1 / 60, paddle2, ball);
-    if (window.EclipseManager && window.EclipseManager.active) window.EclipseManager.update(allBalls, paddle1, paddle2);
+    // --- SUSANOO ---
+    if (config.p1 === 'susanoo' && paddle1.timers.skillDur > 0) {
+        Skills.susanoo.update(paddle1, paddle2, 1, allBalls, frameCount);
+    }
+    if (config.p2 === 'susanoo' && paddle2.timers.skillDur > 0) {
+        Skills.susanoo.update(paddle2, paddle1, -1, allBalls, frameCount);
+    }
+
+    // --- AMATERASU (sin efecto continuo, pero se llama por si acaso) ---
+    if (config.p1 === 'amaterasu' && paddle1.timers.skillDur > 0) {
+        Skills.amaterasu.update(paddle1, paddle2, 1, allBalls, frameCount);
+    }
+    if (config.p2 === 'amaterasu' && paddle2.timers.skillDur > 0) {
+        Skills.amaterasu.update(paddle2, paddle1, -1, allBalls, frameCount);
+    }
+
+    // --- INARI (sin efecto continuo) ---
+    if (config.p1 === 'inari' && paddle1.timers.skillDur > 0) {
+        Skills.inari.update(paddle1, paddle2, 1, allBalls, frameCount);
+    }
+    if (config.p2 === 'inari' && paddle2.timers.skillDur > 0) {
+        Skills.inari.update(paddle2, paddle1, -1, allBalls, frameCount);
+    }
+
+    // --- Efecto de Susanoo: ralentización global ---
+    let susaSlow = (paddle1.timers.skillDur > 0 && config.p1 === 'susanoo') ||
+                   (paddle2.timers.skillDur > 0 && config.p2 === 'susanoo') ? 0.6 : 1;
+
+    // --- Actualización de Mutation y Eclipse ---
+    if (window.MutationManager && window.MutationManager.active) {
+        window.MutationManager.update(1 / 60, paddle2, ball);
+    }
+    if (window.EclipseManager && window.EclipseManager.active) {
+        window.EclipseManager.update(allBalls, paddle1, paddle2);
+    }
+
+    // ============================================================
+    //  BUCLE DE FÍSICA Y COLISIONES
+    // ============================================================
+
+    // Bandera para evitar colisiones durante la espiral de Fujin
+    let fujinActive = (config.p1 === 'fujin' && paddle1.timers.skillDur > 0) ||
+                      (config.p2 === 'fujin' && paddle2.timers.skillDur > 0);
 
     for (let bIndex = allBalls.length - 1; bIndex >= 0; bIndex--) {
         let b = allBalls[bIndex];
+
+        // Movimiento con posible ralentización de Susanoo
         b.x += b.vx * susaSlow;
         b.y += b.vy * susaSlow;
+
+        // Actualizar trail
         b.trail.push({ x: b.x, y: b.y });
         if (b.trail.length > 8) b.trail.shift();
 
+        // --- Colisión con power-ups (solo si la bola tiene un dueño) ---
         if (b.lastHitBy) {
             for (let i = powerUps.length - 1; i >= 0; i--) {
                 let pu = powerUps[i];
@@ -635,104 +546,183 @@ function update() {
                     triggerFlash(p.color, 0.16);
                     kickCamera(5, 0.008);
 
-                    if (pu.type === 'titan') { p.timers.titan = 420; createImpact(pu.x, pu.y, '#ff0', 1.5); showMessage('TITÁN', '#ff0'); }
-                    else if (pu.type === 'hielo') { opp.timers.hielo = 300; createImpact(pu.x, pu.y, '#08f', 1.5); showMessage('HIELO', '#08f'); }
-                    else if (pu.type === 'ghost') { p.timers.ghost = 240; createImpact(pu.x, pu.y, '#aaa', 1.5); showMessage('FANTASMA', '#aaa'); }
-                    else if (pu.type === 'invert') { opp.timers.invert = 240; createImpact(pu.x, pu.y, '#f0f', 1.5); showMessage('CAOS', '#f0f'); }
-                    else if (pu.type === 'shield') { p.shield = true; createImpact(pu.x, pu.y, '#0ff', 1.5); showMessage('ESCUDO', '#0ff'); }
-                    else if (pu.type === 'multi') {
-                        extraBalls.push({ x: b.x, y: b.y, radius: b.radius, vx: -b.vx, vy: -b.vy, baseSpeed: b.baseSpeed, currentSpeed: b.currentSpeed, maxSpeed: b.maxSpeed, color: b.color, glowSize: b.glowSize, lastHitBy: b.lastHitBy, trail: [], isVolatile: false, visible: true, volatileTimer: 0 });
-                        createImpact(pu.x, pu.y, '#fff', 2); showMessage('MULTIBOLA', '#fff');
+                    if (pu.type === 'titan') {
+                        p.timers.titan = 420;
+                        createImpact(pu.x, pu.y, '#ff0', 1.5);
+                        showMessage('TITÁN', '#ff0');
+                    } else if (pu.type === 'hielo') {
+                        opp.timers.hielo = 300;
+                        createImpact(pu.x, pu.y, '#08f', 1.5);
+                        showMessage('HIELO', '#08f');
+                    } else if (pu.type === 'ghost') {
+                        p.timers.ghost = 240;
+                        createImpact(pu.x, pu.y, '#aaa', 1.5);
+                        showMessage('FANTASMA', '#aaa');
+                    } else if (pu.type === 'invert') {
+                        opp.timers.invert = 240;
+                        createImpact(pu.x, pu.y, '#f0f', 1.5);
+                        showMessage('CAOS', '#f0f');
+                    } else if (pu.type === 'shield') {
+                        p.shield = true;
+                        createImpact(pu.x, pu.y, '#0ff', 1.5);
+                        showMessage('ESCUDO', '#0ff');
+                    } else if (pu.type === 'multi') {
+                        extraBalls.push({
+                            x: b.x, y: b.y, radius: b.radius,
+                            vx: -b.vx, vy: -b.vy,
+                            baseSpeed: b.baseSpeed,
+                            currentSpeed: b.currentSpeed,
+                            maxSpeed: b.maxSpeed,
+                            color: b.color,
+                            glowSize: b.glowSize,
+                            lastHitBy: b.lastHitBy,
+                            trail: [],
+                            isVolatile: false,
+                            visible: true,
+                            volatileTimer: 0
+                        });
+                        createImpact(pu.x, pu.y, '#fff', 2);
+                        showMessage('MULTIBOLA', '#fff');
                     }
                     powerUps.splice(i, 1);
                 }
             }
         }
 
-        if (b.y - b.radius < 0 || b.y + b.radius > canvas.height) {
-            b.vy = -b.vy;
-            b.y = b.y - b.radius < 0 ? b.radius : canvas.height - b.radius;
-            playSound('wall', 0.8);
-            EffectsManager.createExplosion(b.x, b.y < 250 ? 0 : canvas.height, '#fff', 8);
-            kickCamera(2.5, 0);
-            EffectsManager.addSpeedLines(b.x, b.y, b.color, 3);
-            if (window.EclipseManager && window.EclipseManager.active) window.EclipseManager.addLightEcho(b.x, b.y);
-        }
-
-        let isHittingP1 = b.x - b.radius < paddle1.x + paddle1.width && b.x + b.radius > paddle1.x && b.y + b.radius > paddle1.y && b.y - b.radius < paddle1.y + paddle1.height;
-        let isHittingP2 = b.x - b.radius < paddle2.x + paddle2.width && b.x + b.radius > paddle2.x && b.y + b.radius > paddle2.y && b.y - b.radius < paddle2.y + paddle2.height;
-
-        let pCol = null;
-        if (isHittingP1 && paddle1.timers.ghost === 0 && b.vx < 0) pCol = paddle1;
-        else if (isHittingP2 && paddle2.timers.ghost === 0 && b.vx > 0) pCol = paddle2;
-
-        if (pCol) {
-            let attackerPaddle = pCol === paddle1 ? paddle2 : paddle1;
-            let attackerGod = pCol === paddle1 ? config.p2 : config.p1;
-
-            if (attackerGod === 'raijin' && attackerPaddle.timers.skillDur > 0) {
-                pCol.timers.necrosis = 90;
-                showMessage('¡ELECTROCUTADO!', '#ffff00', 45, pCol.x, pCol.y);
-                createImpact(pCol.x, pCol.y + pCol.height / 2, '#ffff00', 1.8);
-            }
-            if (attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0) {
-                // Al atajar el tornado, restauramos el color de la pelota
-                b.color = pCol.color;
-            }
-
-            b.lastHitBy = pCol;
-            if (bIndex === 0) rallyCount++;
-
-            if (window.MutationManager && window.MutationManager.active) window.MutationManager.addPoison(15, paddle2, showMessage);
-
-            let isHeavy = GODS[pCol === paddle1 ? config.p1 : config.p2].id === 'kagutsuchi';
-            let intensity = Math.min(2, 1 + rallyCount * 0.1) * (isHeavy ? 1.5 : 1);
-            let intersectY = b.y - (pCol.y + pCol.height / 2);
-            let normalizedIntersectY = intersectY / (pCol.height / 2);
-            let isCrit = Math.abs(normalizedIntersectY) > 0.85;
-
-            if (isCrit) hitstopTimer = 6; else if (rallyCount > 5) hitstopTimer = 3;
-
-            if (isCrit) { intensity *= 1.5; playSound('critical', intensity); showMessage('CRÍTICO', '#f00'); }
-            else playSound(pCol === paddle1 ? 'hit1' : 'hit2', intensity);
-
-            if (!(attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0)) b.color = pCol.color;
-            b.glowSize = Math.min(30, 15 + rallyCount * 1.5);
-            let bounceAngle = normalizedIntersectY * (Math.PI / 3);
-            if (isCrit) bounceAngle *= 1.2;
-            let dir = pCol === paddle1 ? 1 : -1;
-
-            kickCamera(isCrit ? 8 : 3.5, isCrit ? 0.012 : 0.003, dir === 1 ? 1 : -1, normalizedIntersectY * 1.5);
-
-            b.currentSpeed = Math.min(b.maxSpeed, b.baseSpeed + (rallyCount * (isHeavy ? 0.8 : 0.5)) + (isCrit ? 2 : 0));
-            paddle2.speed = Math.min(15, paddle2.baseSpeed + rallyCount * 0.3);
-
-            b.vx = dir * b.currentSpeed * Math.cos(bounceAngle);
-            b.vy = b.currentSpeed * Math.sin(bounceAngle);
-            b.x = dir === 1 ? pCol.x + pCol.width + b.radius : pCol.x - b.radius;
-
-            if (rallyCount > 0 && rallyCount % 5 === 0 && bIndex === 0) showMessage(`¡Rally x${rallyCount}!`, '#fff');
-
-            if (window.MutationManager && window.MutationManager.active) {
-                let mutEffects = window.MutationManager.handleCollision(b, pCol, dir, extraBalls, typeof showMessage === 'function' ? showMessage : null, paddle1, paddle2);
-                if (mutEffects.hitstopMod > 0) hitstopTimer = mutEffects.hitstopMod;
-                if (mutEffects.shakeMod > 0) kickCamera(mutEffects.shakeMod, 0.02, dir, 0);
-                if (mutEffects.triggerFlash) triggerFlash('#adff2f', 0.2);
+        // --- Rebote en paredes superior/inferior (solo si NO está activo Fujin) ---
+        if (!fujinActive) {
+            if (b.y - b.radius < 0 || b.y + b.radius > canvas.height) {
+                b.vy = -b.vy;
+                b.y = b.y - b.radius < 0 ? b.radius : canvas.height - b.radius;
+                playSound('wall', 0.8);
+                EffectsManager.createExplosion(b.x, b.y < 250 ? 0 : canvas.height, '#fff', 8);
+                kickCamera(2.5, 0);
+                EffectsManager.addSpeedLines(b.x, b.y, b.color, 3);
+                if (window.EclipseManager && window.EclipseManager.active) {
+                    window.EclipseManager.addLightEcho(b.x, b.y);
+                }
             }
         }
 
+        // --- Colisión con paletas (solo si NO está activo Fujin) ---
+        if (!fujinActive) {
+            let isHittingP1 = b.x - b.radius < paddle1.x + paddle1.width &&
+                              b.x + b.radius > paddle1.x &&
+                              b.y + b.radius > paddle1.y &&
+                              b.y - b.radius < paddle1.y + paddle1.height;
+
+            let isHittingP2 = b.x - b.radius < paddle2.x + paddle2.width &&
+                              b.x + b.radius > paddle2.x &&
+                              b.y + b.radius > paddle2.y &&
+                              b.y - b.radius < paddle2.y + paddle2.height;
+
+            let pCol = null;
+            if (isHittingP1 && paddle1.timers.ghost === 0 && b.vx < 0) pCol = paddle1;
+            else if (isHittingP2 && paddle2.timers.ghost === 0 && b.vx > 0) pCol = paddle2;
+
+            if (pCol) {
+                let attackerPaddle = pCol === paddle1 ? paddle2 : paddle1;
+                let attackerGod = pCol === paddle1 ? config.p2 : config.p1;
+
+                // Efectos especiales de algunos dioses al golpear
+                if (attackerGod === 'raijin' && attackerPaddle.timers.skillDur > 0) {
+                    pCol.timers.necrosis = 90;
+                    showMessage('¡ELECTROCUTADO!', '#ffff00', 45, pCol.x, pCol.y);
+                    createImpact(pCol.x, pCol.y + pCol.height / 2, '#ffff00', 1.8);
+                }
+                if (attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0) {
+                    b.color = pCol.color; // Restauramos color al golpear con Fujin
+                }
+
+                b.lastHitBy = pCol;
+                if (bIndex === 0) rallyCount++;
+
+                if (window.MutationManager && window.MutationManager.active) {
+                    window.MutationManager.addPoison(15, paddle2, showMessage);
+                }
+
+                let isHeavy = GODS[pCol === paddle1 ? config.p1 : config.p2].id === 'kagutsuchi';
+                let intensity = Math.min(2, 1 + rallyCount * 0.1) * (isHeavy ? 1.5 : 1);
+                let intersectY = b.y - (pCol.y + pCol.height / 2);
+                let normalizedIntersectY = intersectY / (pCol.height / 2);
+                let isCrit = Math.abs(normalizedIntersectY) > 0.85;
+
+                if (isCrit) hitstopTimer = 6;
+                else if (rallyCount > 5) hitstopTimer = 3;
+
+                if (isCrit) {
+                    intensity *= 1.5;
+                    playSound('critical', intensity);
+                    showMessage('CRÍTICO', '#f00');
+                } else {
+                    playSound(pCol === paddle1 ? 'hit1' : 'hit2', intensity);
+                }
+
+                if (!(attackerGod === 'fujin' && attackerPaddle.timers.skillDur > 0)) {
+                    b.color = pCol.color;
+                }
+                b.glowSize = Math.min(30, 15 + rallyCount * 1.5);
+                let bounceAngle = normalizedIntersectY * (Math.PI / 3);
+                if (isCrit) bounceAngle *= 1.2;
+                let dir = pCol === paddle1 ? 1 : -1;
+
+                kickCamera(isCrit ? 8 : 3.5, isCrit ? 0.012 : 0.003, dir === 1 ? 1 : -1, normalizedIntersectY * 1.5);
+
+                b.currentSpeed = Math.min(b.maxSpeed, b.baseSpeed + (rallyCount * (isHeavy ? 0.8 : 0.5)) + (isCrit ? 2 : 0));
+                paddle2.speed = Math.min(15, paddle2.baseSpeed + rallyCount * 0.3);
+
+                b.vx = dir * b.currentSpeed * Math.cos(bounceAngle);
+                b.vy = b.currentSpeed * Math.sin(bounceAngle);
+                b.x = dir === 1 ? pCol.x + pCol.width + b.radius : pCol.x - b.radius;
+
+                if (rallyCount > 0 && rallyCount % 5 === 0 && bIndex === 0) {
+                    showMessage(`¡Rally x${rallyCount}!`, '#fff');
+                }
+
+                if (window.MutationManager && window.MutationManager.active) {
+                    let mutEffects = window.MutationManager.handleCollision(
+                        b, pCol, dir, extraBalls,
+                        typeof showMessage === 'function' ? showMessage : null,
+                        paddle1, paddle2
+                    );
+                    if (mutEffects.hitstopMod > 0) hitstopTimer = mutEffects.hitstopMod;
+                    if (mutEffects.shakeMod > 0) kickCamera(mutEffects.shakeMod, 0.02, dir, 0);
+                    if (mutEffects.triggerFlash) triggerFlash('#adff2f', 0.2);
+                }
+            }
+        }
+
+        // --- Gol fuera (sin cambios) ---
         if (b.x < -20) {
             if (paddle1.shield) {
-                paddle1.shield = false; b.vx *= -1; b.x = 20;
-                showMessage('¡BLOQUEO!', '#0ff'); playSound('hit1', 2); triggerFlash('#0ff', 0.28);
-                kickCamera(7, 0.012); createImpact(b.x, b.y, '#0ff', 1.4);
-            } else if (bIndex === 0) scorePoint(2); else extraBalls.splice(bIndex - 1, 1);
+                paddle1.shield = false;
+                b.vx *= -1;
+                b.x = 20;
+                showMessage('¡BLOQUEO!', '#0ff');
+                playSound('hit1', 2);
+                triggerFlash('#0ff', 0.28);
+                kickCamera(7, 0.012);
+                createImpact(b.x, b.y, '#0ff', 1.4);
+            } else if (bIndex === 0) {
+                scorePoint(2);
+            } else {
+                extraBalls.splice(bIndex - 1, 1);
+            }
         } else if (b.x > canvas.width + 20) {
             if (paddle2.shield) {
-                paddle2.shield = false; b.vx *= -1; b.x = canvas.width - 20;
-                showMessage('¡BLOQUEO!', '#0ff'); playSound('hit2', 2); triggerFlash('#0ff', 0.28);
-                kickCamera(7, 0.012); createImpact(b.x, b.y, '#0ff', 1.4);
-            } else if (bIndex === 0) scorePoint(1); else extraBalls.splice(bIndex - 1, 1);
+                paddle2.shield = false;
+                b.vx *= -1;
+                b.x = canvas.width - 20;
+                showMessage('¡BLOQUEO!', '#0ff');
+                playSound('hit2', 2);
+                triggerFlash('#0ff', 0.28);
+                kickCamera(7, 0.012);
+                createImpact(b.x, b.y, '#0ff', 1.4);
+            } else if (bIndex === 0) {
+                scorePoint(1);
+            } else {
+                extraBalls.splice(bIndex - 1, 1);
+            }
         }
     }
 }
