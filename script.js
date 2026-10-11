@@ -403,7 +403,7 @@ function update() {
 
     // --- Movimiento P1 ---
     let necrosisMult1 = paddle1.timers.necrosis > 0 ? 0.4 : 1;
-    let p1Speed = (paddle1.timers.hielo > 0 ? paddle1.baseSpeed * 0.4 : paddle1.baseSpeed) * necrosisMult1;
+    let p1Speed = (paddle1.timers.hielo > 0 ? paddle1.baseSpeed * 0.4 : paddle1.baseSpeed) * necrosisMult1 * (paddle1.timers.slow > 0 ? 0.6 : 1);
     let p1Dir = 0;
     if (keys.w) p1Dir = -1;
     if (keys.s) p1Dir = 1;
