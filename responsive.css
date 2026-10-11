@@ -5,3 +5,40 @@
 .touch-controls{gap:10px;touch-action:manipulation;user-select:none;-webkit-user-select:none}.touch-player{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px;border:1px solid var(--line);background:#101421}.touch-player>span{grid-column:1/-1;color:var(--muted);font-size:9px;letter-spacing:.16em}.touch-player button{min-height:48px;border:1px solid #48516b;background:#1a2031;color:var(--text);border-radius:4px;font-size:13px;font-weight:800;touch-action:manipulation;user-select:none;-webkit-user-select:none}.touch-player-one button:last-child{border-color:var(--p1);color:var(--p1)}.touch-player-two button:last-child{border-color:var(--p2);color:var(--p2)}.touch-player button:active{background:#323b53;transform:scale(.98)}.touch-player[hidden]{display:none!important}.arena-wrap canvas{touch-action:none;-webkit-user-select:none;user-select:none}@media(max-width:620px){.touch-controls{grid-template-columns:1fr}.touch-player{grid-template-columns:1fr 1fr 1.4fr}.touch-player button{min-height:52px;font-size:14px}.arena-wrap{border-color:#8d9ab8}.game-screen{padding-left:10px;padding-right:10px}.scorebar{padding:9px 6px}.arena-wrap canvas{width:100%;height:auto;aspect-ratio:5/3}}
 
 @media(pointer:coarse){.touch-controls{display:grid}.touch-player{min-width:0}.touch-player button{touch-action:manipulation}}
+
+
+/* V0.1.3: partida adaptada a pantallas táctiles y orientación horizontal. */
+.landscape-hint{display:none;}
+.counter-label{display:block;margin-top:5px;color:var(--gold)!important;font-size:9px!important;line-height:1.35;}
+.counter-info{padding:8px 10px;border-left:2px solid var(--god);background:#ffffff08;}
+@media (orientation:portrait) and (max-width:760px){.landscape-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;padding:9px 12px;border:1px solid #e8bd7270;background:#171725;color:#e8d5ad;font-size:11px;line-height:1.4}.landscape-hint button{background:transparent;border:0;color:inherit;font-size:20px;padding:0 5px}.landscape-hint.dismissed{display:none}}
+@media (orientation:landscape) and (max-height:560px){
+  body.game-playing{overflow:hidden;height:100dvh;min-height:0;}
+  body.game-playing .topbar,body.game-playing .site-footer{display:none!important;}
+  body.game-playing main{height:100dvh;min-height:0;}
+  body.game-playing #screen-game{position:fixed;inset:0;width:100%;height:100dvh;min-height:0;margin:0;padding:5px 12px;overflow-y:auto;display:flex;justify-content:flex-start;gap:4px;}
+  body.game-playing .game-heading{width:100%;margin:0;align-items:center;flex-shrink:0;}
+  body.game-playing .game-heading .eyebrow{display:none;}
+  body.game-playing .game-heading h2{font-size:clamp(15px,3.3vh,23px);}
+  body.game-playing .game-actions{flex-direction:row;gap:5px;}
+  body.game-playing .game-actions .button{padding:6px 9px;font-size:9px;}
+  body.game-playing .scorebar{width:100%;flex-shrink:0;grid-template-columns:1fr 75px 1fr;padding:4px 9px;}
+  body.game-playing .score-player .score-name{font-size:clamp(11px,2.2vh,15px);}
+  body.game-playing .score-player b{font-size:clamp(18px,3.5vh,25px);}
+  body.game-playing .score-player small,.match-center span{font-size:7px;margin-top:1px;}
+  body.game-playing .match-center b{font-size:13px;}
+  body.game-playing .arena-wrap{width:100%;min-height:0;display:flex;justify-content:center;align-items:center;flex:1 1 auto;}
+  body.game-playing .arena-wrap canvas{width:100%;height:auto;max-height:calc(100dvh - 118px);aspect-ratio:5/3;object-fit:contain;}
+  body.game-playing .combat-footer{width:100%;flex-shrink:0;padding:4px 8px;gap:8px;grid-template-columns:1fr 1fr;}
+  body.game-playing .arena-hint{display:none;}
+  body.game-playing .skill-status{grid-template-columns:28px 1fr;gap:5px;}
+  body.game-playing .skill-key{height:25px;font-size:7px;}
+  body.game-playing .skill-status b{font-size:8px;}
+  body.game-playing .skill-status small{font-size:7px;margin-top:1px;}
+  body.game-playing .touch-controls{display:grid;width:100%;grid-template-columns:1fr 1fr;gap:6px;margin-top:0;flex-shrink:0;}
+  body.game-playing .touch-player{padding:4px;gap:4px;grid-template-columns:1fr 1fr 1.3fr;}
+  body.game-playing .touch-player>span{font-size:7px;}
+  body.game-playing .touch-player button{min-height:34px;padding:4px;font-size:11px;}
+  body.game-playing .landscape-hint{display:none;}
+}
+@media (orientation:landscape) and (max-height:560px) and (pointer:coarse){body.game-playing .touch-controls{display:grid;}}

@@ -6,6 +6,16 @@ export const GODS = {
   amaterasu:{id:'amaterasu',name:'Amaterasu',title:'Diosa del sol',symbol:'☼',color:'#f4ce78',role:'Defensa',description:'Invoca luz divina para ampliar su zona de cobertura durante un breve periodo.',skill:{name:'Resplandor',cooldown:9,description:'Aumenta el tamaño de la paleta durante 2 segundos.'},stats:{speed:7.2,size:106,power:7}},
   inari:{id:'inari',name:'Inari',title:'Diosa del espejismo',symbol:'狐',color:'#e8a0e6',role:'Engaño',description:'Desorienta al oponente y convierte movimientos simples en decisiones difíciles.',skill:{name:'Espejismo',cooldown:8,description:'Invierte los controles del rival durante 1,5 segundos.'},stats:{speed:8.4,size:92,power:8}},
   hades:{id:'hades',name:'Hades',title:'Señor del inframundo',symbol:'♜',color:'#b6a0ff',role:'Debilitamiento',description:'Extiende una sombra sobre la paleta rival y reduce su cobertura durante un breve instante.',skill:{name:'Sombra del inframundo',cooldown:10,description:'Reduce el tamaño de la paleta rival durante 2 segundos.'},stats:{speed:7.1,size:105,power:8}},
-  athena:{id:'athena',name:'Atenea',title:'Diosa de la estrategia',symbol:'⌘',color:'#f0d18a',role:'Contraataque',description:'Lee el intercambio y prepara un golpe de respuesta más veloz en el siguiente contacto.',skill:{name:'Contraataque',cooldown:9,description:'El siguiente golpe con la paleta devuelve la pelota con velocidad aumentada.'},stats:{speed:7.6,size:102,power:8}}
+  athena:{id:'athena',name:'Atenea',title:'Diosa de la estrategia',symbol:'⌘',color:'#f0d18a',role:'Contraataque',description:'Lee el intercambio y prepara un golpe de respuesta más veloz en el siguiente contacto.',skill:{name:'Contraataque',cooldown:9,description:'El siguiente golpe con la paleta devuelve la pelota con velocidad aumentada.'},stats:{speed:7.6,size:102,power:8}},
+  odin:{id:'odin',name:'Odín',title:'Padre de los dioses nórdicos',symbol:'ᚠ',color:'#b7c7e8',role:'Precisión',description:'Sacrifica la fuerza bruta por una lectura precisa del intercambio.',skill:{name:'Visión de las runas',cooldown:9,description:'Reduce brevemente la velocidad de la pelota para ganar tiempo de reacción.'},stats:{speed:7.4,size:100,power:7}},
+  quetzalcoatl:{id:'quetzalcoatl',name:'Quetzalcóatl',title:'Serpiente emplumada',symbol:'羽',color:'#78d6a3',role:'Control aéreo',description:'Controla las corrientes y cambia la trayectoria del intercambio.',skill:{name:'Viento emplumado',cooldown:8,description:'Desvía la trayectoria vertical de la pelota y la devuelve hacia el centro.'},stats:{speed:8.1,size:96,power:7}}
 };
+
+// Círculo de contrapartidas: cada dios contrarresta al siguiente y es contrarrestado por el anterior.
+export const GOD_COUNTERS = {raijin:'fujin',fujin:'kagutsuchi',kagutsuchi:'susanoo',susanoo:'amaterasu',amaterasu:'inari',inari:'hades',hades:'athena',athena:'odin',odin:'quetzalcoatl',quetzalcoatl:'raijin'};
+export function matchupModifier(attackerId, defenderId){
+  if(GOD_COUNTERS[attackerId]===defenderId) return 1.2;
+  if(GOD_COUNTERS[defenderId]===attackerId) return 0.8;
+  return 1;
+}
 export const SETTINGS = {width:1000,height:600,winScore:7,ballSpeed:7.2,maxBallSpeed:15,paddleWidth:13,basePaddleHeight:100,skillEnabled:true,itemsEnabled:true};

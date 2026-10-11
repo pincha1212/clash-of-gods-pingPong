@@ -1,6 +1,6 @@
-# Clash of Gods — Divine Arena V0.1.2
+# Clash of Gods — Divine Arena V0.1.3
 
-Prototipo de ping-pong arcade con ocho dioses, habilidades, modo contra CPU y modo local para dos jugadores. Archivos estáticos en la raíz; HTML, CSS y JavaScript nativos, sin proceso de compilación ni dependencias obligatorias.
+Prototipo de ping-pong arcade con diez dioses, habilidades, modo contra CPU y modo local para dos jugadores. Archivos estáticos en la raíz; HTML, CSS y JavaScript nativos, sin proceso de compilación ni dependencias obligatorias.
 
 ## Ejecutar
 
@@ -21,19 +21,16 @@ Abrir después `http://localhost:8000` en el navegador. También puede publicars
 - Las líneas de cancha, el perímetro y la red central tienen mayor contraste.
 - Se agregan Hades (Sombra del inframundo: reduce temporalmente la paleta rival) y Atenea (Contraataque: potencia el siguiente golpe).
 
-## Cambios V0.1.2
 
-- Las pantallas ocultas permanecen ocultas; el menú ya no pisa la navegación por prioridad CSS.
-- El logotipo superior permite volver al menú y detiene la partida en curso.
-- Los botones táctiles de habilidades activan los poderes; los controles del jugador 2 se ocultan en modo contra CPU.
-- Los potenciadores recogidos por la pelota se asignan al jugador que golpeó la pelota por última vez, no siempre al jugador 1.
-- Los nuevos duelos limpian entradas que hayan quedado presionadas y restablecen el texto del botón de pausa.
+## Cambios V0.1.3
 
-## Estado de verificación
+- Ajuste específico para jugar en horizontal en teléfonos y tablets: durante el combate se ocultan cabecera y pie, se compactan el marcador y los controles, y la cancha aprovecha el espacio disponible.
+- Aviso para girar el dispositivo cuando el combate se abre en vertical; se puede cerrar y continuar. El navegador puede ignorar el intento de fijar la orientación, por lo que el diseño adaptable sigue siendo el mecanismo principal.
+- Se agregan Odín y Quetzalcóatl, con habilidades activas propias.
+- Sistema circular de contrapartidas: Raijin → Fujin → Kagutsuchi → Susanoo → Amaterasu → Inari → Hades → Atenea → Odín → Quetzalcóatl → Raijin. Cada dios contrarresta al siguiente y es contrarrestado por el anterior.
+- Frente a su contrapartida directa, una habilidad tiene efecto reforzado y 15% menos de recarga; si el dios está contrarrestado, el efecto se reduce y la recarga aumenta 15%. Los duelos sin relación directa no reciben modificadores.
 
-- **VERIFICADO:** sintaxis de todos los módulos cargados desde `game.js`; referencias CSS/JS directas e identificadores HTML sin duplicados; pruebas automatizadas de navegación, selección, configuración, renderizado Canvas, pausa/reanudación y activación de habilidades por teclado y control táctil mediante un arnés de navegador.
-- **PARCIALMENTE VERIFICADO:** carga nativa de los módulos ES desde una URL HTTP, ejecución de una partida completa hasta la pantalla de resultados y pruebas en Android/GitHub Pages/dispositivos físicos. El entorno usado para la prueba bloqueó las navegaciones HTTP locales, por lo que las interacciones se probaron mediante un arnés que incorpora los mismos módulos al HTML. Una fuente de Google Fonts tampoco pudo resolverse; se utilizan fuentes alternativas del sistema.
+## Verificación V0.1.3
 
-## Mantenimiento
-
-`game.js` coordina la interfaz y el bucle principal. Física, controles, habilidades, estado, audio, efectos, HUD y navegación permanecen separados en sus propios archivos. Los scripts de la implementación antigua que no carga `index.html` se conservaron para evitar eliminaciones no solicitadas; no forman parte del flujo activo de esta versión.
+- **VERIFICADO:** sintaxis de los módulos JavaScript; referencias de módulos y estilos; diez dioses definidos; ciclo de contrapartidas cerrado, sin dioses fuera del ciclo; integridad de los ZIP completo y delta.
+- **NO VERIFICADO:** juego en navegador real, uso táctil en un teléfono/tablet físico y bloqueo real de orientación. El entorno de prueba bloqueó la navegación HTTP local del navegador automatizado.
