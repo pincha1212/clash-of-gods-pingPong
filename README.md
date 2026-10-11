@@ -1,6 +1,6 @@
-# Clash of Gods — Divine Arena V0.1.1
+# Clash of Gods — Divine Arena V0.1.2
 
-Prototipo de ping-pong arcade con seis dioses, habilidades, modo contra CPU y modo local para dos jugadores. Archivos estáticos en la raíz; HTML, CSS y JavaScript nativos, sin proceso de compilación ni dependencias obligatorias.
+Prototipo de ping-pong arcade con ocho dioses, habilidades, modo contra CPU y modo local para dos jugadores. Archivos estáticos en la raíz; HTML, CSS y JavaScript nativos, sin proceso de compilación ni dependencias obligatorias.
 
 ## Ejecutar
 
@@ -17,9 +17,11 @@ Abrir después `http://localhost:8000` en el navegador. También puede publicars
 - Jugador 1: `W` / `S`; habilidad: `Espacio`.
 - Jugador 2 local: `↑` / `↓`; habilidad: `Enter`.
 - `Esc`: pausar o reanudar durante el combate.
-- En pantallas pequeñas aparecen controles táctiles; las habilidades se activan tocando los botones de poder.
+- En pantallas táctiles se puede arrastrar la mitad propia de la cancha para mover la paleta; los botones táctiles permiten moverla y activar habilidades. En modo local se habilitan los controles del segundo jugador.
+- Las líneas de cancha, el perímetro y la red central tienen mayor contraste.
+- Se agregan Hades (Sombra del inframundo: reduce temporalmente la paleta rival) y Atenea (Contraataque: potencia el siguiente golpe).
 
-## Correcciones V0.1.1
+## Cambios V0.1.2
 
 - Las pantallas ocultas permanecen ocultas; el menú ya no pisa la navegación por prioridad CSS.
 - El logotipo superior permite volver al menú y detiene la partida en curso.
