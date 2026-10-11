@@ -15,12 +15,15 @@ export function activateAbility(side){if(!state.running||state.paused||state.fin
  case'tsukuyomi':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.max(4.5,speed*.72);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='tsukuyomi';b.effectTime=.8;break;}
  case'persephone':{p.grow=1.8;p.h=p.baseH*1.45;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);p.shield=1.3;p.abilityEffect='persephone';break;}
  }
- if(god.kind==='hero'){
-  const heroPower=god.heroPower||'counter';
+ if(god.kind==='hero'||god.kind==='titan'||god.kind==='monster'){
+  const heroPower=god.heroPower||god.abilityPower||'counter';
   const speed=Math.hypot(b.vx,b.vy)||b.speed;
   const setSpeed=mult=>{const next=Math.min(SETTINGS.maxBallSpeed,Math.max(4.5,speed*mult));b.vx=(b.vx/speed)*next;b.vy=(b.vy/speed)*next;b.speed=next;};
   switch(heroPower){
    case'speed':setSpeed(1.25);b.specialEffect=god.id;b.effectTime=.75;break;
+   case'slowcounter':{const next=Math.max(4.5,speed*.78);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;p.counter=1.4;b.specialEffect=god.id;b.effectTime=.75;break;}
+   case'speedshrink':{setSpeed(1.18);r.shrink=1.5;r.h=r.baseH*.7;r.y=clamp(r.y,0,SETTINGS.height-r.h);b.specialEffect=god.id;b.effectTime=.75;break;}
+   case'slowcurve':{const next=Math.max(4.5,speed*.8);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?3:-3),-8,8);b.specialEffect=god.id;b.effectTime=.75;break;}
    case'grow':case'growshield':case'growcounter':p.grow=1.8;p.h=p.baseH*1.55;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);if(heroPower==='growshield')p.shield=1.2;if(heroPower==='growcounter'){p.counter=1.3;setSpeed(1.08);}break;
    case'curve':case'dashcurve':case'speedcurve':case'nezha':b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?3.5:-3.5),-8,8);if(heroPower==='speedcurve'||heroPower==='nezha')setSpeed(1.12);if(heroPower==='dashcurve')p.y=clamp(b.y-p.h/2,0,SETTINGS.height-p.h);b.specialEffect=god.id;b.effectTime=.75;break;
    case'dash':case'shielddash':p.y=clamp(b.y-p.h/2,0,SETTINGS.height-p.h);if(heroPower==='shielddash')p.shield=1.2;break;
