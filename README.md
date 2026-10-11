@@ -1,34 +1,28 @@
-# Clash of Gods — Divine Arena V0.1.5
+# Clash of Gods — Divine Arena V0.1.6
 
-Prototipo arcade de ping-pong divino con catorce dioses, habilidades activas, modo contra CPU y modo local para dos jugadores. Proyecto estático en la raíz, con HTML, CSS y JavaScript nativos; no requiere compilación ni frameworks.
+Juego arcade de ping-pong divino en HTML/CSS/JavaScript nativos, con 20 dioses, habilidades, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
 ## Ejecutar
 
-Como el juego utiliza módulos JavaScript, no conviene abrir `index.html` directamente como `file://`. Ejecutar un servidor estático dentro de la carpeta del proyecto:
-
-```bash
-python -m http.server 8000
-```
-
-Abrir `http://localhost:8000` en ese mismo dispositivo. Si el servidor corre en una computadora y se quiere jugar desde el teléfono o la tablet, usar la dirección IP local de la computadora en lugar de `localhost`, con ambos dispositivos en la misma red y el puerto permitido por el firewall.
+Desde la carpeta del proyecto, ejecutar `python -m http.server 8000` y abrir `http://localhost:8000`. Para jugar desde un teléfono o tablet conectado a la misma red que la computadora que sirve el juego, abrir la IP local de esa computadora en el móvil y permitir el puerto en el firewall.
 
 ## Controles
 
 - Jugador 1: `W` / `S`; habilidad: `Espacio`.
 - Jugador 2 local: `↑` / `↓`; habilidad: `Enter`.
-- `Esc`: pausar o reanudar durante el combate.
-- En pantallas táctiles se puede arrastrar la mitad propia de la cancha para mover la paleta; los botones táctiles permiten moverla y activar habilidades. En modo CPU se ocultan los controles del segundo jugador.
+- `Esc`: pausar o reanudar.
+- En pantallas táctiles, arrastrar el lado propio de la cancha o usar los botones en pantalla.
 
-## Cambios V0.1.5
+## Cambios V0.1.6
 
-- Optimización visual para mejorar la fluidez: se quitaron gradientes radiales, sombras grandes y trazados decorativos costosos del renderizado de cada fotograma.
-- La pelota se mantiene blanca. Las habilidades ya no recolorean su cuerpo; sus efectos se dibujan alrededor de la pelota o de la paleta durante un intervalo corto.
-- La estela de la pelota se redujo a cinco posiciones como máximo. Las partículas se limitaron a 60 activas, cada activación genera un máximo de diez y se dibujan sin sombras.
-- El aura del personaje se ilumina con el color de su divinidad cuando activa una habilidad. Zeus produce rayos breves; Raijin una señal de tormenta/viento; Kagutsuchi un aro ígneo; Poseidón ondas; Loki un espejismo.
-- Se agregan Poseidón, que modifica la trayectoria vertical y ralentiza ligeramente al rival, y Loki, que invierte temporalmente sus controles.
-- El ciclo de contrapartidas se amplía a catorce dioses: Raijin → Fujin → Kagutsuchi → Susanoo → Amaterasu → Inari → Hades → Atenea → Odín → Quetzalcóatl → Zeus → Anubis → Poseidón → Loki → Raijin.
+- Se agregan Thor, Medusa, Gaia, Thoth, Kali y Apolo; el elenco pasa de 14 a 20 dioses.
+- Se elimina la contrapartida circular. Cada dios pertenece a Piedra, Papel o Tijera: Piedra vence a Tijera; Tijera vence a Papel; Papel vence a Piedra. Las ventajas modifican el efecto de las habilidades y el impulso de la pelota en los golpes; los emparejamientos de la misma clase son neutrales.
+- La selección y el códice muestran clase, ventajas y debilidades.
+- El canvas estático de la arena se prerenderiza una vez y se reutiliza como imagen de fondo. Se reducen la estela a tres posiciones, las partículas a 28 simultáneas y los efectos por activación. Se eliminan sombras/filtros visuales de la arena durante la partida.
+- La pelota permanece blanca; las habilidades se distinguen mediante auras y efectos breves. Se agregan habilidades funcionales para los seis dioses nuevos.
+- Se ajusta la grilla de selección y el códice para mostrar más personajes en pantallas pequeñas.
 
 ## Verificación
 
-- **VERIFICADO:** sintaxis de los módulos JavaScript; referencias locales de módulos, CSS y JS; catorce dioses definidos; ciclo de contrapartidas cerrado; límites de partículas y estela; integridad de los ZIP.
-- **NO VERIFICADO:** FPS medidos, partida en navegador real, ajuste visual en dispositivos físicos y controles táctiles reales. Sin una prueba en el dispositivo no se puede prometer una cifra de FPS ni una mejora idéntica en todos los equipos.
+- **VERIFICADO:** sintaxis JavaScript, imports/referencias locales, 20 dioses definidos, cada dios asignado exactamente a una clase, reglas Piedra-Papel-Tijera y ZIP íntegro.
+- **NO VERIFICADO:** FPS medidos, balance tras partidas reales, controles físicos en dispositivos reales y ajuste visual en navegadores/dispositivos concretos. El prerenderizado y la reducción de partículas disminuyen trabajo gráfico por fotograma, pero la mejora real debe medirse en el dispositivo.
