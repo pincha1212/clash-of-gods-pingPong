@@ -1,21 +1,9 @@
-// config.js
-// --- GAME DATA & STATE ---
-const GODS = {
-    raijin: { id: 'raijin', name: 'Raijin', icon: '⚡', color: '#00ffff', speed: 8, height: 100, desc: 'Equilibrado', skill: { name: 'Tormenta', cd: 600, dur: 120 }, aura: 'storm', hitPitch: 1.15 },
-    fujin: { id: 'fujin', name: 'Fujin', icon: '🌪️', color: '#55ff55', speed: 9.5, height: 80, desc: 'Veloz / Pequeño', skill: { name: 'Ráfaga', cd: 400, dur: 10 }, aura: 'wind', hitPitch: 1.35 },
-    kagutsuchi: { id: 'kagutsuchi', name: 'Kagutsuchi', icon: '🔥', color: '#ff3300', speed: 6.5, height: 110, desc: 'Golpes Fuertes', skill: { name: 'Llamarada', cd: 700, dur: 180 }, aura: 'fire', hitPitch: 0.9 },
-    susanoo: { id: 'susanoo', name: 'Susanoo', icon: '🌊', color: '#3366ff', speed: 5, height: 130, desc: 'Defensa Alta', skill: { name: 'Maremoto', cd: 600, dur: 150 }, aura: 'water', hitPitch: 0.72 },
-    amaterasu: { id: 'amaterasu', name: 'Amaterasu', icon: '☀️', color: '#ffd700', speed: 7, height: 110, desc: 'Diosa del Sol', skill: { name: 'Resplandor', cd: 700, dur: 120 }, aura: 'light', hitPitch: 1.2 },
-    inari: { id: 'inari', name: 'Inari', icon: '🦊', color: '#ff69b4', speed: 8.5, height: 90, desc: 'Ilusión', skill: { name: 'Espejismo', cd: 600, dur: 10 }, aura: 'illusion', hitPitch: 1.1 }
+export const GODS = {
+  raijin:{id:'raijin',name:'Raijin',title:'Señor de la tormenta',symbol:'ϟ',color:'#70e4e9',role:'Control',description:'Domina el ritmo del duelo y castiga al rival con una descarga que reduce su movilidad.',skill:{name:'Tormenta',cooldown:8,description:'Ralentiza al rival durante 1,7 segundos.'},stats:{speed:7.8,size:100,power:7}},
+  fujin:{id:'fujin',name:'Fujin',title:'Señor del viento',symbol:'〰',color:'#91e58a',role:'Movilidad',description:'Una deidad veloz que corrige su posición en un instante para alcanzar pelotas difíciles.',skill:{name:'Ráfaga',cooldown:6,description:'Se impulsa hacia la altura de la pelota.'},stats:{speed:9.3,size:84,power:6}},
+  kagutsuchi:{id:'kagutsuchi',name:'Kagutsuchi',title:'Dios del fuego',symbol:'✹',color:'#ff805f',role:'Ataque',description:'Convierte los intercambios largos en una prueba de reflejos con una pelota abrasadora.',skill:{name:'Llamarada',cooldown:9,description:'Acelera la pelota y la envuelve en fuego.'},stats:{speed:6.7,size:108,power:9}},
+  susanoo:{id:'susanoo',name:'Susanoo',title:'Dios de las mareas',symbol:'≋',color:'#7c9cff',role:'Defensa',description:'Resiste la presión y gana una oportunidad extra cuando parece que el punto está perdido.',skill:{name:'Maremoto',cooldown:10,description:'Bloquea una pelota que iba a salir de la arena.'},stats:{speed:6.2,size:124,power:7}},
+  amaterasu:{id:'amaterasu',name:'Amaterasu',title:'Diosa del sol',symbol:'☼',color:'#f4ce78',role:'Defensa',description:'Invoca luz divina para ampliar su zona de cobertura durante un breve periodo.',skill:{name:'Resplandor',cooldown:9,description:'Aumenta el tamaño de la paleta durante 2 segundos.'},stats:{speed:7.2,size:106,power:7}},
+  inari:{id:'inari',name:'Inari',title:'Diosa del espejismo',symbol:'狐',color:'#e8a0e6',role:'Engaño',description:'Desorienta al oponente y convierte movimientos simples en decisiones difíciles.',skill:{name:'Espejismo',cooldown:8,description:'Invierte los controles del rival durante 1,5 segundos.'},stats:{speed:8.4,size:92,power:8}}
 };
-
-const config = { p1: 'raijin', p2: 'fujin', winScore: 10, difficulty: 'normal', powerUps: true, mode: 'cpu' };
-
-let records = { maxDiff: 0, maxRally: 0, wins: { raijin: 0, fujin: 0, kagutsuchi: 0, susanoo: 0, amaterasu: 0, inari: 0 } };
-
-try {
-    let saved = JSON.parse(localStorage.getItem('clashGodsRec'));
-    if (saved) records = { ...records, ...saved };
-} catch (e) { 
-    console.warn("No se pudo cargar el archivo de guardado."); 
-}
+export const SETTINGS = {width:1000,height:600,winScore:7,ballSpeed:7.2,maxBallSpeed:15,paddleWidth:13,basePaddleHeight:100,skillEnabled:true,itemsEnabled:true};

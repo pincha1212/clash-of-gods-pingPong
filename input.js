@@ -1,22 +1,2 @@
-// input.js
-// --- INPUTS ---
-const keys = { w: false, s: false, up: false, down: false, space: false, enter: false };
-
-window.addEventListener('keydown', e => {
-    if (e.key.toLowerCase() === 'w') keys.w = true;
-    if (e.key.toLowerCase() === 's') keys.s = true;
-    if (e.key === 'ArrowUp') keys.up = true;
-    if (e.key === 'ArrowDown') keys.down = true;
-    if (e.key === ' ') { keys.space = true; activateSkill(1); }
-    if (e.key === 'Enter' || e.key === 'Shift') { keys.enter = true; activateSkill(2); }
-    if (e.key.toLowerCase() === 'p' || e.key === 'Escape') togglePause();
-});
-
-window.addEventListener('keyup', e => {
-    if (e.key.toLowerCase() === 'w') keys.w = false;
-    if (e.key.toLowerCase() === 's') keys.s = false;
-    if (e.key === 'ArrowUp') keys.up = false;
-    if (e.key === 'ArrowDown') keys.down = false;
-    if (e.key === ' ') keys.space = false;
-    if (e.key === 'Enter' || e.key === 'Shift') keys.enter = false;
-});
+import {state} from './state.js';import {activateAbility} from './abilities.js';
+export function setupInput(){window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','Space','Enter'].includes(e.code))e.preventDefault();state.keys[e.code]=true;if(e.repeat)return;if(e.code==='Space')activateAbility('p1');if(e.code==='Enter'&&state.mode==='local')activateAbility('p2');if(e.code==='Escape'&&state.screen==='game')window.dispatchEvent(new CustomEvent('toggle-pause'));});window.addEventListener('keyup',e=>{state.keys[e.code]=false;});window.addEventListener('blur',()=>{state.keys={};state.touch={up1:false,down1:false,up2:false,down2:false};});document.querySelectorAll('[data-touch]').forEach(btn=>{const key=btn.dataset.touch;const start=e=>{e.preventDefault();state.touch[key]=true;};const end=e=>{e.preventDefault();state.touch[key]=false;};btn.addEventListener('pointerdown',start);['pointerup','pointercancel','pointerleave'].forEach(ev=>btn.addEventListener(ev,end));btn.addEventListener('contextmenu',e=>e.preventDefault());});}
