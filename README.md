@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.0
+# Clash of Gods — Divine Arena V0.2.1
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -26,9 +26,9 @@ El códice empieza por una pantalla de cuatro categorías: dioses, héroes, tita
 
 Hay 35 arenas en total: se conservan las 30 originales y se agregan cinco arenas nuevas, temáticas de Titanomaquia, Hidra, Kraken, Minotauro y Fenrir. Las arenas se pueden elegir con cualquier categoría de personajes; no se crea una arena por personaje.
 
-## Power-ups de arena (V0.2.0)
+## Power-ups de arena (V0.2.1)
 
-Hay 15 potenciadores que aparecen aleatoriamente durante la partida. La pelota recoge el objeto y el último jugador que la golpeó recibe el efecto correspondiente:
+Hay 25 potenciadores que aparecen aleatoriamente durante la partida. La frecuencia se aumentó: pueden coexistir hasta cinco objetos y aparecen aproximadamente cada 2–3 segundos mientras haya espacio. La pelota recoge el objeto y el último jugador que la golpeó recibe el efecto correspondiente:
 
 1. **Coloso:** aumenta temporalmente el tamaño de la paleta.
 2. **Égida:** bloquea una pelota que iba a salir por tu lado.
@@ -45,6 +45,18 @@ Hay 15 potenciadores que aparecen aleatoriamente durante la partida. La pelota r
 13. **Terremoto:** agrega marcas visuales de vibración a la cancha.
 14. **Prisma:** aplica una variación temporal de color a cada mitad de la arena.
 15. **Aura de contraataque:** rodea tu paleta y potencia el siguiente golpe.
+16. **Maldición diminuta:** reduce la paleta rival.
+17. **Prisión glacial:** inmoviliza brevemente al rival.
+18. **Intercambio astral:** intercambia la altura de las paletas.
+19. **Voluntad inversa:** invierte el rumbo de la pelota.
+20. **Pozo gravitatorio:** curva la trayectoria hacia abajo.
+21. **Trayectoria serpentina:** la pelota se mueve en una curva oscilante.
+22. **Rebote titánico:** aumenta la variación de los ángulos de rebote.
+23. **Segunda oportunidad:** activa un escudo temporal.
+24. **Juicio doble:** el próximo punto que ganes vale dos.
+25. **Aura cromática:** envuelve la paleta en un contorno cambiante.
+
+Además, aparecen **barricadas rúnicas en el centro de la arena** durante un segundo. La pelota rebota contra sus segmentos y hay dos power-ups incrustados que se pueden recoger al tocarlos. Las barricadas vuelven a aparecer con intervalos variables.
 
 Los objetos solo aparecen si está activada la opción **Objetos de arena**. Su efecto es temporal cuando corresponde; los objetos sin efecto sobre la paleta o la arena modifican la pelota durante unos segundos.
 
@@ -59,8 +71,9 @@ Desde la carpeta del proyecto, ejecutar `python -m http.server 8000` y abrir `ht
 - `Esc`: pausar o reanudar.
 - En pantallas táctiles, arrastrar tu lado de la cancha o usar los botones en pantalla.
 
-## Verificación V0.2.0
+## Verificación V0.2.1
 
-- **VERIFICADO:** sintaxis de JavaScript, referencias locales, 15 power-ups registrados y con efecto asignado, 90 IDs de personajes únicos, distribución exacta 30 dioses / 30 héroes / 15 titanes / 15 monstruos y 35 arenas.
-- **VERIFICADO:** filtros de selección y códice incluyen las cuatro categorías; los poderes de titanes y monstruos usan los efectos de combate existentes.
-- **NO VERIFICADO:** partida interactiva completa en navegador real, balance de todas las habilidades, FPS medidos y controles en dispositivos físicos. No se declara una cifra de FPS sin medición.
+- **VERIFICADO:** sintaxis de todos los módulos JavaScript del proyecto.
+- **VERIFICADO:** 25 power-ups registrados; la prueba automatizada de activación recorrió los 25 sin excepciones.
+- **VERIFICADO:** el sistema de aparición admite hasta cinco objetos normales en pantalla y programa las barricadas temporales centrales con una duración de un segundo.
+- **NO VERIFICADO:** partida interactiva completa en navegador real, balance de los nuevos efectos, colisiones en todos los escenarios, FPS medidos y controles en dispositivos físicos.
