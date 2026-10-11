@@ -1,6 +1,6 @@
-# Clash of Gods — Divine Arena V0.1.4
+# Clash of Gods — Divine Arena V0.1.5
 
-Prototipo arcade de ping-pong divino con doce dioses, habilidades activas, modo contra CPU y modo local para dos jugadores. Proyecto estático en la raíz, con HTML, CSS y JavaScript nativos; no requiere compilación ni frameworks.
+Prototipo arcade de ping-pong divino con catorce dioses, habilidades activas, modo contra CPU y modo local para dos jugadores. Proyecto estático en la raíz, con HTML, CSS y JavaScript nativos; no requiere compilación ni frameworks.
 
 ## Ejecutar
 
@@ -19,17 +19,16 @@ Abrir `http://localhost:8000` en ese mismo dispositivo. Si el servidor corre en 
 - `Esc`: pausar o reanudar durante el combate.
 - En pantallas táctiles se puede arrastrar la mitad propia de la cancha para mover la paleta; los botones táctiles permiten moverla y activar habilidades. En modo CPU se ocultan los controles del segundo jugador.
 
-## Cambios V0.1.4
+## Cambios V0.1.5
 
-- Modo de combate apaisado para teléfonos y tablets: oculta cabecera y pie durante la partida, compacta marcador y habilidades, y reserva la zona central para el canvas.
-- El canvas ahora tiene fondo cósmico, constelaciones discretas, marco energético, cancha con profundidad, núcleo rúnico central, red iluminada, paletas facetadas y estelas más intensas para la pelota.
-- Zeus se incorpora con **Rayo del Olimpo**: acelera la pelota y ralentiza brevemente al rival.
-- Anubis se incorpora con **Juicio de la Duat**: rescata una pelota que está por salir por su lado; si no está en peligro inmediato, concede un escudo temporal.
-- El ciclo de contrapartidas queda cerrado en doce dioses: Raijin → Fujin → Kagutsuchi → Susanoo → Amaterasu → Inari → Hades → Atenea → Odín → Quetzalcóatl → Zeus → Anubis → Raijin.
-- Cada dios contrarresta al siguiente y es contrarrestado por el anterior; no existe un dios superior a todos. Frente a la contrapartida directa, la habilidad recibe un modificador de efecto y 15% menos de recarga. Si está contrarrestado, el efecto se reduce y la recarga aumenta 15%. Los demás enfrentamientos no reciben modificadores.
-- El bloqueo de orientación se intenta en dispositivos compatibles, pero el navegador puede rechazarlo. El diseño adaptable sigue siendo la alternativa principal.
+- Optimización visual para mejorar la fluidez: se quitaron gradientes radiales, sombras grandes y trazados decorativos costosos del renderizado de cada fotograma.
+- La pelota se mantiene blanca. Las habilidades ya no recolorean su cuerpo; sus efectos se dibujan alrededor de la pelota o de la paleta durante un intervalo corto.
+- La estela de la pelota se redujo a cinco posiciones como máximo. Las partículas se limitaron a 60 activas, cada activación genera un máximo de diez y se dibujan sin sombras.
+- El aura del personaje se ilumina con el color de su divinidad cuando activa una habilidad. Zeus produce rayos breves; Raijin una señal de tormenta/viento; Kagutsuchi un aro ígneo; Poseidón ondas; Loki un espejismo.
+- Se agregan Poseidón, que modifica la trayectoria vertical y ralentiza ligeramente al rival, y Loki, que invierte temporalmente sus controles.
+- El ciclo de contrapartidas se amplía a catorce dioses: Raijin → Fujin → Kagutsuchi → Susanoo → Amaterasu → Inari → Hades → Atenea → Odín → Quetzalcóatl → Zeus → Anubis → Poseidón → Loki → Raijin.
 
 ## Verificación
 
-- **VERIFICADO:** sintaxis de todos los módulos JavaScript; referencias locales de módulos, CSS y JS; doce dioses definidos; ciclo cerrado de doce contrapartidas; balance de llaves CSS; integridad de los ZIP completo y delta.
-- **NO VERIFICADO:** partida en navegador real, ajuste visual final en dispositivos físicos, controles táctiles reales y bloqueo efectivo de orientación. El entorno de prueba bloqueó la navegación HTTP local del navegador automatizado.
+- **VERIFICADO:** sintaxis de los módulos JavaScript; referencias locales de módulos, CSS y JS; catorce dioses definidos; ciclo de contrapartidas cerrado; límites de partículas y estela; integridad de los ZIP.
+- **NO VERIFICADO:** FPS medidos, partida en navegador real, ajuste visual en dispositivos físicos y controles táctiles reales. Sin una prueba en el dispositivo no se puede prometer una cifra de FPS ni una mejora idéntica en todos los equipos.
