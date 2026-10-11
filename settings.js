@@ -1,7 +1,7 @@
 import {state} from './state.js';
 export function setupSettings(){
  const mode=document.getElementById('mode-select'),diff=document.getElementById('difficulty-select');
- mode.addEventListener('change',()=>{state.mode=mode.value;window.dispatchEvent(new Event('settings-changed'));});diff.addEventListener('change',()=>state.difficulty=diff.value);
+ mode.addEventListener('change',()=>{state.mode=mode.value;window.dispatchEvent(new Event('settings-changed'));});const rosterConfig=document.getElementById('roster-mode-config');if(rosterConfig){rosterConfig.value=state.rosterMode;rosterConfig.addEventListener('change',()=>{state.rosterMode=rosterConfig.value;document.getElementById('roster-mode-select').value=state.rosterMode;window.dispatchEvent(new CustomEvent('roster-mode-changed',{detail:{mode:state.rosterMode,returnToSelect:true}}));});}diff.addEventListener('change',()=>state.difficulty=diff.value);
  document.getElementById('skills-enabled').addEventListener('change',e=>state.skillsEnabled=e.target.checked);document.getElementById('items-enabled').addEventListener('change',e=>state.itemsEnabled=e.target.checked);
  let score=7;const update=()=>document.getElementById('score-value').textContent=score;document.getElementById('score-minus').addEventListener('click',()=>{score=Math.max(3,score-1);state.winScore=score;update();});document.getElementById('score-plus').addEventListener('click',()=>{score=Math.min(15,score+1);state.winScore=score;update();});
  const quality=document.getElementById('video-quality'),motion=document.getElementById('reduced-motion'),volume=document.getElementById('sound-volume'),mute=document.getElementById('settings-sound-enabled'),touch=document.getElementById('touch-controls-enabled');

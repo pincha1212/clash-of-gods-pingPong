@@ -125,3 +125,5 @@ body.reduced-effects .ambient{display:none!important;}
 body.touch-controls-disabled .touch-controls{display:none!important;}
 @media(max-width:900px){.god-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
 @media(max-width:620px){.gear-button{width:36px;height:36px;font-size:19px!important;}.god-grid{grid-template-columns:repeat(3,minmax(0,1fr));}.settings-modal{padding:8px;align-items:flex-start;}.settings-panel{max-height:calc(100dvh - 16px);padding:16px;}.controls-reference p{display:block;}.controls-reference span{display:block;text-align:left;margin-top:3px;}}
+
+@media(max-width:620px){.roster-mode-row{grid-template-columns:1fr;gap:8px}.roster-mode-row select{width:100%}.codex-picker{gap:8px}.codex-choice{min-height:160px}.codex-choice .god-symbol{width:52px;height:52px;font-size:24px}.codex-choice strong{font-size:22px}.codex-subhead{flex-wrap:wrap}}
