@@ -23,18 +23,44 @@ export function updatePhysics(dt){if(!state.running||state.paused||state.finishe
    const free=zones.filter(z=>!state.items.some(it=>Math.hypot(it.x-z.x,it.y-z.y)<35));const spot=free.length?free[Math.floor(Math.random()*free.length)]:{x:300+Math.random()*400,y:85+Math.random()*430};
    state.items.push({x:spot.x,y:spot.y,r:13,life:12,type:pick.id});state.powerupSpawnTimer=2.1+Math.random()*1.0;
   }
-  // Barricadas rúnicas aparecen en el centro durante un segundo y alteran la trayectoria.
+  // Evento de barricadas rúnicas: geometrías variadas en el centro, activas durante ~1 s.
   state.wallSpawnTimer=(state.wallSpawnTimer??5)-dt;
   if(state.wallSpawnTimer<=0&&!state.temporaryWalls.length){
-   const a=POWERUPS[Math.floor(Math.random()*POWERUPS.length)],c=POWERUPS[Math.floor(Math.random()*POWERUPS.length)];
-   state.temporaryWalls=[{x:462,y:176,w:15,h:82,color:'#9be8ff'},{x:523,y:342,w:15,h:82,color:'#d6a4ff'},{x:480,y:282,w:40,h:12,color:'#f6d98b'}];
-   state.items.push({x:450,y:218,r:11,life:1,type:a.id,wallDrop:true},{x:550,y:380,r:11,life:1,type:c.id,wallDrop:true});
-   state.wallSpawnTimer=8.5+Math.random()*3.0;
+   const palette=['#8ee9ff','#d6a4ff','#ffd479','#ff9fe5'];
+   const layouts=[
+    [[-38,-94,12,76],[-38,18,12,76],[26,-38,12,76]],
+    [[-82,-58,68,12],[14,-58,68,12],[-34,0,68,12],[-82,58,68,12],[14,58,68,12]],
+    [[-72,-62,12,62],[-72,0,72,12],[0,0,12,62],[0,-62,72,12]],
+    [[-78,-42,12,84],[-42,-12,84,12],[30,-42,12,84],[ -42,30,84,12]]
+   ];
+   const layout=layouts[Math.floor(Math.random()*layouts.length)],cx=SETTINGS.width/2,cy=SETTINGS.height/2;
+   state.temporaryWalls=layout.map((r,i)=>({x:cx+r[0],y:cy+r[1],w:r[2],h:r[3],color:palette[i%palette.length],life:1.05,maxLife:1.05,rune:['ᚠ','ᚱ','ᛉ','ᛟ'][i%4]}));
+   // Dos objetos quedan cerca del evento, pero sobreviven a la barricada para poder recogerlos.
+   const candidates=[{x:cx-105,y:cy-68},{x:cx+105,y:cy+68},{x:cx-105,y:cy+68},{x:cx+105,y:cy-68}];
+   for(let i=0;i<2;i++){
+    const spot=candidates.splice(Math.floor(Math.random()*candidates.length),1)[0];
+    const pick=POWERUPS[Math.floor(Math.random()*POWERUPS.length)];
+    if(state.items.length<7)state.items.push({x:spot.x,y:spot.y,r:13,life:6.5,type:pick.id,wallDrop:true});
+   }
+   window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'BARRICADAS RÚNICAS',color:'#9be8ff'}}));
+   state.wallSpawnTimer=7.5+Math.random()*3.5;
   }
  }
  for(let i=state.temporaryWalls.length-1;i>=0;i--){const wall=state.temporaryWalls[i];wall.life=(wall.life??1)-dt;if(wall.life<=0)state.temporaryWalls.splice(i,1);}
- // La pelota rebota en las barricadas temporales; los objetos incrustados se recogen por contacto.
- for(const wall of state.temporaryWalls){if(b.x+b.r>wall.x&&b.x-b.r<wall.x+wall.w&&b.y+b.r>wall.y&&b.y-b.r<wall.y+wall.h){if(prevX+b.r<=wall.x){b.x=wall.x-b.r;b.vx=-Math.abs(b.vx);}else if(prevX-b.r>=wall.x+wall.w){b.x=wall.x+wall.w+b.r;b.vx=Math.abs(b.vx);}else if(prevY+b.r<=wall.y){b.y=wall.y-b.r;b.vy=-Math.abs(b.vy);}else if(prevY-b.r>=wall.y+wall.h){b.y=wall.y+wall.h+b.r;b.vy=Math.abs(b.vy);}else{b.vx*=-1;b.vy*=-1;}playTone(310,.025,'triangle',.018);}}
+ // Colisión círculo-rectángulo: las barreras afectan la pelota, no las paletas.
+ for(const wall of state.temporaryWalls){
+  const nearestX=clamp(b.x,wall.x,wall.x+wall.w),nearestY=clamp(b.y,wall.y,wall.y+wall.h);
+  const dx=b.x-nearestX,dy=b.y-nearestY;
+  if(dx*dx+dy*dy<=b.r*b.r){
+   if(prevX+b.r<=wall.x){b.x=wall.x-b.r;b.vx=-Math.abs(b.vx);}
+   else if(prevX-b.r>=wall.x+wall.w){b.x=wall.x+wall.w+b.r;b.vx=Math.abs(b.vx);}
+   else if(prevY+b.r<=wall.y){b.y=wall.y-b.r;b.vy=-Math.abs(b.vy);}
+   else if(prevY-b.r>=wall.y+wall.h){b.y=wall.y+wall.h+b.r;b.vy=Math.abs(b.vy);}
+   else if(Math.abs(dx)>Math.abs(dy)){b.vx*=-1;b.x+=Math.sign(dx||1)*2;}
+   else{b.vy*=-1;b.y+=Math.sign(dy||1)*2;}
+   playTone(310,.025,'triangle',.018);
+  }
+ }
  for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];item.life-=dt;if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';applyPowerup(item.type,ownerSide);state.items.splice(i,1);}}
 
 }

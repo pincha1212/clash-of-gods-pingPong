@@ -26,8 +26,19 @@ function draw(){
  ctx.clearRect(0,0,W,H);
  // El campo está prerenderizado una sola vez; cada frame reutiliza una imagen estática.
  ctx.drawImage(arenaCache,0,0);drawPowerupEffects(ctx);
- // Barricadas rúnicas de aparición breve: geometría simple, borde luminoso y núcleo oscuro.
- for(const wall of state.temporaryWalls||[]){ctx.save();ctx.globalAlpha=Math.min(1,(wall.life??1)*1.2);ctx.fillStyle='#11172b';ctx.fillRect(wall.x,wall.y,wall.w,wall.h);ctx.strokeStyle=wall.color||'#9be8ff';ctx.lineWidth=2;ctx.strokeRect(wall.x+.5,wall.y+.5,wall.w-1,wall.h-1);ctx.globalAlpha*=.45;ctx.fillStyle=wall.color||'#9be8ff';ctx.fillRect(wall.x+3,wall.y+3,Math.max(2,wall.w-6),Math.max(2,wall.h-6));ctx.restore();}
+ // Barricadas rúnicas: núcleo oscuro, doble contorno y marcas geométricas sin blur pesado.
+ for(const wall of state.temporaryWalls||[]){
+  const life=Math.max(0,Math.min(1,(wall.life??1)/(wall.maxLife||1)));
+  const pulse=.78+Math.sin(performance.now()/65+(wall.x+wall.y)*.03)*.12;
+  ctx.save();ctx.globalAlpha=Math.min(1,life*1.35)*pulse;
+  ctx.fillStyle='#101629';ctx.fillRect(wall.x,wall.y,wall.w,wall.h);
+  ctx.strokeStyle=wall.color||'#9be8ff';ctx.lineWidth=2;ctx.strokeRect(wall.x+.5,wall.y+.5,wall.w-1,wall.h-1);
+  ctx.globalAlpha*=.42;ctx.strokeStyle='#ffffff';ctx.lineWidth=1;ctx.strokeRect(wall.x+3.5,wall.y+3.5,Math.max(1,wall.w-7),Math.max(1,wall.h-7));
+  ctx.globalAlpha*=1.7;ctx.fillStyle=wall.color||'#9be8ff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 12px serif';
+  if(wall.w>=28&&wall.h>=24){ctx.fillText(wall.rune||'ᛉ',wall.x+wall.w/2,wall.y+wall.h/2);}
+  else{ctx.beginPath();ctx.moveTo(wall.x+wall.w/2,wall.y+2);ctx.lineTo(wall.x+wall.w-2,wall.y+wall.h/2);ctx.lineTo(wall.x+wall.w/2,wall.y+wall.h-2);ctx.lineTo(wall.x+2,wall.y+wall.h/2);ctx.closePath();ctx.stroke();}
+  ctx.restore();
+ }
  const p1=state.paddles.p1,p2=state.paddles.p2;
  // Red discreta: dos trazos sin blur ni sombras.
  ctx.strokeStyle=(p1?.color||'#70e4e9')+'88';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(500,25);ctx.lineTo(500,575);ctx.stroke();
