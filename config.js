@@ -18,29 +18,29 @@ export const GODS = {
   gaia:{id:'gaia',name:'Gaia',title:'Madre primordial de la Tierra',symbol:'♧',color:'#78c98b',role:'Resistencia',description:'La fuerza primordial de la tierra amplía su zona de defensa.',skill:{name:'Bastión de la Tierra',cooldown:10,description:'Aumenta temporalmente el tamaño de la paleta.'},stats:{speed:6.9,size:116,power:8}},
   thoth:{id:'thoth',name:'Thoth',title:'Dios egipcio del conocimiento',symbol:'𓁟',color:'#80d9d0',role:'Precisión',description:'Calcula el movimiento de la pelota y altera el ritmo del intercambio.',skill:{name:'Cálculo sagrado',cooldown:9,description:'Reduce brevemente la velocidad de la pelota.'},stats:{speed:7.8,size:98,power:7}},
   kali:{id:'kali',name:'Kali',title:'Diosa de la transformación',symbol:'✺',color:'#e78cba',role:'Presión',description:'Desata una ráfaga agresiva que reduce la cobertura rival.',skill:{name:'Danza del tiempo',cooldown:10,description:'Reduce la paleta rival y acelera ligeramente la pelota.'},stats:{speed:8,size:94,power:9}},
-  apollo:{id:'apollo',name:'Apolo',title:'Dios griego de la luz y la profecía',symbol:'☀',color:'#ffd27a',role:'Contraataque',description:'Lee la trayectoria y prepara una devolución precisa.',skill:{name:'Flecha solar',cooldown:9,description:'Potencia el siguiente golpe con la paleta.'},stats:{speed:8.1,size:100,power:8}}
+  apollo:{id:'apollo',name:'Apolo',title:'Dios griego de la luz y la profecía',symbol:'☀',color:'#ffd27a',role:'Contraataque',description:'Lee la trayectoria y prepara una devolución precisa.',skill:{name:'Flecha solar',cooldown:9,description:'Potencia el siguiente golpe con la paleta.'},stats:{speed:8.1,size:100,power:8}},
+
+  isis:{id:'isis',name:'Isis',title:'Diosa egipcia de la magia',symbol:'𓆄',color:'#9ed9df',role:'Protección',description:'Teje un sello protector para sostener el intercambio cuando la presión aumenta.',skill:{name:'Velo de Isis',cooldown:10,description:'Activa un escudo temporal que bloquea una pelota que iba a salir por tu lado.'},stats:{speed:7.4,size:108,power:7}},
+  ares:{id:'ares',name:'Ares',title:'Dios griego de la guerra',symbol:'⚔',color:'#e46b63',role:'Ataque',description:'Busca imponer el ritmo con una ofensiva directa y contundente.',skill:{name:'Furia de guerra',cooldown:9,description:'Acelera la pelota y potencia el siguiente impacto.'},stats:{speed:7.8,size:96,power:10}},
+  artemis:{id:'artemis',name:'Artemisa',title:'Diosa de la caza',symbol:'☾',color:'#a8c6ff',role:'Precisión',description:'La cazadora lunar afina su posición para alcanzar trayectorias complicadas.',skill:{name:'Flecha lunar',cooldown:8,description:'Ajusta la pelota hacia una trayectoria más inclinada.'},stats:{speed:8.2,size:94,power:7}},
+  hermes:{id:'hermes',name:'Hermes',title:'Mensajero de los dioses',symbol:'☿',color:'#e8d18a',role:'Velocidad',description:'Se mueve con una rapidez difícil de seguir y aprovecha cada hueco.',skill:{name:'Paso alado',cooldown:7,description:'Se desplaza rápidamente hacia la altura de la pelota.'},stats:{speed:9.5,size:86,power:7}},
+  freyja:{id:'freyja',name:'Freyja',title:'Diosa nórdica del amor y la magia',symbol:'✧',color:'#e5a0c9',role:'Equilibrio',description:'Combina magia y temple para ganar un instante de control.',skill:{name:'Manto seidr',cooldown:9,description:'Amplía temporalmente la paleta y reduce la velocidad de la pelota.'},stats:{speed:7.6,size:106,power:8}},
+  hel:{id:'hel',name:'Hel',title:'Señora del reino de los muertos',symbol:'☠',color:'#9d9caf',role:'Debilitamiento',description:'La quietud del inframundo reduce la capacidad de respuesta rival.',skill:{name:'Frío de Niflheim',cooldown:10,description:'Ralentiza al rival durante un breve periodo.'},stats:{speed:7,size:104,power:8}},
+  ra:{id:'ra',name:'Ra',title:'Dios solar egipcio',symbol:'☀',color:'#f5b85d',role:'Impacto solar',description:'Invoca el poder del sol para reforzar un golpe decisivo.',skill:{name:'Disco solar',cooldown:9,description:'Acelera la pelota y deja un aro solar breve.'},stats:{speed:7.8,size:100,power:9}},
+  shiva:{id:'shiva',name:'Shiva',title:'Dios de la transformación',symbol:'ॐ',color:'#83b9f4',role:'Transformación',description:'Rompe el ritmo establecido y altera el curso del intercambio.',skill:{name:'Danza cósmica',cooldown:10,description:'Cambia la trayectoria de la pelota y reduce la cobertura rival.'},stats:{speed:7.7,size:102,power:9}},
+  tsukuyomi:{id:'tsukuyomi',name:'Tsukuyomi',title:'Dios japonés de la luna',symbol:'☾',color:'#c4c9f4',role:'Control',description:'La luz lunar calma el intercambio y abre espacio para reaccionar.',skill:{name:'Eclipse lunar',cooldown:9,description:'Reduce temporalmente la velocidad de la pelota.'},stats:{speed:7.5,size:104,power:7}},
+  persephone:{id:'persephone',name:'Perséfone',title:'Reina de la primavera y el inframundo',symbol:'❀',color:'#d5a0a7',role:'Adaptación',description:'Alterna entre la delicadeza primaveral y la firmeza del inframundo.',skill:{name:'Flor del umbral',cooldown:9,description:'Amplía temporalmente la paleta y activa un aura protectora.'},stats:{speed:7.6,size:108,power:8}}
+
 };
 
-// Sistema Piedra-Papel-Tijera: las clases determinan las ventajas del duelo.
-export const GOD_CLASSES = {
-  stone:['kagutsuchi','susanoo','hades','zeus','anubis','thor','kali'],
-  paper:['amaterasu','inari','athena','odin','quetzalcoatl','gaia','thoth'],
-  scissors:['raijin','fujin','poseidon','loki','medusa','apollo']
-};
-export const GOD_CLASS_BY_ID = Object.fromEntries(Object.entries(GOD_CLASSES).flatMap(([type,ids])=>ids.map(id=>[id,type])));
-export const CLASS_INFO = {
-  stone:{name:'Piedra',icon:'◆',beats:'scissors',beatsName:'Tijera',losesTo:'paper',losesToName:'Papel'},
-  paper:{name:'Papel',icon:'▤',beats:'stone',beatsName:'Piedra',losesTo:'scissors',losesToName:'Tijera'},
-  scissors:{name:'Tijera',icon:'✂',beats:'paper',beatsName:'Papel',losesTo:'stone',losesToName:'Piedra'}
-};
-export function matchupModifier(attackerId, defenderId){
-  const attacker=GOD_CLASS_BY_ID[attackerId], defender=GOD_CLASS_BY_ID[defenderId];
-  if(!attacker||!defender||attacker===defender)return 1;
-  return CLASS_INFO[attacker].beats===defender?1.16:0.84;
-}
-export function matchupLabel(attackerId, defenderId){
-  const a=GOD_CLASS_BY_ID[attackerId],b=GOD_CLASS_BY_ID[defenderId];
-  if(!a||!b||a===b)return 'Sin ventaja de clase';
-  return CLASS_INFO[a].beats===b?`${CLASS_INFO[a].name} vence a ${CLASS_INFO[b].name}`:`${CLASS_INFO[a].name} pierde contra ${CLASS_INFO[b].name}`;
-}
+// Todos los dioses tienen una arena temática seleccionable. Seis familias visuales se reutilizan con paletas únicas.
+const ARENA_FAMILIES=[
+ {style:'temple',label:'Templo',bg:'#0b101b',field:'#172033',accent:'#cba86b',line:'#6e6657'},
+ {style:'storm',label:'Tormenta',bg:'#07121b',field:'#10242c',accent:'#70dce4',line:'#456d7a'},
+ {style:'inferno',label:'Abismo ígneo',bg:'#170c12',field:'#2b151c',accent:'#f17a55',line:'#75433d'},
+ {style:'ocean',label:'Santuario marino',bg:'#061522',field:'#0c2638',accent:'#65bde9',line:'#3c7188'},
+ {style:'moon',label:'Santuario lunar',bg:'#0d1020',field:'#191b32',accent:'#b9c4f4',line:'#5c628c'},
+ {style:'wild',label:'Jardín ancestral',bg:'#09170f',field:'#14281d',accent:'#8fd39b',line:'#486c51'}
+];
+export const ARENAS=Object.values(GODS).map((god,index)=>{const family=ARENA_FAMILIES[index%ARENA_FAMILIES.length];return {id:god.id,name:`${god.name} · ${family.label}`,godId:god.id,style:family.style,bg:family.bg,field:family.field,accent:god.color||family.accent,line:family.line};});
 export const SETTINGS = {width:1000,height:600,winScore:7,ballSpeed:7.2,maxBallSpeed:15,paddleWidth:13,basePaddleHeight:100,skillEnabled:true,itemsEnabled:true};

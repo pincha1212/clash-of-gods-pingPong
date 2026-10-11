@@ -1,5 +1,5 @@
 export const state = {
-  screen:'menu', mode:'cpu', difficulty:'normal', winScore:7, skillsEnabled:true, itemsEnabled:true,
+  screen:'menu', mode:'cpu', difficulty:'normal', winScore:7, skillsEnabled:true, itemsEnabled:true, arenaId:'raijin', settings:{quality:'balanced',reducedMotion:false,volume:0.7,sound:true,touchControls:true},
   selected:{p1:'raijin',p2:'fujin'}, scores:{p1:0,p2:0}, running:false, paused:false, finished:false,
   keys:{}, touch:{up1:false,down1:false,up2:false,down2:false}, touchDrag:{p1:null,p2:null}, lastFrame:0, raf:0,
   ball:null,paddles:{p1:null,p2:null}, particles:[], items:[], countdown:0, serveTimer:0, rally:0,
