@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.4
+# Clash of Gods — Divine Arena V0.2.5
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -28,7 +28,7 @@ Hay 35 arenas en total: se conservan las 30 originales y se agregan cinco arenas
 
 ## Power-ups de arena
 
-Hay 25 potenciadores que aparecen aleatoriamente durante la partida. Pueden coexistir hasta cinco objetos normales y, mientras haya espacio, aparece uno nuevo aproximadamente cada 2–3 segundos. La pelota recoge el objeto y el último jugador que la golpeó recibe el efecto correspondiente:
+Hay 27 potenciadores que aparecen aleatoriamente durante la partida. Pueden coexistir hasta cinco objetos normales y, mientras haya espacio, aparece uno nuevo aproximadamente cada 2–3 segundos. La pelota recoge el objeto y el último jugador que la golpeó recibe el efecto correspondiente:
 
 1. **Coloso:** aumenta temporalmente el tamaño de la paleta.
 2. **Égida:** bloquea una pelota que iba a salir por tu lado.
@@ -55,17 +55,18 @@ Hay 25 potenciadores que aparecen aleatoriamente durante la partida. Pueden coex
 23. **Segunda oportunidad:** activa un escudo temporal.
 24. **Juicio doble:** el próximo punto que ganes vale dos.
 25. **Aura cromática:** envuelve la paleta en un contorno cambiante.
+26. **Barricada rúnica:** al recogerla, invoca una formación aleatoria de muros rúnicos en el centro durante aproximadamente un segundo.
+27. **Tempestad divina:** transforma visualmente toda la arena, genera ráfagas que desvían la pelota y añade un efecto eléctrico temporal.
 
 Los objetos aparecen cuando está activada la opción **Objetos de arena**.
 
-## Barricadas rúnicas (V0.2.2)
+## Barricadas y cambios de ambiente (V0.2.5)
 
-- Aparecen en el centro de la arena con cuatro patrones geométricos posibles.
-- Duran aproximadamente un segundo y desaparecen con un pulso visual.
-- La pelota rebota en los segmentos; las paletas no quedan bloqueadas.
-- Cada evento intenta generar dos power-ups cerca de la estructura, sujetos al límite de objetos disponibles.
-- Los tonos cian, violeta, dorado y rosa mantienen la estética oscura y luminosa del juego.
-- Los eventos se repiten con intervalos variables de aproximadamente 7,5–11 segundos.
+- Las barricadas ya no aparecen automáticamente ni generan objetos extra. Solo aparecen cuando la pelota recoge el power-up **Barricada rúnica**.
+- La formación se elige entre cuatro patrones geométricos, dura aproximadamente un segundo y la pelota rebota en sus segmentos; las paletas no quedan bloqueadas.
+- **Tempestad divina** modifica el aspecto de toda la arena, añade trazos eléctricos y ráfagas que afectan la trayectoria de la pelota.
+- Eclipse, Prisma, Terremoto, Viento cruzado, Pozo gravitatorio y Trayectoria serpentina también alteran temporalmente la apariencia o las condiciones de la cancha.
+- Los efectos de ambiente se dibujan encima de la arena elegida y debajo de la pelota y las paletas, para conservar la legibilidad del combate.
 
 ## Ejecutar
 
@@ -137,3 +138,26 @@ El delta no reemplaza todos los archivos del proyecto; solo incluye los archivos
 4. Abre el juego y prueba golpes con la paleta en movimiento, golpes de precisión y los power-ups de pelota pesada y relámpago.
 
 Este delta no sustituye el proyecto completo.
+
+
+## Cambios de power-ups V0.2.5
+
+- Se agregan Barricada rúnica y Tempestad divina, para un total de 27 power-ups.
+- Se elimina la aparición autónoma y periódica de barricadas: la formación solo se activa al recoger su objeto.
+- Se amplían los efectos visuales de ambiente para Viento cruzado, Pozo gravitatorio, Trayectoria serpentina y Tempestad divina, sin reemplazar la identidad de la arena elegida.
+- Tempestad divina combina cambio ambiental, ráfagas físicas y un efecto temporal de pelota relámpago.
+
+## Verificación V0.2.5
+
+- **VERIFICADO:** sintaxis de los módulos JavaScript activos.
+- **VERIFICADO:** catálogo con 27 IDs únicos; activación automatizada de cada power-up; barricadas creadas al activar su power-up y sin temporizador de aparición automática.
+- **VERIFICADO:** integridad del delta.
+- **NO VERIFICADO:** partida completa en navegador real, legibilidad de todos los efectos en cada arena y rendimiento en dispositivos físicos.
+
+## Aplicar la actualización V0.2.5
+
+1. Conserva una copia de seguridad de tu proyecto V0.2.4.
+2. Extrae el delta en una carpeta temporal.
+3. Copia los archivos incluidos sobre la raíz del proyecto V0.2.4 y acepta reemplazar esos archivos.
+4. Activa Objetos de arena y comprueba que las barricadas solo aparezcan después de recoger el power-up correspondiente.
+5. Prueba Tempestad divina, Eclipse, Prisma y Viento cruzado en varias arenas.
