@@ -38,12 +38,24 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  if(!hit)return false;
  b.x=hitX;b.y=hitY;
  const norm=clamp((hitY-(p.y+p.h/2))/(p.h/2),-1,1),dir=side==='p1'?1:-1;
- let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(SETTINGS.ballSpeed,ballMagnitude(b)*1.035));
- if(p.counter>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.32);p.counter=0;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'CONTRAATAQUE',color:p.color}}));}
- let angle=norm*1.02;if(getBallPowerType()==='chaos')angle+=(Math.random()-.5)*.7;if(getBallPowerType()==='ricochet')angle+=(Math.random()-.5)*1.0;
+ // Conserva la escala de los modificadores de pelota y aumenta la intensidad
+ // de forma gradual según la duración del intercambio, sin saltos bruscos.
+ const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier();
+ const rallyFloor=baseSpeed*(1+Math.min(state.rally,16)*.018);
+ let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(rallyFloor,ballMagnitude(b)*1.012));
+ if(p.counter>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.24);p.counter=0;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'CONTRAATAQUE',color:p.color}}));}
+ // El movimiento vertical de la paleta influye sutilmente en el ángulo:
+ // permite apuntar con intención sin hacer que el control sea impredecible.
+ const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
+ let angle=norm*1.08+paddleMotion*.20;
+ if(getBallPowerType()==='chaos')angle+=(Math.random()-.5)*.7;
+ if(getBallPowerType()==='ricochet')angle+=(Math.random()-.5)*1.0;
+ angle=clamp(angle,-1.18,1.18);
+ const perfect=Math.abs(norm)>=.22&&Math.abs(norm)<=.38;
+ if(perfect){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.07);burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'GOLPE PRECISO',color:p.color}}));}
  b.vx=dir*speed*Math.cos(angle);b.vy=speed*Math.sin(angle);b.speed=speed;b.lastHit=side;b.fire=0;b.color='#f6f4ed';state.rally++;
  if(p.aura>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.22);const magnitude=ballMagnitude(b);b.vx=b.vx/magnitude*speed;b.vy=b.vy/magnitude*speed;p.aura=0;p.counter=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'AURA DE CONTRAATAQUE',color:p.color}}));}
- burst(b.x,b.y,p.color,2,1.1);playTone(side==='p1'?410:520,.055,'triangle',.035);return true;
+ burst(b.x,b.y,p.color,perfect?4:2,perfect?1.8:1.1);playTone(perfect?side==='p1'?560:680:side==='p1'?410:520,perfect?.075:.055,'triangle',perfect?.045:.035);return true;
 }
 
 export function serve(direction=Math.random()>.5?1:-1){
@@ -110,8 +122,19 @@ export function updatePhysics(dt){
 
 export function updatePaddles(dt){
  if(!state.running||state.paused||state.finished)return;const {p1,p2}=state.paddles;
- const move=(p,up,down,side)=>{if(p.freeze>0)return;if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);p.y=clamp((p.invert>0?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),0,SETTINGS.height-p.h);return;}let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*dt*60,0,SETTINGS.height-p.h);};
+ const move=(p,up,down,side)=>{
+  const oldY=p.y;if(p.freeze>0){p.motion=0;return;}
+  if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);p.y=clamp((p.invert>0?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),0,SETTINGS.height-p.h);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
+  let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
+  p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*dt*60,0,SETTINGS.height-p.h);
+  p.motion=dt>0?(p.y-oldY)/(dt*60):0;
+ };
  move(p1,state.keys.KeyW||state.touch.up1,state.keys.KeyS||state.touch.down1,'p1');
  if(state.mode==='local')move(p2,state.keys.ArrowUp||state.touch.up2,state.keys.ArrowDown||state.touch.down2,'p2');
- else{if(p2.freeze>0)return;const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2);p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,0,SETTINGS.height-p2.h);}
+ else{
+  const oldY=p2.y;
+  if(p2.freeze>0){p2.motion=0;return;}
+  const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2);
+  p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,0,SETTINGS.height-p2.h);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
+ }
 }

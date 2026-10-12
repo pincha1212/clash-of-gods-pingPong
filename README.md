@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.3
+# Clash of Gods — Divine Arena V0.2.4
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -112,3 +112,28 @@ Desde la carpeta del proyecto, ejecutar `python -m http.server 8000` y abrir `ht
 5. Ejecuta el juego con un servidor local y revisa manualmente los flujos enumerados en el informe.
 
 El delta no reemplaza todos los archivos del proyecto; solo incluye los archivos modificados y el informe de auditoría.
+
+
+## Mejoras de combate V0.2.4
+
+- La dirección del golpe ahora responde de forma moderada al movimiento vertical de la paleta, dando más control para colocar la pelota.
+- Los contactos dentro de una franja de precisión (entre el 22 % y el 38 % de la mitad de la paleta desde el centro) producen un golpe preciso con un pequeño impulso y una señal audiovisual.
+- La pelota gana intensidad gradualmente a medida que crece el intercambio, con límite global para evitar velocidades extremas.
+- Se conserva el modificador de pelota pesada o relámpago al devolver la pelota; la velocidad base de cada efecto ya no se reemplaza por la velocidad normal en el siguiente golpe.
+- El ángulo de salida queda limitado para evitar trayectorias excesivamente verticales que alarguen intercambios sin avance horizontal.
+- El movimiento de paleta se mide tanto con teclado como con arrastre táctil; la CPU también genera una medida de movimiento compatible.
+
+## Verificación V0.2.4
+
+- **VERIFICADO:** sintaxis de todos los módulos JavaScript cargados por `index.html`.
+- **VERIFICADO:** pruebas automatizadas aisladas de las fórmulas de velocidad, límite de ángulo y cálculo de movimiento de paleta.
+- **NO VERIFICADO:** partida completa en navegador real, balance de la franja de precisión, sensación de control en pantalla táctil ni rendimiento en dispositivos físicos.
+
+## Aplicar la actualización V0.2.4
+
+1. Conserva una copia de tu carpeta V0.2.3.
+2. Extrae `clash-of-gods-delta-v0.2.4.zip` en una carpeta temporal.
+3. Copia los archivos incluidos en la raíz de tu proyecto V0.2.3 y acepta reemplazar los archivos correspondientes.
+4. Abre el juego y prueba golpes con la paleta en movimiento, golpes de precisión y los power-ups de pelota pesada y relámpago.
+
+Este delta no sustituye el proyecto completo.
