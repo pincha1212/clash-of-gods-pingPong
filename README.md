@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.5
+# Clash of Gods — Divine Arena V0.2.6
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -161,3 +161,30 @@ Este delta no sustituye el proyecto completo.
 3. Copia los archivos incluidos sobre la raíz del proyecto V0.2.4 y acepta reemplazar esos archivos.
 4. Activa Objetos de arena y comprueba que las barricadas solo aparezcan después de recoger el power-up correspondiente.
 5. Prueba Tempestad divina, Eclipse, Prisma y Viento cruzado en varias arenas.
+
+
+## Correcciones de Power-ups V0.2.6
+
+Esta actualización corrige interacciones del sistema existente; no agrega potenciadores nuevos.
+
+- **Bola pesada y Bola relámpago:** el cambio de velocidad se aplica al activar el efecto y se mantiene durante los rebotes. Ya no se fuerza una velocidad fija cada fotograma, lo que anulaba la aceleración progresiva del intercambio.
+- **Reemplazo de efectos de pelota:** si se recoge otro potenciador de pelota, se retira primero el modificador anterior para evitar acumular o arrastrar cambios de velocidad. Al terminar el efecto, la velocidad vuelve a una escala normal coherente con el intercambio.
+- **Tempestad divina:** usa el mismo control de duración y velocidad que Bola relámpago, sin un segundo mecanismo de aceleración que lo contradiga.
+- **Juicio doble:** se consume en el próximo punto disputado. Ya no queda guardado indefinidamente si el jugador que lo recogió pierde ese punto.
+- **Reinicio de partida y saque:** el estado del modificador de velocidad queda inicializado de forma explícita.
+
+## Verificación V0.2.6
+
+- **VERIFICADO:** sintaxis de los módulos JavaScript activos.
+- **VERIFICADO:** aplicación aislada de los 27 Power-ups, sin excepciones.
+- **VERIFICADO:** cambios de velocidad al activar, reemplazar y terminar Bola pesada/Bola relámpago.
+- **VERIFICADO:** consumo de Juicio doble en el punto siguiente, incluso si lo pierde quien lo recogió.
+- **VERIFICADO:** integridad del ZIP delta.
+- **NO VERIFICADO:** partida interactiva completa en navegador real y pruebas físicas en móvil.
+
+## Aplicar la actualización V0.2.6
+
+1. Conserva una copia de seguridad de tu proyecto V0.2.5.
+2. Extrae `clash-of-gods-delta-v0.2.6.zip` en una carpeta temporal.
+3. Copia los archivos del delta sobre la raíz del proyecto V0.2.5 y acepta reemplazar los archivos incluidos.
+4. No reemplaza el proyecto completo; contiene únicamente los archivos modificados y este README.

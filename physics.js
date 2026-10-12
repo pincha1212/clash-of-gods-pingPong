@@ -59,7 +59,7 @@ function collideWithPaddle(b,prevX,prevY,p,side){
 }
 
 export function serve(direction=Math.random()>.5?1:-1){
- const b=state.ball;state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.color='#f6f4ed';b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';state.ballPower={type:'',time:0,baseSpeed:0};state.serveTimer=.65;state.rally=0;
+ const b=state.ball;state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.color='#f6f4ed';b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;
 }
 
 export function updatePhysics(dt){
@@ -75,7 +75,9 @@ export function updatePhysics(dt){
  if(state.worldEffects?.gravity>0)b.vy+=dt*2.1;
  if(state.worldEffects?.curve>0)b.vy+=Math.sin((performance.now?.()||0)/105)*dt*3.4;
  if(state.worldEffects?.storm>0)b.vy+=Math.sin((performance.now?.()||0)/170)*dt*2.1;
- const powerMult=getBallSpeedMultiplier();if(powerMult!==1){const current=ballMagnitude(b),target=Math.min(SETTINGS.maxBallSpeed,Math.max(3.2,SETTINGS.ballSpeed*powerMult));b.vx=b.vx/current*target;b.vy=b.vy/current*target;}capBallSpeed(b);
+ // El modificador de velocidad se aplica al recoger el objeto y se conserva en los golpes.
+ // No forzar la pelota a una velocidad fija cada fotograma: eso anulaba la aceleración del rally.
+ capBallSpeed(b);
 
  // Generación de objetos; las barricadas solo se activan al recoger su power-up.
  if(state.itemsEnabled){
@@ -95,8 +97,10 @@ export function updatePhysics(dt){
  if(b.x< -b.r||b.x>SETTINGS.width+b.r){
   const conceding=b.x<0?'p1':'p2',p=state.paddles[conceding];
   if(p.shield>0){p.shield=0;b.x=conceding==='p1'?p.x+p.w+b.r:p.x-b.r;b.vx=Math.abs(b.vx)*(conceding==='p1'?1:-1);burst(b.x,b.y,p.color,6,2.3);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'BLOQUEO DIVINO',color:p.color}}));playTone(180,.18,'sawtooth',.04);return;}
-  const winner=conceding==='p1'?'p2':'p1',scorer=state.paddles[winner];state.scores[winner]+=scorer?.bonusPoint>0?2:1;
-  if(scorer?.bonusPoint>0){scorer.bonusPoint=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DOBLE · +2',color:scorer.color}}));}
+  const winner=conceding==='p1'?'p2':'p1',scorer=state.paddles[winner],doublePoint=scorer?.bonusPoint>0;state.scores[winner]+=doublePoint?2:1;
+  // Juicio doble corresponde al próximo punto, no al próximo punto que eventualmente gane el usuario.
+  for(const side of ['p1','p2'])if(state.paddles[side])state.paddles[side].bonusPoint=0;
+  if(doublePoint)window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DOBLE · +2',color:scorer.color}}));
   burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),45,5);playTone(180,.25,'sawtooth',.04);window.dispatchEvent(new CustomEvent('point-scored',{detail:{winner}}));
   if(state.scores[winner]>=state.winScore){state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner}}));}
   else serve(winner==='p1'?1:-1);
