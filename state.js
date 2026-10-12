@@ -1,5 +1,5 @@
 export const state = {
-  screen:'menu', mode:'cpu', mythicMode:'classic', mythicSurgeTime:0, mythicSurgeCooldown:0, mythicRagnarokElapsed:0, mythicRagnarokStage:0, mythicRagnarokPulse:0, mythicRagnarokCooldown:4.5, rosterMode:'gods', difficulty:'normal', winScore:7, skillsEnabled:true, itemsEnabled:true, arenaId:'raijin', settings:{quality:'balanced',reducedMotion:false,volume:0.7,sound:true,touchControls:true},
+  screen:'menu', mode:'cpu', mythicMode:'classic', mythicSurgeTime:0, mythicSurgeCooldown:0, mythicRagnarokElapsed:0, mythicRagnarokStage:0, mythicRagnarokPulse:0, mythicRagnarokCooldown:4.5, mythicThroneElapsed:0, mythicThroneStage:0, mythicThronePulse:0, mythicThroneCooldown:5, rosterMode:'gods', difficulty:'normal', winScore:7, skillsEnabled:true, itemsEnabled:true, arenaId:'raijin', settings:{quality:'balanced',reducedMotion:false,volume:0.7,sound:true,touchControls:true},
   selected:{p1:'raijin',p2:'fujin'}, scores:{p1:0,p2:0}, running:false, paused:false, finished:false,
   keys:{}, touch:{up1:false,down1:false,up2:false,down2:false}, touchDrag:{p1:null,p2:null}, lastFrame:0, raf:0,
   ball:null,paddles:{p1:null,p2:null}, particles:[], items:[], temporaryWalls:[], powerupSpawnTimer:1.1, countdown:0, serveTimer:0, rally:0,
