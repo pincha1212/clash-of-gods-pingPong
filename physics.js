@@ -67,6 +67,7 @@ export function updatePhysics(dt){
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);updatePowerups(dt);const b=state.ball;
  for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);if(p.grow>0)p.h=p.baseH*1.65;else if(p.shrink>0)p.h=p.baseH*.62;else p.h=p.baseH;}
  if(state.serveTimer>0){state.serveTimer=Math.max(0,state.serveTimer-dt);return;}
+ if(state.mythicMode==='olympus'){state.mythicSurgeCooldown=Math.max(0,(state.mythicSurgeCooldown||0)-dt);state.mythicSurgeTime=Math.max(0,(state.mythicSurgeTime||0)-dt);if(state.mythicSurgeCooldown<=0&&state.mythicSurgeTime<=0){state.mythicSurgeTime=1.35;state.mythicSurgeCooldown=8.25;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL OLIMPO',color:'#ffe17a'}}));}if(state.mythicSurgeTime>0)b.vy+=Math.sin((performance.now?.()||0)/210)*dt*2.0;}
  capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y});if(b.trail.length>3)b.trail.shift();
  if(b.effectTime>0)b.effectTime=Math.max(0,b.effectTime-dt);else b.specialEffect='';
  b.x+=b.vx*dt*60;b.y+=b.vy*dt*60;
