@@ -1,4 +1,5 @@
 import {state} from './state.js';
+import {SETTINGS} from './config.js';
 import {burst} from './effects.js';
 
 export const POWERUPS = [
@@ -30,7 +31,7 @@ export const POWERUPS = [
 ];
 const byId = Object.fromEntries(POWERUPS.map(p=>[p.id,p]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export function resetPowerups(){state.worldEffects={eclipse:0,quake:0,prism:0,crosswind:0,gravity:0,curve:0};state.ballPower={type:'',time:0,baseSpeed:0};for(const side of ['p1','p2']){const p=state.paddles[side];if(p){p.haste=0;p.aura=0;p.freeze=0;p.palette=0;p.bonusPoint=0;}}}
+export function resetPowerups(){state.worldEffects={eclipse:0,quake:0,prism:0,crosswind:0,gravity:0,curve:0};state.ballPower={type:'',time:0,baseSpeed:0};for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','slow','invert'])p[key]=0;if(p.baseH)p.h=p.baseH;}}}
 export function applyPowerup(id,side){const def=byId[id];if(!def)return;const owner=state.paddles[side],opponent=state.paddles[side==='p1'?'p2':'p1'],ball=state.ball;if(!owner||!opponent||!ball)return;
  switch(id){
   case 'colossus': owner.grow=5;break;
@@ -46,7 +47,7 @@ export function applyPowerup(id,side){const def=byId[id];if(!def)return;const ow
   case 'aura': owner.aura=7;break;
   case 'shrink': opponent.shrink=5;break;
   case 'freeze': opponent.freeze=1.15;break;
-  case 'swap': {const y=owner.y;owner.y=clamp(opponent.y,0,600-owner.h);opponent.y=clamp(y,0,600-opponent.h);break;}
+  case 'swap': {const y=owner.y;owner.y=clamp(opponent.y,0,SETTINGS.height-owner.h);opponent.y=clamp(y,0,SETTINGS.height-opponent.h);break;}
   case 'reversal': ball.vx*=-1;ball.vy*=-1;break;
   case 'gravity': state.worldEffects.gravity=4.5;break;
   case 'curveball': state.worldEffects.curve=4.5;break;
