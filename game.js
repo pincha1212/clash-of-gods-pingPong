@@ -1,6 +1,6 @@
 import {GODS,SETTINGS,ARENAS} from './config.js';
 import {state,createBall,createPaddle} from './state.js';
-import {renderGodCard,renderCodex} from './characters.js';
+import {renderGodCard,renderCodex,countCodexKind,getCodexRoles} from './characters.js';
 import {showScreen} from './navigation.js';
 import {setupInput} from './input.js';
 import {setupSettings} from './settings.js';
@@ -88,5 +88,49 @@ function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,
 function togglePause(){if(!state.running&&!state.paused)return;state.paused=!state.paused;document.getElementById('pause-overlay').classList.toggle('hidden',!state.paused);document.getElementById('pause-button').textContent=state.paused?'▶ REANUDAR':'Ⅱ PAUSA';if(!state.paused){state.lastFrame=0;}}
 function finishMatch(e){const winner=e.detail.winner,side=winner==='p1'?'p1':'p2',god=GODS[state.selected[side]];document.getElementById('result-title').textContent=`${god.name.toUpperCase()} TRIUNFA`;document.getElementById('result-title').style.color=god.color;document.getElementById('result-emblem').textContent=god.symbol;document.getElementById('result-description').textContent=`${god.skill.name} inclinó el destino de la arena. ${god.name} (${characterKindLabel(god).toLowerCase()}) se queda con la victoria.`;document.getElementById('result-p1').textContent=state.scores.p1;document.getElementById('result-p2').textContent=state.scores.p2;showScreen('result');}
 function bindUI(){document.getElementById('mythic-mode-select').addEventListener('change',e=>applyMythicMode(e.target.value));document.getElementById('roster-mode-select').addEventListener('change',e=>{state.rosterMode=e.target.value;normalizeRosterSelection();renderSelection();});window.addEventListener('roster-mode-changed',e=>{state.rosterMode=e.detail.mode;normalizeRosterSelection();renderSelection();if(e.detail.returnToSelect)showScreen('select');});document.getElementById('dismiss-landscape-hint')?.addEventListener('click',()=>document.getElementById('landscape-hint').classList.add('dismissed'));document.getElementById('play-button').addEventListener('click',()=>{renderSelection();showScreen('select');});document.getElementById('codex-button').addEventListener('click',()=>showScreen('codex'));document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));document.querySelector('.wordmark').addEventListener('click',e=>{e.preventDefault();state.running=false;state.paused=false;state.finished=false;state.keys={};state.touch={up1:false,down1:false,up2:false,down2:false};cancelAnimationFrame(state.raf);document.getElementById('pause-overlay').classList.add('hidden');showScreen('menu');});document.getElementById('continue-button').addEventListener('click',()=>{renderSelection();showScreen('config');});document.getElementById('start-button').addEventListener('click',()=>{state.mode=document.getElementById('mode-select').value;state.difficulty=document.getElementById('difficulty-select').value;state.skillsEnabled=document.getElementById('skills-enabled').checked;state.itemsEnabled=document.getElementById('items-enabled').checked;state.winScore=Number(document.getElementById('score-value').textContent)||7;renderSelection();startMatch();});document.getElementById('pause-button').addEventListener('click',togglePause);document.getElementById('resume-button').addEventListener('click',togglePause);document.getElementById('exit-button').addEventListener('click',()=>{state.running=false;state.paused=false;cancelAnimationFrame(state.raf);showScreen('menu');});document.getElementById('rematch-button').addEventListener('click',startMatch);document.getElementById('sound-toggle').addEventListener('click',e=>{setSound(!state.soundEnabled);state.settings.sound=state.soundEnabled;document.getElementById('settings-sound-enabled').checked=state.soundEnabled;e.currentTarget.textContent=`SONIDO: ${state.soundEnabled?'ON':'OFF'}`;if(state.soundEnabled)playTone(550,.07);});window.addEventListener('toggle-pause',togglePause);window.addEventListener('god-message',e=>{messageText=e.detail.text.toUpperCase();messageColor=e.detail.color;messageTimer=90;});window.addEventListener('point-scored',e=>{const color=e.detail.winner==='p1'?GODS[state.selected.p1].color:GODS[state.selected.p2].color;burst(500,300,color,10,2.2);updateHUD();});window.addEventListener('match-finished',finishMatch);window.addEventListener('settings-changed',()=>{renderSelection();buildArenaCache();});}
-function init(){const codexGrid=document.getElementById('codex-grid');const codexPicker=document.getElementById('codex-picker'),codexSubhead=document.getElementById('codex-subhead');const showCodexKind=kind=>{codexGrid.innerHTML=renderCodex(kind);codexGrid.classList.remove('hidden');codexPicker.classList.add('hidden');codexSubhead.classList.remove('hidden');const names={god:'DIOSES · 32 REGISTROS',hero:'HÉROES · 30 REGISTROS',titan:'TITANES · 15 REGISTROS',monster:'MONSTRUOS · 15 REGISTROS'};document.getElementById('codex-category-title').textContent=names[kind]||'CÓDICE';};document.getElementById('codex-gods').addEventListener('click',()=>showCodexKind('god'));document.getElementById('codex-heroes').addEventListener('click',()=>showCodexKind('hero'));document.getElementById('codex-titans').addEventListener('click',()=>showCodexKind('titan'));document.getElementById('codex-monsters').addEventListener('click',()=>showCodexKind('monster'));document.getElementById('codex-back').addEventListener('click',()=>{codexGrid.classList.add('hidden');codexPicker.classList.remove('hidden');codexSubhead.classList.add('hidden');});document.getElementById('codex-button').addEventListener('click',()=>{codexGrid.classList.add('hidden');codexPicker.classList.remove('hidden');codexSubhead.classList.add('hidden');});const arenaSelect=document.getElementById('arena-select');arenaSelect.innerHTML=ARENAS.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');arenaSelect.value=state.arenaId;arenaSelect.addEventListener('change',()=>{state.arenaId=arenaSelect.value;buildArenaCache();});buildArenaCache();setupInput();setupSettings();bindUI();renderSelection();updateMythicModeUI();updateHUD();}
+function init(){
+ const codexGrid=document.getElementById('codex-grid');
+ const codexPicker=document.getElementById('codex-picker');
+ const codexBrowser=document.getElementById('codex-browser');
+ const codexSubhead=document.getElementById('codex-subhead');
+ const codexSearch=document.getElementById('codex-search');
+ const codexRole=document.getElementById('codex-role-filter');
+ const codexSort=document.getElementById('codex-sort');
+ const codexEmpty=document.getElementById('codex-empty');
+ let activeCodexKind='god';
+ const kindNames={god:'DIOSES',hero:'HÉROES',titan:'TITANES',monster:'MONSTRUOS'};
+ const kindButtons={god:'codex-gods',hero:'codex-heroes',titan:'codex-titans',monster:'codex-monsters'};
+ const refreshCodex=()=>{
+  const query=codexSearch.value;
+  const role=codexRole.value;
+  const sort=codexSort.value;
+  codexGrid.innerHTML=renderCodex(activeCodexKind,query,role,sort);
+  const count=codexGrid.querySelectorAll('[data-codex-entry]').length;
+  document.getElementById('codex-visible-count').textContent=`${count} ${count===1?'REGISTRO':'REGISTROS'}`;
+  document.getElementById('codex-results-note').textContent=query||role!=='all'?`${count} resultado${count===1?'':'s'} para los filtros actuales.`:'Explorá los perfiles y ordenalos por nombre, velocidad o potencia.';
+  codexEmpty.classList.toggle('hidden',count!==0);
+  codexGrid.classList.toggle('hidden',count===0);
+ };
+ const showCodexKind=kind=>{
+  activeCodexKind=kind;
+  codexSearch.value='';codexRole.value='all';codexSort.value='name';
+  const roles=getCodexRoles(kind);
+  codexRole.innerHTML='<option value="all">Todos los roles</option>'+roles.map(role=>`<option value="${role.replaceAll('&','&amp;').replaceAll('"','&quot;')}">${role}</option>`).join('');
+  document.getElementById('codex-category-title').textContent=kindNames[kind]||'CÓDICE';
+  codexPicker.classList.add('hidden');codexBrowser.classList.remove('hidden');codexSubhead.classList.remove('hidden');
+  Object.entries(kindButtons).forEach(([key,id])=>document.getElementById(id).setAttribute('aria-pressed',String(key===kind)));
+  refreshCodex();
+ };
+ Object.entries(kindButtons).forEach(([kind,id])=>document.getElementById(id).addEventListener('click',()=>showCodexKind(kind)));
+ document.getElementById('codex-back').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');});
+ codexSearch.addEventListener('input',refreshCodex);codexRole.addEventListener('change',refreshCodex);codexSort.addEventListener('change',refreshCodex);
+ document.getElementById('codex-clear-filters').addEventListener('click',()=>{codexSearch.value='';codexRole.value='all';codexSort.value='name';refreshCodex();codexSearch.focus();});
+ const counts={god:countCodexKind('god'),hero:countCodexKind('hero'),titan:countCodexKind('titan'),monster:countCodexKind('monster')};
+ document.querySelectorAll('[data-codex-count]').forEach(el=>el.textContent=counts[el.dataset.codexCount]??0);
+ document.getElementById('codex-total-count').textContent=Object.values(GODS).length;
+ document.getElementById('codex-button').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');});
+ const arenaSelect=document.getElementById('arena-select');
+ arenaSelect.innerHTML=ARENAS.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');arenaSelect.value=state.arenaId;arenaSelect.addEventListener('change',()=>{state.arenaId=arenaSelect.value;buildArenaCache();});
+ buildArenaCache();setupInput();setupSettings();bindUI();renderSelection();updateMythicModeUI();updateHUD();
+}
 init();
