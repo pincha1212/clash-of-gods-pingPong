@@ -99,9 +99,33 @@ function init(){
  const codexEmpty=document.getElementById('codex-empty');
  const codexDetail=document.getElementById('codex-detail-modal');
  const codexDetailContent=document.getElementById('codex-detail-content');
+ const safeRead=(key,fallback)=>{try{const value=JSON.parse(localStorage.getItem(key)||'null');return value??fallback;}catch{return fallback;}};
+ const safeWrite=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}};
+ const favorites=new Set(safeRead('clashOfGods.codexFavorites',[]).filter(id=>GODS[id]));
+ const readProgress=new Set(safeRead('clashOfGods.codexReadProgress',[]).filter(id=>GODS[id]));
+ let compareIds=safeRead('clashOfGods.codexCompare',[]).filter((id,index,all)=>GODS[id]&&all.indexOf(id)===index).slice(0,3);
+ let favoritesOnly=false;
  let codexLastFocus=null;
  const closeCodexDetail=()=>{codexDetail.classList.add('hidden');codexDetail.setAttribute('aria-hidden','true');document.body.classList.remove('codex-detail-open');if(codexLastFocus?.isConnected)codexLastFocus.focus();};
- const openCodexDetail=id=>{const markup=renderCodexDetail(id);if(!markup)return;if(codexDetail.classList.contains('hidden'))codexLastFocus=document.activeElement;codexDetailContent.innerHTML=markup;codexDetail.classList.remove('hidden');codexDetail.setAttribute('aria-hidden','false');document.body.classList.add('codex-detail-open');document.getElementById('codex-detail-close').focus();};
+ const syncCodexTools=()=>{
+  document.getElementById('codex-favorite-count').textContent=String(favorites.size);
+  document.getElementById('codex-progress-label').textContent=`LECTURA · ${readProgress.size}/${Object.keys(GODS).length}`;
+  document.getElementById('codex-progress-bar').style.width=`${readProgress.size/Math.max(1,Object.keys(GODS).length)*100}%`;
+  const filterButton=document.getElementById('codex-favorites-filter');filterButton.setAttribute('aria-pressed',String(favoritesOnly));filterButton.innerHTML=`${favoritesOnly?'★ MOSTRAR TODOS':'☆ VER FAVORITOS'} <span id="codex-favorite-count">${favorites.size}</span>`;
+  document.querySelectorAll('[data-codex-favorite]').forEach(button=>{const saved=favorites.has(button.dataset.codexFavorite);button.setAttribute('aria-pressed',String(saved));button.textContent=saved?'★ GUARDADO':'☆ FAVORITO';});
+  document.querySelectorAll('[data-codex-compare]').forEach(button=>{const selected=compareIds.includes(button.dataset.codexCompare);button.setAttribute('aria-pressed',String(selected));button.textContent=selected?'✓ EN COMPARACIÓN':'+ COMPARAR';});
+  document.getElementById('codex-compare-count').textContent=`${compareIds.length}/3`;
+  const panel=document.getElementById('codex-compare-panel');panel.classList.toggle('hidden',compareIds.length===0);
+  const content=document.getElementById('codex-compare-content');
+  if(!compareIds.length){content.innerHTML='';return;}
+  const entries=compareIds.map(id=>GODS[id]).filter(Boolean);
+  const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const metric=(label,key)=>`<div class="codex-compare-row codex-compare-metric"><span>${label}</span>${entries.map(g=>`<b style="--god:${g.color}">${key==='coverage'?Math.round(g.stats.size/12.4):g.stats[key]}<small>/10</small></b>`).join('')}</div>`;
+  content.innerHTML=`<div class="codex-compare-table" style="--compare-count:${entries.length}"><div class="codex-compare-row codex-compare-names"><span>PERSONAJE</span>${entries.map(g=>`<div style="--god:${g.color}"><strong>${esc(g.symbol)} ${esc(g.name)}</strong><button type="button" data-codex-compare-remove="${esc(g.id)}" aria-label="Quitar ${esc(g.name)} de comparación">×</button><button type="button" data-codex-related="${esc(g.id)}">VER FICHA ↗</button></div>`).join('')}</div>${metric('VELOCIDAD','speed')}${metric('COBERTURA','coverage')}${metric('POTENCIA','power')}<div class="codex-compare-row codex-compare-skills"><span>HABILIDAD</span>${entries.map(g=>`<div><strong>${esc(g.skill.name)}</strong><small>${esc(g.skill.description)}</small></div>`).join('')}</div></div>`;
+ };
+ const toggleFavorite=id=>{if(!GODS[id])return;if(favorites.has(id))favorites.delete(id);else favorites.add(id);safeWrite('clashOfGods.codexFavorites',[...favorites]);refreshCodex();if(!codexDetail.classList.contains('hidden')){document.querySelectorAll('#codex-detail-content [data-codex-favorite]').forEach(button=>{if(button.dataset.codexFavorite!==id)return;const saved=favorites.has(id);button.setAttribute('aria-pressed',String(saved));button.textContent=saved?'★ GUARDADO':'☆ FAVORITO';});}syncCodexTools();};
+ const toggleCompare=id=>{if(!GODS[id])return;if(compareIds.includes(id))compareIds=compareIds.filter(item=>item!==id);else if(compareIds.length>=3){document.getElementById('codex-results-note').textContent='El comparador admite hasta tres personajes. Quitá uno para agregar otro.';return;}else compareIds.push(id);safeWrite('clashOfGods.codexCompare',compareIds);refreshCodex();syncCodexTools();};
+ const openCodexDetail=id=>{const markup=renderCodexDetail(id);if(!markup)return;if(codexDetail.classList.contains('hidden'))codexLastFocus=document.activeElement;readProgress.add(id);safeWrite('clashOfGods.codexReadProgress',[...readProgress]);codexDetailContent.innerHTML=markup;codexDetail.classList.remove('hidden');codexDetail.setAttribute('aria-hidden','false');document.body.classList.add('codex-detail-open');syncCodexTools();document.getElementById('codex-detail-close').focus();};
  let activeCodexKind='god';
  const kindNames={god:'DIOSES',hero:'HÉROES',titan:'TITANES',monster:'MONSTRUOS'};
  const kindButtons={god:'codex-gods',hero:'codex-heroes',titan:'codex-titans',monster:'codex-monsters'};
@@ -110,11 +134,13 @@ function init(){
   const role=codexRole.value;
   const sort=codexSort.value;
   codexGrid.innerHTML=renderCodex(activeCodexKind,query,role,sort);
-  const count=codexGrid.querySelectorAll('[data-codex-entry]').length;
+  codexGrid.querySelectorAll('[data-codex-entry]').forEach(card=>{card.hidden=favoritesOnly&&!favorites.has(card.dataset.codexEntry);});
+  const count=[...codexGrid.querySelectorAll('[data-codex-entry]')].filter(card=>!card.hidden).length;
   document.getElementById('codex-visible-count').textContent=`${count} ${count===1?'REGISTRO':'REGISTROS'}`;
-  document.getElementById('codex-results-note').textContent=query||role!=='all'?`${count} resultado${count===1?'':'s'} para los filtros actuales.`:'Explorá los perfiles y ordenalos por nombre, velocidad o potencia.';
+  document.getElementById('codex-results-note').textContent=favoritesOnly?`${count} favorito${count===1?'':'s'} en esta categoría.`:query||role!=='all'?`${count} resultado${count===1?'':'s'} para los filtros actuales.`:'Explorá los perfiles y ordenalos por nombre, velocidad o potencia.';
   codexEmpty.classList.toggle('hidden',count!==0);
   codexGrid.classList.toggle('hidden',count===0);
+  syncCodexTools();
  };
  const showCodexKind=kind=>{
   activeCodexKind=kind;
@@ -128,8 +154,14 @@ function init(){
  };
  Object.entries(kindButtons).forEach(([kind,id])=>document.getElementById(id).addEventListener('click',()=>showCodexKind(kind)));
  document.getElementById('codex-back').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');});
- codexGrid.addEventListener('click',e=>{const trigger=e.target.closest('[data-codex-open]');if(trigger)openCodexDetail(trigger.dataset.codexOpen);});
- codexDetailContent.addEventListener('click',e=>{const related=e.target.closest('[data-codex-related]');if(related)openCodexDetail(related.dataset.codexRelated);});
+ const handleCodexAction=e=>{const fav=e.target.closest('[data-codex-favorite]');if(fav){e.preventDefault();toggleFavorite(fav.dataset.codexFavorite);return;}const compare=e.target.closest('[data-codex-compare]');if(compare){e.preventDefault();toggleCompare(compare.dataset.codexCompare);return;}const remove=e.target.closest('[data-codex-compare-remove]');if(remove){compareIds=compareIds.filter(id=>id!==remove.dataset.codexCompareRemove);safeWrite('clashOfGods.codexCompare',compareIds);refreshCodex();syncCodexTools();return;}const related=e.target.closest('[data-codex-related]');if(related)openCodexDetail(related.dataset.codexRelated);};
+ codexGrid.addEventListener('click',e=>{const trigger=e.target.closest('[data-codex-open]');if(trigger){openCodexDetail(trigger.dataset.codexOpen);return;}handleCodexAction(e);});
+ codexDetailContent.addEventListener('click',handleCodexAction);
+ document.getElementById('codex-compare-content').addEventListener('click',handleCodexAction);
+ document.getElementById('codex-random').addEventListener('click',()=>{const entries=Object.values(GODS);const pick=entries[Math.floor(Math.random()*entries.length)];const kind=pick.kind||'god';if(activeCodexKind!==kind||codexBrowser.classList.contains('hidden'))showCodexKind(kind);openCodexDetail(pick.id);});
+ document.getElementById('codex-favorites-filter').addEventListener('click',()=>{favoritesOnly=!favoritesOnly;refreshCodex();});
+ document.getElementById('codex-compare-clear').addEventListener('click',()=>{compareIds=[];safeWrite('clashOfGods.codexCompare',compareIds);refreshCodex();});
+ document.getElementById('codex-progress-reset').addEventListener('click',()=>{if(!readProgress.size)return;if(!window.confirm('¿Reiniciar el progreso de lectura del Códice?'))return;readProgress.clear();safeWrite('clashOfGods.codexReadProgress',[]);syncCodexTools();});
  document.getElementById('codex-detail-close').addEventListener('click',closeCodexDetail);
  document.getElementById('codex-detail-close-bottom').addEventListener('click',closeCodexDetail);
  codexDetail.addEventListener('click',e=>{if(e.target===codexDetail)closeCodexDetail();});
@@ -139,6 +171,7 @@ function init(){
  const counts={god:countCodexKind('god'),hero:countCodexKind('hero'),titan:countCodexKind('titan'),monster:countCodexKind('monster')};
  document.querySelectorAll('[data-codex-count]').forEach(el=>el.textContent=counts[el.dataset.codexCount]??0);
  document.getElementById('codex-total-count').textContent=Object.values(GODS).length;
+ syncCodexTools();
  document.getElementById('codex-button').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');});
  const arenaSelect=document.getElementById('arena-select');
  arenaSelect.innerHTML=ARENAS.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');arenaSelect.value=state.arenaId;arenaSelect.addEventListener('change',()=>{state.arenaId=arenaSelect.value;buildArenaCache();});

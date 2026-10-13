@@ -33,7 +33,9 @@
     </section>
     <section id="screen-codex" class="screen hidden codex-screen">
       <div class="section-head codex-page-head"><div><p class="eyebrow">ARCHIVO DE COMBATE / ENCICLOPEDIA</p><h2>EL CÓDICE DE <em>LOS PERSONAJES</em></h2><p class="muted">Explora las cuatro grandes familias, busca personajes y compara sus perfiles de combate.</p></div><button class="button button-quiet" data-screen="menu">← VOLVER</button></div>
-      <div class="codex-overview"><div><span class="codex-overview-number" id="codex-total-count">94</span><span class="codex-overview-label">REGISTROS</span></div><p>Explorá la identidad, los relatos y los símbolos de cada figura. Las habilidades y estadísticas del juego se muestran por separado de la tradición mitológica.</p></div>
+      <div class="codex-overview"><div><span class="codex-overview-number" id="codex-total-count">94</span><span class="codex-overview-label">REGISTROS</span></div><div class="codex-progress-copy"><p>Explorá la identidad, los relatos y los símbolos de cada figura. Las habilidades y estadísticas del juego se muestran por separado de la tradición mitológica.</p><div class="codex-progress-line"><span id="codex-progress-label">LECTURA · 0/94</span><i><u id="codex-progress-bar" style="width:0%"></u></i></div></div></div>
+      <div class="codex-extra-tools" aria-label="Herramientas del Códice"><button type="button" class="button button-quiet" id="codex-random">✦ DESCUBRIR PERSONAJE</button><button type="button" class="button button-quiet" id="codex-favorites-filter" aria-pressed="false">☆ VER FAVORITOS <span id="codex-favorite-count">0</span></button><button type="button" class="button button-quiet" id="codex-progress-reset">REINICIAR PROGRESO</button></div>
+      <section id="codex-compare-panel" class="codex-compare-panel hidden" aria-label="Comparador de personajes"><div class="codex-compare-heading"><div><p class="eyebrow">HERRAMIENTA DE ANÁLISIS</p><h3>COMPARAR PERSONAJES <span id="codex-compare-count">0/3</span></h3><p>Elegí hasta tres figuras para comparar sus estadísticas y habilidades del juego.</p></div><button type="button" class="button button-quiet" id="codex-compare-clear">LIMPIAR</button></div><div id="codex-compare-content" class="codex-compare-content"></div></section>
       <div id="codex-picker" class="codex-picker">
         <button class="codex-choice codex-choice-gods" id="codex-gods" data-codex-kind="god"><span class="codex-choice-index">01</span><span class="god-symbol">☼</span><strong>DIOSES</strong><small><b data-codex-count="god">—</b> personajes · poderes y dominios</small><span class="codex-choice-cta">EXPLORAR CATEGORÍA ↗</span></button>
         <button class="codex-choice codex-choice-heroes" id="codex-heroes" data-codex-kind="hero"><span class="codex-choice-index">02</span><span class="god-symbol">⚔</span><strong>HÉROES</strong><small><b data-codex-count="hero">—</b> personajes · hazañas y destreza</small><span class="codex-choice-cta">EXPLORAR CATEGORÍA ↗</span></button>
@@ -43,7 +45,7 @@
       <div class="codex-browser hidden" id="codex-browser">
         <div class="codex-subhead" id="codex-subhead"><button class="button button-quiet" id="codex-back">← CATEGORÍAS</button><div><p class="eyebrow">ESTÁS EXPLORANDO</p><h3 id="codex-category-title">DIOSES</h3></div><span class="codex-category-count" id="codex-visible-count">0 REGISTROS</span></div>
         <div class="codex-toolbar"><label class="codex-search"><span aria-hidden="true">⌕</span><input id="codex-search" type="search" placeholder="Buscar por nombre, dominio o habilidad…" autocomplete="off" aria-label="Buscar personajes del Códice"></label><label class="codex-filter-label">ROL <select id="codex-role-filter" aria-label="Filtrar por rol"><option value="all">Todos los roles</option></select></label><label class="codex-filter-label">ORDEN <select id="codex-sort" aria-label="Ordenar personajes"><option value="name">Nombre A–Z</option><option value="power">Mayor potencia</option><option value="speed">Mayor velocidad</option></select></label></div>
-        <p class="codex-results-note" id="codex-results-note">Los resultados se actualizan al escribir o cambiar los filtros.</p>
+        <p class="codex-results-note" id="codex-results-note">Los resultados se actualizan al escribir o cambiar los filtros. Usá ☆ para guardar favoritos y + para comparar.</p>
         <div id="codex-grid" class="codex-grid"></div><div id="codex-empty" class="codex-empty hidden"><span>⌕</span><strong>No encontramos personajes</strong><p>Probá con otro nombre o cambiá los filtros.</p><button class="button button-quiet" id="codex-clear-filters">LIMPIAR FILTROS</button></div>
       </div>
     </section>
@@ -60,6 +62,6 @@
       <section class="settings-section"><h3>⌖ CONTROLES</h3><label class="settings-check"><span>Mostrar controles táctiles</span><input type="checkbox" id="touch-controls-enabled" checked><i></i></label><div class="controls-reference"><p><b>Jugador 1</b><span>W / S · Poder: Espacio</span></p><p><b>Jugador 2 local</b><span>↑ / ↓ · Poder: Enter</span></p><p><b>Teléfono o tablet</b><span>Arrastra tu lado de la cancha o usa los botones táctiles.</span></p><p><b>Pausa</b><span>Esc o botón PAUSA</span></p></div></section>
     </div>
   </div>
-  <footer class="site-footer"><span>CLASH OF GODS <i>／</i> DIVINE ARENA</span><span>VERSIÓN · V0.2.16</span></footer>
+  <footer class="site-footer"><span>CLASH OF GODS <i>／</i> DIVINE ARENA</span><span>VERSIÓN · V0.2.17</span></footer>
   <script type="module" src="game.js"></script>
 </body></html>
