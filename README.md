@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.2
+# Clash of Gods — Divine Arena V0.2.21
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -87,6 +87,23 @@ Desde la carpeta del proyecto, ejecutar `python -m http.server 8000` y abrir `ht
 - **NO VERIFICADO:** partida interactiva completa en navegador real, balance de efectos, FPS medidos y controles en dispositivos físicos.
 
 
-## Versión acumulada V0.2.20
+## Versión acumulada V0.2.21
 
-Incluye los cambios acumulados desde la base completa V0.2.2 hasta V0.2.20. La corrección de V0.2.20 ajusta la detección de colisiones pelota-paleta durante el movimiento de la paleta. Las pruebas manuales en navegador y móvil siguen pendientes.
+Incluye los cambios acumulados desde la base completa V0.2.2 hasta V0.2.21.
+
+### Base estructural de pelotas múltiples
+
+- `state.balls` es la colección de pelotas; `state.ball` conserva compatibilidad como referencia a la pelota principal.
+- Todas las pelotas registradas recorren la misma implementación de física: movimiento, rebotes, colisiones con paletas y barricadas, interacción con objetos, salida del campo y puntuación.
+- El renderizado reutiliza el mismo dibujo para cada pelota.
+- Cada pelota tiene identificador y linaje (`parentId`, `generation`, `lineage.rootId` y `lineage.mutation`) para permitir futuras mecánicas de división celular sin crear otro motor.
+- `spawnBall()` crea una descendiente heredando características básicas de la pelota madre; `removeBall()` y `resetBallCollection()` administran el ciclo de vida.
+- `state.ballLimit` define un límite operativo configurable (64 por defecto) para proteger el rendimiento. La arquitectura usa una colección, no variables separadas por cada pelota.
+- Los temporizadores compartidos, los objetos y los eventos globales avanzan una sola vez por fotograma, no una vez por pelota.
+
+### Estado de verificación V0.2.21
+
+- **VERIFICADO:** sintaxis de los módulos JavaScript revisados.
+- **VERIFICADO:** colección, metadatos de linaje y operaciones de alta/baja mediante comprobaciones automatizadas aisladas.
+- **VERIFICADO:** el flujo de física recorre la colección mediante una sola función de física.
+- **NO VERIFICADO:** partida interactiva completa en navegador real, puntuación bajo división simultánea y rendimiento en móvil. La mutación todavía no está conectada a esta base.
