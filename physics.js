@@ -33,12 +33,12 @@ function collideWithTemporaryWalls(b,prevX,prevY){
 function collideWithPaddle(b,prevX,prevY,p,side){
  const dx=b.x-prevX,dy=b.y-prevY,toward=side==='p1'?b.vx<0:b.vx>0;if(!toward)return false;
  const plane=side==='p1'?p.x+p.w+b.r:p.x-b.r;
- let hitY=b.y,hitX=plane,hit=false;
- if(Math.abs(dx)>1e-9){const t=(plane-prevX)/dx;if(t>=0&&t<=1&&((side==='p1'&&dx<0)||(side==='p2'&&dx>0))){hitY=prevY+dy*t;hit=Math.abs(hitY-(p.y+p.h/2))<=p.h/2+b.r;}}
- if(!hit){const overlapsX=b.x+b.r>=p.x&&b.x-b.r<=p.x+p.w;const overlapsY=b.y+b.r>=p.y&&b.y-b.r<=p.y+p.h;if(overlapsX&&overlapsY){hit=true;hitY=b.y;hitX=side==='p1'?p.x+p.w+b.r:p.x-b.r;}}
+ let hitY=b.y,hitX=plane,hit=false,planeCrossed=false,impactPaddleY=p.y;
+ if(Math.abs(dx)>1e-9){const t=(plane-prevX)/dx;if(t>=0&&t<=1&&((side==='p1'&&dx<0)||(side==='p2'&&dx>0))){planeCrossed=true;hitY=prevY+dy*t;const previousPaddleY=Number.isFinite(p.previousY)?p.previousY:p.y;impactPaddleY=previousPaddleY+(p.y-previousPaddleY)*t;hit=Math.abs(hitY-(impactPaddleY+p.h/2))<=p.h/2+b.r;}}
+ if(!hit&&!planeCrossed){const overlapsX=b.x+b.r>=p.x&&b.x-b.r<=p.x+p.w;const overlapsY=b.y+b.r>=p.y&&b.y-b.r<=p.y+p.h;if(overlapsX&&overlapsY){hit=true;hitY=b.y;hitX=side==='p1'?p.x+p.w+b.r:p.x-b.r;impactPaddleY=p.y;}}
  if(!hit)return false;
  b.x=hitX;b.y=hitY;
- const norm=clamp((hitY-(p.y+p.h/2))/(p.h/2),-1,1),dir=side==='p1'?1:-1;
+ const norm=clamp((hitY-(impactPaddleY+p.h/2))/(p.h/2),-1,1),dir=side==='p1'?1:-1;
  // Conserva la escala de los modificadores de pelota y aumenta la intensidad
  // de forma gradual según la duración del intercambio, sin saltos bruscos.
  const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier();
@@ -132,7 +132,7 @@ export function updatePhysics(dt){
 export function updatePaddles(dt){
  if(!state.running||state.paused||state.finished)return;const {p1,p2}=state.paddles;
  const move=(p,up,down,side)=>{
-  const oldY=p.y;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
+  const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
   if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);p.y=clamp((p.invert>0?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),topLimit,bottomLimit);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
   let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
   p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*dt*60,topLimit,bottomLimit);
@@ -141,7 +141,7 @@ export function updatePaddles(dt){
  move(p1,state.keys.KeyW||state.touch.up1,state.keys.KeyS||state.touch.down1,'p1');
  if(state.mode==='local')move(p2,state.keys.ArrowUp||state.touch.up2,state.keys.ArrowDown||state.touch.down2,'p2');
  else{
-  const oldY=p2.y;
+  const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
   const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
