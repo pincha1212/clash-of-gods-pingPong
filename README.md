@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.23
+# Clash of Gods — Divine Arena V0.2.24
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -132,3 +132,12 @@ Incluye los cambios acumulados desde la base completa V0.2.2 hasta V0.2.21.
 - 75%: se invierten los controles del rival; en CPU se invierte su respuesta de seguimiento.
 - Los modificadores se restablecen al comenzar la siguiente jugada. El modo mutación permanece activo.
 - No se han añadido división celular, cambios de tamaño, empujes ni efectos visuales en esta versión.
+
+
+## v0.2.24 — División celular simétrica
+
+- Los umbrales de mutación afectan a ambos lados por igual: ralentización del 15% desde 25% e inversión de controles desde 75%.
+- Desde 50% se habilita la división celular: cada golpe de cualquier pelota tiene una probabilidad del 35% de crear una descendiente.
+- Las pelotas descendientes usan la colección y el mismo motor de física; heredan linaje/genética y cuentan para el límite operativo configurable `state.ballLimit` (64 por defecto).
+- No se agregaron esporas, hologramas ni efectos visuales de mutación; quedan para la siguiente etapa.
+- Pruebas de navegador y dispositivos físicos pendientes.

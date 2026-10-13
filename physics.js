@@ -3,7 +3,7 @@ import {SETTINGS} from './config.js';
 import {burst} from './effects.js';
 import {playTone} from './audio.js';
 import {POWERUPS,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType} from './powerups.js';
-import {resetMutationRally,accumulateMutationCharge,resolveMutationEffects} from './mutation.js';
+import {resetMutationRally,accumulateMutationCharge,resolveMutationEffects,tryMutationDivision} from './mutation.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ballMagnitude=b=>Math.hypot(b.vx,b.vy)||1;
@@ -129,7 +129,7 @@ function updatePhysicsSingle(dt,isPrimary){
  }
  if(isPrimary)for(let i=state.temporaryWalls.length-1;i>=0;i--){const wall=state.temporaryWalls[i];wall.life=(wall.life??1)-dt;if(wall.life<=0)state.temporaryWalls.splice(i,1);}
  const wallHit=collideWithTemporaryWalls(b,prevX,prevY);
- if(!wallHit){for(const side of ['p1','p2']){if(collideWithPaddle(b,prevX,prevY,state.paddles[side],side)){accumulateMutationCharge(undefined,{ballId:b.id,side});resolveMutationEffects({ballId:b.id,side});break;}}}
+ if(!wallHit){for(const side of ['p1','p2']){if(collideWithPaddle(b,prevX,prevY,state.paddles[side],side)){accumulateMutationCharge(undefined,{ballId:b.id,side});resolveMutationEffects({ballId:b.id,side});tryMutationDivision(b,{ballId:b.id,side});break;}}}
 
  if(b.x< -b.r||b.x>SETTINGS.width+b.r){
   const conceding=b.x<0?'p1':'p2',p=state.paddles[conceding];
@@ -153,8 +153,8 @@ export function updatePaddles(dt){
  const move=(p,up,down,side)=>{
   const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
   const mutation=state.mutation?.active?state.mutation:null;
-  const mutationInvert=side==='p2'&&Boolean(mutation?.modifiers?.invertP2);
-  const mutationSpeed=side==='p2'&&mutation?.modifiers?.slowP2 ? 0.85 : 1;
+  const mutationInvert=Boolean(mutation?.modifiers?.invertBoth);
+  const mutationSpeed=mutation?.modifiers?.slowBoth ? 0.85 : 1;
   if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);const inverted=(p.invert>0)!==mutationInvert;p.y=clamp((inverted?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),topLimit,bottomLimit);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
   let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;if(mutationInvert)dir*=-1;
   p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*mutationSpeed*getPaddleSpeedMultiplier(p)*dt*60,topLimit,bottomLimit);
@@ -165,7 +165,7 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const mutation=state.mutation?.active?state.mutation:null,mutationInvert=Boolean(mutation?.modifiers?.invertP2),mutationSpeed=mutation?.modifiers?.slowP2 ? 0.85 : 1;
+  const mutation=state.mutation?.active?state.mutation:null,mutationInvert=Boolean(mutation?.modifiers?.invertBoth),mutationSpeed=mutation?.modifiers?.slowBoth ? 0.85 : 1;
   const target=(mutationInvert?SETTINGS.height-state.ball.y:state.ball.y)-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*mutationSpeed*getPaddleSpeedMultiplier(p2);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
