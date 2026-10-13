@@ -14,9 +14,9 @@ export const POWERUPS = [
  {id:'lightningball',name:'Bola relámpago',symbol:'ϟ',color:'#fff08a',description:'La pelota acelera durante unos segundos.'},
  {id:'chaos',name:'Rebote caótico',symbol:'✳',color:'#ffcf70',description:'Los rebotes alteran más el ángulo de la pelota.'},
  {id:'crosswind',name:'Viento cruzado',symbol:'≋',color:'#8adfff',description:'Una corriente desvía la pelota hacia arriba o abajo.'},
- {id:'eclipse',name:'Eclipse',symbol:'◐',color:'#9b8bce',description:'Oscurece la arena temporalmente.'},
- {id:'quake',name:'Terremoto',symbol:'⌁',color:'#e5a16c',description:'La arena tiembla suavemente.'},
- {id:'prism',name:'Prisma',symbol:'◇',color:'#ff9be8',description:'Cambia temporalmente la paleta de colores de la arena.'},
+ {id:'eclipse',name:'Eclipse',symbol:'◐',color:'#9b8bce',description:'Oscurece la arena y genera una deriva sutil en la pelota.'},
+ {id:'quake',name:'Terremoto',symbol:'⌁',color:'#e5a16c',description:'La arena se agrieta y sacudidas breves alteran la trayectoria de la pelota.'},
+ {id:'prism',name:'Prisma',symbol:'◇',color:'#ff9be8',description:'La arena se refracta y los golpes reciben una desviación prismática leve.'},
  {id:'aura',name:'Aura de contraataque',symbol:'✦',color:'#f4e6a4',description:'Tu próximo golpe gana potencia y recibe un aura.'},
  {id:'shrink',name:'Maldición diminuta',symbol:'↧',color:'#d6a4ff',description:'Reduce temporalmente el tamaño de la paleta rival.'},
  {id:'freeze',name:'Prisión glacial',symbol:'❄',color:'#8ee9ff',description:'Inmoviliza brevemente la paleta rival.'},
@@ -25,19 +25,20 @@ export const POWERUPS = [
  {id:'gravity',name:'Pozo gravitatorio',symbol:'◉',color:'#c4a7ff',description:'La gravedad curva la trayectoria de la pelota.'},
  {id:'curveball',name:'Trayectoria serpentina',symbol:'〰',color:'#8df0d2',description:'La pelota serpentea durante unos segundos.'},
  {id:'ricochet',name:'Rebote titánico',symbol:'⤴',color:'#ffd479',description:'Los rebotes contra la pared y las paletas son más extremos.'},
- {id:'secondchance',name:'Segunda oportunidad',symbol:'⛨',color:'#9fe7a5',description:'Activa un escudo adicional para el próximo punto.'},
+ {id:'secondchance',name:'Segunda oportunidad',symbol:'⛨',color:'#9fe7a5',description:'Una salvada devuelve la pelota con un contraataque acelerado.'},
  {id:'doublepoint',name:'Juicio doble',symbol:'Ⅱ',color:'#ff8f91',description:'Si ganas el próximo punto, suma dos puntos.'},
- {id:'chromaaura',name:'Aura cromática',symbol:'✺',color:'#ff9fe5',description:'Tu paleta queda envuelta en un aura de color temporal.'},
+ {id:'chromaaura',name:'Aura cromática',symbol:'✺',color:'#ff9fe5',description:'Tu paleta gana movilidad mientras su aura está activa.'},
  {id:'runebarricade',name:'Barricada rúnica',symbol:'ᛉ',color:'#8ee9ff',description:'Invoca durante un instante una formación de muros rúnicos en el centro de la arena.'},
  {id:'divinestorm',name:'Tempestad divina',symbol:'ϟ',color:'#8adfff',description:'Transforma la arena en una tormenta eléctrica y desvía la pelota con ráfagas de viento.'}
 ];
 const byId = Object.fromEntries(POWERUPS.map(p=>[p.id,p]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const BALL_POWER_SCALE={heavyball:.72,lightningball:1.22};
+const EMPTY_BALL_POWER=()=>({type:'',time:0,baseSpeed:0,scale:1});
 const speedOf=ball=>Math.hypot(ball.vx,ball.vy)||ball.speed||SETTINGS.ballSpeed;
 function setBallPower(type,duration,ball){
  const current=speedOf(ball);
- const previous=state.ballPower?.time>0?(state.ballPower.scale||BALL_POWER_SCALE[state.ballPower.type]||1):1;
+ const previous=state.ballPower?.type?(state.ballPower.scale||BALL_POWER_SCALE[state.ballPower.type]||1):1;
  const normalSpeed=current/previous;
  const scale=BALL_POWER_SCALE[type]||1;
  const target=clamp(normalSpeed*scale,3.2,SETTINGS.maxBallSpeed);
@@ -47,15 +48,15 @@ function setBallPower(type,duration,ball){
 }
 function clearBallPower(ball){
  const active=state.ballPower;
- if(active?.time>0){
+ if(active?.type){
   const current=speedOf(ball),scale=active.scale||BALL_POWER_SCALE[active.type]||1;
   const target=clamp(current/scale,3.2,SETTINGS.maxBallSpeed);
   if(current>0){ball.vx=ball.vx/current*target;ball.vy=ball.vy/current*target;}
   ball.speed=target;
  }
- state.ballPower={type:'',time:0,baseSpeed:0,scale:1};
+ state.ballPower=EMPTY_BALL_POWER();
 }
-export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0};state.ballPower={type:'',time:0,baseSpeed:0,scale:1};for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','slow','invert'])p[key]=0;if(p.baseH)p.h=p.baseH;}}}
+export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0};state.ballPower=EMPTY_BALL_POWER();for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert'])p[key]=0;p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
 function summonRuneBarricades(){
  const cx=SETTINGS.width/2,cy=SETTINGS.height/2;
  const layouts=[
@@ -69,42 +70,43 @@ function summonRuneBarricades(){
 }
 export function applyPowerup(id,side){const def=byId[id];if(!def)return;const owner=state.paddles[side],opponent=state.paddles[side==='p1'?'p2':'p1'],ball=state.ball;if(!owner||!opponent||!ball)return;
  switch(id){
-  case 'colossus': owner.grow=5;break;
-  case 'aegis': owner.shield=2.8;break;
+  case 'colossus': owner.powerGrow=5;break;
+  case 'aegis': owner.shield=2.8;owner.shieldMode='aegis';break;
   case 'haste': owner.haste=5;break;
   case 'snare': opponent.slow=3.8;break;
   case 'invert': opponent.invert=3.2;break;
   case 'fireball': case 'ghostball': case 'heavyball': case 'lightningball': case 'chaos': setBallPower(id,5,ball);break;
   case 'crosswind': state.worldEffects.crosswind=4.5;break;
   case 'eclipse': state.worldEffects.eclipse=5;break;
-  case 'quake': state.worldEffects.quake=3.5;break;
+  case 'quake': state.worldEffects.quake=3.5;state.worldEffects.quakePulse=.4;break;
   case 'prism': state.worldEffects.prism=6;break;
   case 'aura': owner.aura=7;break;
-  case 'shrink': opponent.shrink=5;break;
+  case 'shrink': opponent.powerShrink=5;break;
   case 'freeze': opponent.freeze=1.15;break;
   case 'swap': {const y=owner.y;owner.y=clamp(opponent.y,0,SETTINGS.height-owner.h);opponent.y=clamp(y,0,SETTINGS.height-opponent.h);break;}
   case 'reversal': ball.vx*=-1;ball.vy*=-1;break;
   case 'gravity': state.worldEffects.gravity=4.5;break;
   case 'curveball': state.worldEffects.curve=4.5;break;
   case 'ricochet': setBallPower(id,5,ball);break;
-  case 'secondchance': owner.shield=Math.max(owner.shield||0,4.5);break;
+  case 'secondchance': owner.shield=Math.max(owner.shield||0,4.5);owner.shieldMode='secondchance';break;
   case 'doublepoint': owner.bonusPoint=1;break;
   case 'chromaaura': owner.palette=6;break;
   case 'runebarricade': summonRuneBarricades();break;
-  case 'divinestorm': state.worldEffects.storm=5;state.worldEffects.crosswind=Math.max(state.worldEffects.crosswind||0,4.5);setBallPower('lightningball',3.5,ball);break;
+  case 'divinestorm': state.worldEffects.storm=5;state.worldEffects.crosswind=Math.max(state.worldEffects.crosswind||0,5);setBallPower('lightningball',5,ball);break;
  }
  burst(ball.x,ball.y,def.color,5,2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:def.name,color:def.color}}));
 }
 export function updatePowerups(dt){
  if(!state.worldEffects)resetPowerups();
- for(const key of Object.keys(state.worldEffects))state.worldEffects[key]=Math.max(0,(state.worldEffects[key]||0)-dt);
- if(state.ballPower?.time>0){
-  state.ballPower.time=Math.max(0,state.ballPower.time-dt);
+ for(const key of Object.keys(state.worldEffects))if(key!=='quakePulse')state.worldEffects[key]=Math.max(0,(state.worldEffects[key]||0)-dt);
+ if((state.worldEffects.quake||0)<=0)state.worldEffects.quakePulse=0;
+ if(state.ballPower?.type){
+  state.ballPower.time=Math.max(0,(state.ballPower.time||0)-dt);
   if(state.ballPower.time===0)clearBallPower(state.ball);
  }
  for(const side of ['p1','p2']){
   const p=state.paddles[side];if(!p)continue;
-  for(const key of ['haste','aura','freeze','palette'])p[key]=Math.max(0,(p[key]||0)-dt);
+  for(const key of ['haste','aura','freeze','palette','powerGrow','powerShrink'])p[key]=Math.max(0,(p[key]||0)-dt);
  }
 }
 export function drawPowerupEffects(ctx){
@@ -118,9 +120,17 @@ export function drawPowerupEffects(ctx){
  if(e.storm>0){ctx.save();ctx.fillStyle='rgba(25,48,83,.17)';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#8adfff';ctx.lineWidth=2;ctx.globalAlpha=.6;const pulse=(performance.now()/100|0)%5;for(let i=0;i<3;i++){const x=100+((i*317+pulse*71)%(W-200)),y=25+((i*137+pulse*47)%(H-80));ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-8,y+18);ctx.lineTo(x+4,y+25);ctx.lineTo(x-10,y+43);ctx.stroke();}ctx.globalAlpha=.18;ctx.strokeStyle='#d8f6ff';for(let i=0;i<7;i++){const y=40+i*82;ctx.beginPath();ctx.moveTo(25,y);ctx.lineTo(W-25,y+Math.sin(performance.now()/140+i)*12);ctx.stroke();}ctx.restore();}
 }
 
-export function drawBallPower(ctx,b){const effect=state.ballPower?.time>0?state.ballPower.type:'';if(!effect)return;ctx.save();ctx.globalAlpha=effect==='ghostball'?.45:1;ctx.strokeStyle=byId[effect]?.color||'#fff';ctx.fillStyle=byId[effect]?.color||'#fff';ctx.lineWidth=2;if(effect==='fireball'){ctx.beginPath();ctx.moveTo(b.x-b.r-11,b.y-5);ctx.lineTo(b.x-b.r-3,b.y);ctx.lineTo(b.x-b.r-10,b.y+6);ctx.stroke();ctx.beginPath();ctx.arc(b.x,b.y,b.r+5,Math.PI*.1,Math.PI*1.8);ctx.stroke();}else if(effect==='ghostball'){ctx.beginPath();ctx.arc(b.x,b.y,b.r+6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(b.x-3,b.y-2,b.r*.5,0,Math.PI*2);ctx.stroke();}else if(effect==='heavyball'){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.stroke();ctx.fillRect(b.x-2,b.y-2,4,4);}else if(effect==='lightningball'){ctx.beginPath();ctx.moveTo(b.x-5,b.y-b.r-7);ctx.lineTo(b.x+1,b.y-2);ctx.lineTo(b.x-4,b.y+1);ctx.lineTo(b.x+5,b.y+b.r+7);ctx.stroke();}else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}ctx.restore();}
+export function drawBallPower(ctx,b){const effect=state.ballPower?.time>0?state.ballPower.type:'';if(!effect)return;ctx.save();ctx.globalAlpha=effect==='ghostball'?.45:1;ctx.strokeStyle=byId[effect]?.color||'#fff';ctx.fillStyle=byId[effect]?.color||'#fff';ctx.lineWidth=2;
+ if(effect==='fireball'){
+  const trail=(b.trail||[]);for(let i=0;i<trail.length;i++){const point=trail[i],alpha=(i+1)/(trail.length+1);ctx.globalAlpha=alpha*.62;ctx.fillStyle=i%2?'#ff875e':'#ffd479';ctx.beginPath();ctx.arc(point.x,point.y,Math.max(1,b.r*(.25+alpha*.45)),0,Math.PI*2);ctx.fill();}
+  ctx.globalAlpha=.9;ctx.strokeStyle='#ff875e';ctx.beginPath();ctx.moveTo(b.x-b.r-13,b.y-5);ctx.lineTo(b.x-b.r-3,b.y);ctx.lineTo(b.x-b.r-10,b.y+6);ctx.stroke();ctx.strokeStyle='#ffd479';ctx.beginPath();ctx.arc(b.x,b.y,b.r+5,Math.PI*.1,Math.PI*1.8);ctx.stroke();
+ }else if(effect==='ghostball'){const trail=(b.trail||[]);for(let i=0;i<trail.length;i++){const point=trail[i],alpha=(i+1)/(trail.length+1);ctx.globalAlpha=alpha*.32;ctx.beginPath();ctx.arc(point.x,point.y,b.r*(.35+alpha*.3),0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(b.x,b.y,b.r+6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(b.x-3,b.y-2,b.r*.5,0,Math.PI*2);ctx.stroke();}
+ else if(effect==='heavyball'){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.stroke();ctx.fillRect(b.x-2,b.y-2,4,4);}
+ else if(effect==='lightningball'){ctx.beginPath();ctx.moveTo(b.x-5,b.y-b.r-7);ctx.lineTo(b.x+1,b.y-2);ctx.lineTo(b.x-4,b.y+1);ctx.lineTo(b.x+5,b.y+b.r+7);ctx.stroke();}
+ else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}
+ ctx.restore();}
 export function getPowerupDefinition(id){return byId[id]||POWERUPS[0];}
 export function getBallSpeedMultiplier(){return state.ballPower?.time>0?(state.ballPower.scale||BALL_POWER_SCALE[state.ballPower.type]||1):1;}
-export function getPaddleSpeedMultiplier(p){return p?.haste>0?1.45:1;}
+export function getPaddleSpeedMultiplier(p){return p?.haste>0?1.45:p?.palette>0?1.12:1;}
 export function getBallPowerType(){return state.ballPower?.time>0?state.ballPower.type:'';}
 export function getPowerupColor(id){return byId[id]?.color||'#fff';}

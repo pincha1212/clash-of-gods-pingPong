@@ -6,6 +6,7 @@ import {POWERUPS,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpe
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ballMagnitude=b=>Math.hypot(b.vx,b.vy)||1;
+function deflectTitanic(b,wallDirection){const speed=ballMagnitude(b),angle=Math.atan2(b.vy,b.vx)+(b.vx>=0?1:-1)*wallDirection*.16;b.vx=Math.cos(angle)*speed;b.vy=Math.sin(angle)*speed;}
 function capBallSpeed(b){const speed=ballMagnitude(b);if(speed>SETTINGS.maxBallSpeed){b.vx=b.vx/speed*SETTINGS.maxBallSpeed;b.vy=b.vy/speed*SETTINGS.maxBallSpeed;}}
 function getColor(side){return getComputedStyle(document.documentElement).getPropertyValue(side==='p1'?'--p1':'--p2').trim()||'#fff';}
 
@@ -50,6 +51,9 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  let angle=norm*1.08+paddleMotion*.20;
  if(getBallPowerType()==='chaos')angle+=(Math.random()-.5)*.7;
  if(getBallPowerType()==='ricochet')angle+=(Math.random()-.5)*1.0;
+ if(state.worldEffects?.prism>0)angle+=Math.sin((performance.now?.()||0)/180)*.12;
+ if(p.palette>0)angle+=Math.sin((performance.now?.()||0)/240)*.09;
+ if(getBallPowerType()==='fireball')speed=Math.min(SETTINGS.maxBallSpeed,speed*1.045);
  angle=clamp(angle,-1.18,1.18);
  const perfect=Math.abs(norm)>=.22&&Math.abs(norm)<=.38;
  if(perfect){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.07);burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'GOLPE PRECISO',color:p.color}}));}
@@ -65,21 +69,28 @@ export function serve(direction=Math.random()>.5?1:-1){
 export function updatePhysics(dt){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);updatePowerups(dt);const b=state.ball;
- for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);if(p.grow>0)p.h=p.baseH*1.65;else if(p.shrink>0)p.h=p.baseH*.62;else p.h=p.baseH;}
+ for(let i=state.items.length-1;i>=0;i--){state.items[i].life-=dt;if(state.items[i].life<=0)state.items.splice(i,1);}
+ for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);p.h=p.baseH*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1);p.y=clamp(p.y,0,SETTINGS.height-p.h);if(p.shield<=0)p.shieldMode='';}
  if(state.serveTimer>0){state.serveTimer=Math.max(0,state.serveTimer-dt);return;}
  if(state.mythicMode==='olympus'){state.mythicSurgeCooldown=Math.max(0,(state.mythicSurgeCooldown||0)-dt);state.mythicSurgeTime=Math.max(0,(state.mythicSurgeTime||0)-dt);if(state.mythicSurgeCooldown<=0&&state.mythicSurgeTime<=0){state.mythicSurgeTime=1.35;state.mythicSurgeCooldown=8.25;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL OLIMPO',color:'#ffe17a'}}));}if(state.mythicSurgeTime>0)b.vy+=Math.sin((performance.now?.()||0)/210)*dt*2.0;}
  if(state.mythicMode==='ragnarok'){state.mythicRagnarokElapsed=(state.mythicRagnarokElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicRagnarokElapsed/15));if(stage>(state.mythicRagnarokStage||0)){state.mythicRagnarokStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL VIENTO DEL NORTE DESPIERTA','LAS RAÍCES DE MIDGARD SE QUIEBRAN','EL CIELO DEL RAGNARÖK SE ABRE','EL FIN DE LOS DIOSES SE ACERCA'][stage],color:'#a9d6df'}}));}state.mythicRagnarokPulse=Math.max(0,(state.mythicRagnarokPulse||0)-dt);state.mythicRagnarokCooldown=Math.max(0,(state.mythicRagnarokCooldown||0)-dt);if(state.mythicRagnarokCooldown<=0&&state.mythicRagnarokPulse<=0){state.mythicRagnarokPulse=1.05;state.mythicRagnarokCooldown=Math.max(5.5,8.5-stage*.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL RAGNARÖK',color:'#a9d6df'}}));}if(state.mythicRagnarokPulse>0)b.vy+=Math.sin((performance.now?.()||0)/240)*dt*(1.15+stage*.28);}
  if(state.mythicMode==='throne'){state.mythicThroneElapsed=(state.mythicThroneElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicThroneElapsed/12));if(stage>(state.mythicThroneStage||0)){state.mythicThroneStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL CONSEJO DIVINO SE REÚNE','EL DESIERTO RECLAMA SU PRECIO','EL SOL ENTRA EN ECLIPSE','EL TRONO EXIGE UN HEREDERO'][stage],color:stage>=2?'#cf8064':'#e8c66f'}}));}state.mythicThronePulse=Math.max(0,(state.mythicThronePulse||0)-dt);state.mythicThroneCooldown=Math.max(0,(state.mythicThroneCooldown||0)-dt);if(state.mythicThroneCooldown<=0&&state.mythicThronePulse<=0){state.mythicThronePulse=.85;state.mythicThroneCooldown=9;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'ECLIPSE DEL JUICIO',color:'#cf8064'}}));}if(state.mythicThronePulse>0)b.vy+=Math.sin((performance.now?.()||0)/285)*dt*.95;}
  if(state.mythicMode==='waters'){state.mythicWatersElapsed=(state.mythicWatersElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicWatersElapsed/14));if(stage>(state.mythicWatersStage||0)){state.mythicWatersStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['LA TIERRA SE RESQUEBRAJA','VRITRA RETIENE LAS AGUAS','EL VAJRA ROMPE LA OSCURIDAD','LAS AGUAS VUELVEN AL MUNDO'][stage],color:stage<2?'#c9a66a':'#83d8e8'}}));}state.mythicWatersPulse=Math.max(0,(state.mythicWatersPulse||0)-dt);state.mythicWatersCooldown=Math.max(0,(state.mythicWatersCooldown||0)-dt);if(state.mythicWatersCooldown<=0&&state.mythicWatersPulse<=0){state.mythicWatersPulse=.9;state.mythicWatersCooldown=Math.max(6.5,9-stage*.5);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:stage<2?'RÁFAGA SECA':'OLEADA DE INDRA',color:stage<2?'#c9a66a':'#83d8e8'}}));}if(state.mythicWatersPulse>0)b.vy+=Math.sin((performance.now?.()||0)/260)*dt*(.8+stage*.18);}
 
- capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y});if(b.trail.length>3)b.trail.shift();
+ capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y});if(b.trail.length>12)b.trail.shift();
  if(b.effectTime>0)b.effectTime=Math.max(0,b.effectTime-dt);else b.specialEffect='';
  b.x+=b.vx*dt*60;b.y+=b.vy*dt*60;
- if(b.y-b.r<0){b.y=b.r;b.vy=Math.abs(b.vy);playTone(250,.025,'sine',.015);}if(b.y+b.r>SETTINGS.height){b.y=SETTINGS.height-b.r;b.vy=-Math.abs(b.vy);playTone(250,.025,'sine',.015);}
- if(state.worldEffects?.crosswind>0)b.vy+=Math.sin((performance.now?.()||0)/310)*dt*2.8;
- if(state.worldEffects?.gravity>0)b.vy+=dt*2.1;
- if(state.worldEffects?.curve>0)b.vy+=Math.sin((performance.now?.()||0)/105)*dt*3.4;
- if(state.worldEffects?.storm>0)b.vy+=Math.sin((performance.now?.()||0)/170)*dt*2.1;
+ if(b.y-b.r<0){b.y=b.r;b.vy=Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>SETTINGS.height){b.y=SETTINGS.height-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
+ // Las fuerzas ambientales se suman en una sola autoridad y se limitan para que
+ // acumular varios Power-ups no vuelva la pelota casi vertical de forma incontrolable.
+ const now=performance.now?.()||0;let fieldForce=0;
+ if(state.worldEffects?.eclipse>0)fieldForce+=Math.sin(now/360)*1.05;
+ if(state.worldEffects?.crosswind>0)fieldForce+=Math.sin(now/310)*2.8;
+ if(state.worldEffects?.gravity>0)fieldForce+=2.1;
+ if(state.worldEffects?.curve>0)fieldForce+=Math.sin(now/105)*3.4;
+ if(state.worldEffects?.storm>0)fieldForce+=Math.sin(now/170)*2.1;
+ b.vy+=clamp(fieldForce,-4.8,4.8)*dt;
+ if(state.worldEffects?.quake>0){state.worldEffects.quakePulse=Math.max(0,(state.worldEffects.quakePulse||0)-dt);if(state.worldEffects.quakePulse<=0){b.vy+=((Math.random()-.5)*1.7);state.worldEffects.quakePulse=.55;}}
  // El modificador de velocidad se aplica al recoger el objeto y se conserva en los golpes.
  // No forzar la pelota a una velocidad fija cada fotograma: eso anulaba la aceleración del rally.
  capBallSpeed(b);
@@ -101,7 +112,7 @@ export function updatePhysics(dt){
 
  if(b.x< -b.r||b.x>SETTINGS.width+b.r){
   const conceding=b.x<0?'p1':'p2',p=state.paddles[conceding];
-  if(p.shield>0){p.shield=0;b.x=conceding==='p1'?p.x+p.w+b.r:p.x-b.r;b.vx=Math.abs(b.vx)*(conceding==='p1'?1:-1);burst(b.x,b.y,p.color,6,2.3);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'BLOQUEO DIVINO',color:p.color}}));playTone(180,.18,'sawtooth',.04);return;}
+  if(p.shield>0){const shieldMode=p.shieldMode||'aegis';p.shield=0;p.shieldMode='';b.x=conceding==='p1'?p.x+p.w+b.r:p.x-b.r;b.vx=Math.abs(b.vx)*(conceding==='p1'?1:-1);if(shieldMode==='secondchance'){const speed=Math.min(SETTINGS.maxBallSpeed,ballMagnitude(b)*1.12),angle=Math.atan2(b.vy,b.vx)+(Math.random()-.5)*.22;b.vx=Math.cos(angle)*speed;b.vy=Math.sin(angle)*speed;b.speed=speed;}burst(b.x,b.y,p.color,6,2.3);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:shieldMode==='secondchance'?'SEGUNDA OPORTUNIDAD · CONTRAATAQUE':'BLOQUEO DIVINO',color:p.color}}));playTone(180,.18,'sawtooth',.04);return;}
   const winner=conceding==='p1'?'p2':'p1',scorer=state.paddles[winner],doublePoint=scorer?.bonusPoint>0;state.scores[winner]+=doublePoint?2:1;
   // Juicio doble corresponde al próximo punto, no al próximo punto que eventualmente gane el usuario.
   for(const side of ['p1','p2'])if(state.paddles[side])state.paddles[side].bonusPoint=0;
@@ -112,7 +123,7 @@ export function updatePhysics(dt){
   return; // Evita recoger objetos o procesar eventos sobre la pelota reiniciada en el centro.
  }
  b.fire=0;b.color='#f6f4ed';b.glow=0;
- for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];item.life-=dt;if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';applyPowerup(item.type,ownerSide);state.items.splice(i,1);}}
+ for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';applyPowerup(item.type,ownerSide);state.items.splice(i,1);}}
 }
 
 export function updatePaddles(dt){
