@@ -3,6 +3,7 @@ import {SETTINGS} from './config.js';
 import {burst} from './effects.js';
 import {playTone} from './audio.js';
 import {POWERUPS,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType} from './powerups.js';
+import {resetMutationRally,accumulateMutationCharge,resolveMutationEffects} from './mutation.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ballMagnitude=b=>Math.hypot(b.vx,b.vy)||1;
@@ -63,6 +64,7 @@ function collideWithPaddle(b,prevX,prevY,p,side){
 }
 
 export function serve(direction=Math.random()>.5?1:-1){
+ resetMutationRally();
  const b=(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.color='#f6f4ed';b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;
 }
 
@@ -127,7 +129,7 @@ function updatePhysicsSingle(dt,isPrimary){
  }
  if(isPrimary)for(let i=state.temporaryWalls.length-1;i>=0;i--){const wall=state.temporaryWalls[i];wall.life=(wall.life??1)-dt;if(wall.life<=0)state.temporaryWalls.splice(i,1);}
  const wallHit=collideWithTemporaryWalls(b,prevX,prevY);
- if(!wallHit){for(const side of ['p1','p2']){if(collideWithPaddle(b,prevX,prevY,state.paddles[side],side))break;}}
+ if(!wallHit){for(const side of ['p1','p2']){if(collideWithPaddle(b,prevX,prevY,state.paddles[side],side)){accumulateMutationCharge(undefined,{ballId:b.id,side});resolveMutationEffects({ballId:b.id,side});break;}}}
 
  if(b.x< -b.r||b.x>SETTINGS.width+b.r){
   const conceding=b.x<0?'p1':'p2',p=state.paddles[conceding];

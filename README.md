@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.21
+# Clash of Gods — Divine Arena V0.2.22
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -107,3 +107,19 @@ Incluye los cambios acumulados desde la base completa V0.2.2 hasta V0.2.21.
 - **VERIFICADO:** colección, metadatos de linaje y operaciones de alta/baja mediante comprobaciones automatizadas aisladas.
 - **VERIFICADO:** el flujo de física recorre la colección mediante una sola función de física.
 - **NO VERIFICADO:** partida interactiva completa en navegador real, puntuación bajo división simultánea y rendimiento en móvil. La mutación todavía no está conectada a esta base.
+
+
+## Motor de mutación genética (V0.2.22)
+
+- Se añade la variante de combate **Mutación genética · Experimental**, separada de la elección de arena y de las crónicas mitológicas.
+- `mutation.js` es ahora un módulo ES del motor activo; no depende de `window.MutationManager` ni vuelve a conectar el motor legado `script.js`. La implementación anterior se conserva como `mutation-legacy.js` solo para consulta y no se carga.
+- Cada golpe válido de una pelota contra una paleta agrega 15 puntos de carga mutágena, hasta un máximo de 100. La colección de pelotas de V0.2.21 usa el mismo gancho de colisión.
+- La acumulación solo actualiza la carga y encola la petición `charge-ready`. `resolveMutationEffects()` procesa esa petición después del cálculo del choque, como punto separado de extensión para futuros efectos.
+- Al llegar al 100%, la carga queda marcada como lista y muestra un aviso. La carga se reinicia al comenzar una nueva jugada después de un punto.
+- Se incluye un indicador de carga para verificar la acumulación. **Todavía no se implementan umbrales intermedios, modificadores de estado, empujes, división celular ni efectos de esporas/hologramas.**
+
+### Verificación V0.2.22
+
+- **VERIFICADO:** sintaxis JavaScript y referencias de integración revisadas.
+- **VERIFICADO:** pruebas aisladas del núcleo de carga, límite, resolución única al completar el 100% y reinicio por jugada.
+- **NO VERIFICADO:** partida interactiva completa en navegador real y rendimiento en dispositivos físicos.
