@@ -33,7 +33,7 @@
     </section>
     <section id="screen-codex" class="screen hidden codex-screen">
       <div class="section-head codex-page-head"><div><p class="eyebrow">ARCHIVO DE COMBATE / ENCICLOPEDIA</p><h2>EL CÓDICE DE <em>LOS PERSONAJES</em></h2><p class="muted">Explora las cuatro grandes familias, busca personajes y compara sus perfiles de combate.</p></div><button class="button button-quiet" data-screen="menu">← VOLVER</button></div>
-      <div class="codex-overview"><div><span class="codex-overview-number" id="codex-total-count">90</span><span class="codex-overview-label">REGISTROS</span></div><p>Cuatro categorías para empezar. Las fichas ampliadas, las relaciones mitológicas y las herramientas de exploración se incorporarán en las próximas fases.</p></div>
+      <div class="codex-overview"><div><span class="codex-overview-number" id="codex-total-count">94</span><span class="codex-overview-label">REGISTROS</span></div><p>Explorá la identidad, los relatos y los símbolos de cada figura. Las habilidades y estadísticas del juego se muestran por separado de la tradición mitológica.</p></div>
       <div id="codex-picker" class="codex-picker">
         <button class="codex-choice codex-choice-gods" id="codex-gods" data-codex-kind="god"><span class="codex-choice-index">01</span><span class="god-symbol">☼</span><strong>DIOSES</strong><small><b data-codex-count="god">—</b> personajes · poderes y dominios</small><span class="codex-choice-cta">EXPLORAR CATEGORÍA ↗</span></button>
         <button class="codex-choice codex-choice-heroes" id="codex-heroes" data-codex-kind="hero"><span class="codex-choice-index">02</span><span class="god-symbol">⚔</span><strong>HÉROES</strong><small><b data-codex-count="hero">—</b> personajes · hazañas y destreza</small><span class="codex-choice-cta">EXPLORAR CATEGORÍA ↗</span></button>
@@ -50,6 +50,9 @@
     <section id="screen-result" class="screen hidden"><div class="result-card"><p class="eyebrow">COMBATE CONCLUIDO</p><div class="result-emblem" id="result-emblem">✦</div><h2 id="result-title">VICTORIA</h2><p id="result-description" class="muted"></p><div class="result-score"><span id="result-p1">0</span><i>:</i><span id="result-p2">0</span></div><div class="hero-actions centered"><button class="button button-primary" id="rematch-button">REVANCHA ↻</button><button class="button button-quiet" data-screen="menu">MENÚ PRINCIPAL</button></div></div></section>
   </main>
 
+  <div id="codex-detail-modal" class="codex-detail-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="codex-detail-title">
+    <div class="codex-detail-panel"><div class="codex-detail-toolbar"><span class="eyebrow">ARCHIVO MITOLÓGICO / PERFIL DE PERSONAJE</span><button type="button" id="codex-detail-close" class="codex-detail-close" aria-label="Cerrar ficha">×</button></div><div id="codex-detail-content"></div><div class="codex-detail-actions"><button type="button" class="button button-quiet" id="codex-detail-close-bottom">CERRAR FICHA</button></div></div>
+  </div>
   <div id="settings-modal" class="settings-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="settings-title">
     <div class="settings-panel"><div class="settings-heading"><div><p class="eyebrow">DIVINE ARENA / PREFERENCIAS</p><h2 id="settings-title">AJUSTES <em>DEL JUEGO</em></h2></div><button id="settings-close" class="settings-close" aria-label="Cerrar ajustes">×</button></div>
       <section class="settings-section"><h3>▣ VIDEO</h3><label for="video-quality">Calidad gráfica</label><select id="video-quality"><option value="low">Rendimiento — máximo ahorro</option><option value="balanced" selected>Equilibrada</option><option value="high">Alta — más detalles</option></select><label class="settings-check"><span>Reducir efectos y partículas</span><input type="checkbox" id="reduced-motion"><i></i></label><button id="fullscreen-button" class="button button-quiet full-width">⛶ PANTALLA COMPLETA</button><small id="fullscreen-note" class="settings-note">La disponibilidad depende del navegador.</small></section>
@@ -57,6 +60,6 @@
       <section class="settings-section"><h3>⌖ CONTROLES</h3><label class="settings-check"><span>Mostrar controles táctiles</span><input type="checkbox" id="touch-controls-enabled" checked><i></i></label><div class="controls-reference"><p><b>Jugador 1</b><span>W / S · Poder: Espacio</span></p><p><b>Jugador 2 local</b><span>↑ / ↓ · Poder: Enter</span></p><p><b>Teléfono o tablet</b><span>Arrastra tu lado de la cancha o usa los botones táctiles.</span></p><p><b>Pausa</b><span>Esc o botón PAUSA</span></p></div></section>
     </div>
   </div>
-  <footer class="site-footer"><span>CLASH OF GODS <i>／</i> DIVINE ARENA</span><span>VERSIÓN · V0.2.14</span></footer>
+  <footer class="site-footer"><span>CLASH OF GODS <i>／</i> DIVINE ARENA</span><span>VERSIÓN · V0.2.15</span></footer>
   <script type="module" src="game.js"></script>
 </body></html>

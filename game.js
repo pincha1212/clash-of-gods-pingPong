@@ -1,6 +1,6 @@
 import {GODS,SETTINGS,ARENAS} from './config.js';
 import {state,createBall,createPaddle} from './state.js';
-import {renderGodCard,renderCodex,countCodexKind,getCodexRoles} from './characters.js';
+import {renderGodCard,renderCodex,renderCodexDetail,countCodexKind,getCodexRoles} from './characters.js';
 import {showScreen} from './navigation.js';
 import {setupInput} from './input.js';
 import {setupSettings} from './settings.js';
@@ -97,6 +97,11 @@ function init(){
  const codexRole=document.getElementById('codex-role-filter');
  const codexSort=document.getElementById('codex-sort');
  const codexEmpty=document.getElementById('codex-empty');
+ const codexDetail=document.getElementById('codex-detail-modal');
+ const codexDetailContent=document.getElementById('codex-detail-content');
+ let codexLastFocus=null;
+ const closeCodexDetail=()=>{codexDetail.classList.add('hidden');codexDetail.setAttribute('aria-hidden','true');document.body.classList.remove('codex-detail-open');if(codexLastFocus?.isConnected)codexLastFocus.focus();};
+ const openCodexDetail=id=>{const markup=renderCodexDetail(id);if(!markup)return;codexLastFocus=document.activeElement;codexDetailContent.innerHTML=markup;codexDetail.classList.remove('hidden');codexDetail.setAttribute('aria-hidden','false');document.body.classList.add('codex-detail-open');document.getElementById('codex-detail-close').focus();};
  let activeCodexKind='god';
  const kindNames={god:'DIOSES',hero:'HÉROES',titan:'TITANES',monster:'MONSTRUOS'};
  const kindButtons={god:'codex-gods',hero:'codex-heroes',titan:'codex-titans',monster:'codex-monsters'};
@@ -123,6 +128,11 @@ function init(){
  };
  Object.entries(kindButtons).forEach(([kind,id])=>document.getElementById(id).addEventListener('click',()=>showCodexKind(kind)));
  document.getElementById('codex-back').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');});
+ codexGrid.addEventListener('click',e=>{const trigger=e.target.closest('[data-codex-open]');if(trigger)openCodexDetail(trigger.dataset.codexOpen);});
+ document.getElementById('codex-detail-close').addEventListener('click',closeCodexDetail);
+ document.getElementById('codex-detail-close-bottom').addEventListener('click',closeCodexDetail);
+ codexDetail.addEventListener('click',e=>{if(e.target===codexDetail)closeCodexDetail();});
+ document.addEventListener('keydown',e=>{if(codexDetail.classList.contains('hidden'))return;if(e.key==='Escape'){closeCodexDetail();return;}if(e.key==='Tab'){const focusables=[...codexDetail.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
  codexSearch.addEventListener('input',refreshCodex);codexRole.addEventListener('change',refreshCodex);codexSort.addEventListener('change',refreshCodex);
  document.getElementById('codex-clear-filters').addEventListener('click',()=>{codexSearch.value='';codexRole.value='all';codexSort.value='name';refreshCodex();codexSearch.focus();});
  const counts={god:countCodexKind('god'),hero:countCodexKind('hero'),titan:countCodexKind('titan'),monster:countCodexKind('monster')};
