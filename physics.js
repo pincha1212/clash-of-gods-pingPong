@@ -76,11 +76,12 @@ export function updatePhysics(dt){
  if(state.mythicMode==='ragnarok'){state.mythicRagnarokElapsed=(state.mythicRagnarokElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicRagnarokElapsed/15));if(stage>(state.mythicRagnarokStage||0)){state.mythicRagnarokStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL VIENTO DEL NORTE DESPIERTA','LAS RAÍCES DE MIDGARD SE QUIEBRAN','EL CIELO DEL RAGNARÖK SE ABRE','EL FIN DE LOS DIOSES SE ACERCA'][stage],color:'#a9d6df'}}));}state.mythicRagnarokPulse=Math.max(0,(state.mythicRagnarokPulse||0)-dt);state.mythicRagnarokCooldown=Math.max(0,(state.mythicRagnarokCooldown||0)-dt);if(state.mythicRagnarokCooldown<=0&&state.mythicRagnarokPulse<=0){state.mythicRagnarokPulse=1.05;state.mythicRagnarokCooldown=Math.max(5.5,8.5-stage*.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL RAGNARÖK',color:'#a9d6df'}}));}if(state.mythicRagnarokPulse>0)b.vy+=Math.sin((performance.now?.()||0)/240)*dt*(1.15+stage*.28);}
  if(state.mythicMode==='throne'){state.mythicThroneElapsed=(state.mythicThroneElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicThroneElapsed/12));if(stage>(state.mythicThroneStage||0)){state.mythicThroneStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL CONSEJO DIVINO SE REÚNE','EL DESIERTO RECLAMA SU PRECIO','EL SOL ENTRA EN ECLIPSE','EL TRONO EXIGE UN HEREDERO'][stage],color:stage>=2?'#cf8064':'#e8c66f'}}));}state.mythicThronePulse=Math.max(0,(state.mythicThronePulse||0)-dt);state.mythicThroneCooldown=Math.max(0,(state.mythicThroneCooldown||0)-dt);if(state.mythicThroneCooldown<=0&&state.mythicThronePulse<=0){state.mythicThronePulse=.85;state.mythicThroneCooldown=9;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'ECLIPSE DEL JUICIO',color:'#cf8064'}}));}if(state.mythicThronePulse>0)b.vy+=Math.sin((performance.now?.()||0)/285)*dt*.95;}
  if(state.mythicMode==='waters'){state.mythicWatersElapsed=(state.mythicWatersElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicWatersElapsed/14));if(stage>(state.mythicWatersStage||0)){state.mythicWatersStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['LA TIERRA SE RESQUEBRAJA','VRITRA RETIENE LAS AGUAS','EL VAJRA ROMPE LA OSCURIDAD','LAS AGUAS VUELVEN AL MUNDO'][stage],color:stage<2?'#c9a66a':'#83d8e8'}}));}state.mythicWatersPulse=Math.max(0,(state.mythicWatersPulse||0)-dt);state.mythicWatersCooldown=Math.max(0,(state.mythicWatersCooldown||0)-dt);if(state.mythicWatersCooldown<=0&&state.mythicWatersPulse<=0){state.mythicWatersPulse=.9;state.mythicWatersCooldown=Math.max(6.5,9-stage*.5);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:stage<2?'RÁFAGA SECA':'OLEADA DE INDRA',color:stage<2?'#c9a66a':'#83d8e8'}}));}if(state.mythicWatersPulse>0)b.vy+=Math.sin((performance.now?.()||0)/260)*dt*(.8+stage*.18);}
+ if(state.mythicMode==='boss-jormungandr'){const boss=state.jormungandr||(state.jormungandr={elapsed:0,stage:0,warning:0,active:0,recovery:0,cooldown:4.5,inset:0,targetInset:42});boss.elapsed+=dt;const stage=Math.min(3,Math.floor(boss.elapsed/18));if(stage>boss.stage){boss.stage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['MIDGARD TIEMBLA','JÖRMUNGANDR DESPIERTA','LA SERPIENTE CIERRA SU CÍRCULO','EL MUNDO QUEDA ATRAPADO'][stage],color:'#a9e4bd'}}));}boss.cooldown=Math.max(0,boss.cooldown-dt);const wasWarning=boss.warning>0;boss.warning=Math.max(0,boss.warning-dt);if(wasWarning&&boss.warning<=0){boss.active=2.65;boss.recovery=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'¡EL CERCO DE MIDGARD SE CIERRA!',color:'#d5ffdf'}}));playTone(170,.12,'triangle',.035);}if(boss.active>0){boss.active=Math.max(0,boss.active-dt);boss.inset=boss.targetInset;if(boss.active<=0){boss.recovery=1.0;}}else if(boss.recovery>0){boss.recovery=Math.max(0,boss.recovery-dt);boss.inset=boss.targetInset*(boss.recovery/1.0);}else{boss.inset=0;if(boss.cooldown<=0&&boss.warning<=0){boss.warning=1.15;boss.targetInset=42+stage*9;boss.cooldown=8.5-stage*.65;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JÖRMUNGANDR SE PREPARA PARA CERRAR EL CERCO',color:'#b8edcc'}}));}}}
 
  capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y});if(b.trail.length>12)b.trail.shift();
  if(b.effectTime>0)b.effectTime=Math.max(0,b.effectTime-dt);else b.specialEffect='';
  b.x+=b.vx*dt*60;b.y+=b.vy*dt*60;
- if(b.y-b.r<0){b.y=b.r;b.vy=Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>SETTINGS.height){b.y=SETTINGS.height-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
+ const bossArena=state.mythicMode==='boss-jormungandr',arenaTop=bossArena?24:0,arenaBottom=bossArena?SETTINGS.height-24:SETTINGS.height,bossInset=bossArena?Math.max(0,state.jormungandr?.inset||0):0,topLimit=arenaTop+bossInset,bottomLimit=arenaBottom-bossInset;if(b.y-b.r<topLimit){b.y=topLimit+b.r;b.vy=Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>bottomLimit){b.y=bottomLimit-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
  // Las fuerzas ambientales se suman en una sola autoridad y se limitan para que
  // acumular varios Power-ups no vuelva la pelota casi vertical de forma incontrolable.
  const now=performance.now?.()||0;let fieldForce=0;
@@ -96,7 +97,7 @@ export function updatePhysics(dt){
  capBallSpeed(b);
 
  // Generación de objetos; las barricadas solo se activan al recoger su power-up.
- if(state.itemsEnabled){
+ if(state.itemsEnabled&&state.mythicMode!=='boss-jormungandr'){
   state.powerupSpawnTimer=(state.powerupSpawnTimer??1)-dt;
   if(state.powerupSpawnTimer<=0&&state.items.length<5){
    const available=POWERUPS.filter(x=>x.id!=='aegis'||state.paddles.p1.shield<=0||state.paddles.p2.shield<=0);
@@ -123,16 +124,17 @@ export function updatePhysics(dt){
   return; // Evita recoger objetos o procesar eventos sobre la pelota reiniciada en el centro.
  }
  b.fire=0;b.color='#f6f4ed';b.glow=0;
+ if(state.mythicMode==='boss-jormungandr')state.items.length=0;
  for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';applyPowerup(item.type,ownerSide);state.items.splice(i,1);}}
 }
 
 export function updatePaddles(dt){
  if(!state.running||state.paused||state.finished)return;const {p1,p2}=state.paddles;
  const move=(p,up,down,side)=>{
-  const oldY=p.y;if(p.freeze>0){p.motion=0;return;}
-  if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);p.y=clamp((p.invert>0?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),0,SETTINGS.height-p.h);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
+  const oldY=p.y;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
+  if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);p.y=clamp((p.invert>0?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),topLimit,bottomLimit);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
   let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
-  p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*dt*60,0,SETTINGS.height-p.h);
+  p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*dt*60,topLimit,bottomLimit);
   p.motion=dt>0?(p.y-oldY)/(dt*60):0;
  };
  move(p1,state.keys.KeyW||state.touch.up1,state.keys.KeyS||state.touch.down1,'p1');
@@ -141,6 +143,6 @@ export function updatePaddles(dt){
   const oldY=p2.y;
   if(p2.freeze>0){p2.motion=0;return;}
   const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2);
-  p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,0,SETTINGS.height-p2.h);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
+  const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }
