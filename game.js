@@ -101,7 +101,7 @@ function init(){
  const codexDetailContent=document.getElementById('codex-detail-content');
  let codexLastFocus=null;
  const closeCodexDetail=()=>{codexDetail.classList.add('hidden');codexDetail.setAttribute('aria-hidden','true');document.body.classList.remove('codex-detail-open');if(codexLastFocus?.isConnected)codexLastFocus.focus();};
- const openCodexDetail=id=>{const markup=renderCodexDetail(id);if(!markup)return;codexLastFocus=document.activeElement;codexDetailContent.innerHTML=markup;codexDetail.classList.remove('hidden');codexDetail.setAttribute('aria-hidden','false');document.body.classList.add('codex-detail-open');document.getElementById('codex-detail-close').focus();};
+ const openCodexDetail=id=>{const markup=renderCodexDetail(id);if(!markup)return;if(codexDetail.classList.contains('hidden'))codexLastFocus=document.activeElement;codexDetailContent.innerHTML=markup;codexDetail.classList.remove('hidden');codexDetail.setAttribute('aria-hidden','false');document.body.classList.add('codex-detail-open');document.getElementById('codex-detail-close').focus();};
  let activeCodexKind='god';
  const kindNames={god:'DIOSES',hero:'HÉROES',titan:'TITANES',monster:'MONSTRUOS'};
  const kindButtons={god:'codex-gods',hero:'codex-heroes',titan:'codex-titans',monster:'codex-monsters'};
@@ -129,6 +129,7 @@ function init(){
  Object.entries(kindButtons).forEach(([kind,id])=>document.getElementById(id).addEventListener('click',()=>showCodexKind(kind)));
  document.getElementById('codex-back').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');});
  codexGrid.addEventListener('click',e=>{const trigger=e.target.closest('[data-codex-open]');if(trigger)openCodexDetail(trigger.dataset.codexOpen);});
+ codexDetailContent.addEventListener('click',e=>{const related=e.target.closest('[data-codex-related]');if(related)openCodexDetail(related.dataset.codexRelated);});
  document.getElementById('codex-detail-close').addEventListener('click',closeCodexDetail);
  document.getElementById('codex-detail-close-bottom').addEventListener('click',closeCodexDetail);
  codexDetail.addEventListener('click',e=>{if(e.target===codexDetail)closeCodexDetail();});

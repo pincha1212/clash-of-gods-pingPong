@@ -1,5 +1,6 @@
 import {GODS} from './config.js';
 import {getCodexProfile} from './codex-profiles.js';
+import {getCodexConnections,getCodexMyths} from './codex-relations.js';
 const KIND_LABEL={hero:'HÉROE',titan:'TITÁN',monster:'MONSTRUO'};
 export const kindLabel=g=>KIND_LABEL[g.kind]||(g.kind==='god'?'DIOS':'DIOS');
 export function countCodexKind(kind){return Object.values(GODS).filter(g=>kind==='god'?(!g.kind||g.kind==='god'):g.kind===kind).length;}
@@ -15,9 +16,27 @@ export function renderCodex(kind='god',query='',role='all',sort='name'){
 
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function detailList(label,items){return items?.length?`<section class="codex-detail-block"><h4>${escapeHTML(label)}</h4><div class="codex-chip-list">${items.map(item=>`<span>${escapeHTML(item)}</span>`).join('')}</div></section>`:'';}
+function renderConnectionSection(id,g){
+ const links=getCodexConnections(id).filter(link=>GODS[link.relatedId]);
+ const groups=[
+  ['parent','GENEALOGÍA Y FAMILIA'],['sibling','HERMANOS Y HERMANAS'],['consort','PAREJAS Y UNIONES'],['rival','RIVALES Y ADVERSARIOS'],['ally','ALIADOS Y VÍNCULOS'],['family','OTROS VÍNCULOS']
+ ];
+ const used=new Set();
+ const blocks=groups.map(([type,label])=>{
+  const matches=links.filter(link=>link.type===type&&!used.has(`${link.relatedId}|${link.label}`));
+  matches.forEach(link=>used.add(`${link.relatedId}|${link.label}`));
+  if(!matches.length)return '';
+  return `<section class="codex-detail-block"><h4>${label}</h4><div class="codex-link-list">${matches.map(link=>{const related=GODS[link.relatedId];return `<article class="codex-link-card"><div><span class="codex-link-type">${escapeHTML(link.label)}</span><strong>${escapeHTML(related.name)}</strong><p>${escapeHTML(link.note)}</p></div><button type="button" data-codex-related="${escapeHTML(related.id)}" aria-label="Abrir ficha de ${escapeHTML(related.name)}">VER FICHA ↗</button></article>`;}).join('')}</div></section>`;
+ }).join('');
+ return `<div class="codex-detail-section codex-connections"><p class="eyebrow">RED DE RELACIONES</p><p class="codex-detail-origin">Conexiones documentadas en tradiciones concretas. Algunos parentescos cambian según la fuente; cada vínculo incluye una nota para no presentar una versión como la única.</p>${blocks||'<p class="codex-detail-origin">Todavía no hay vínculos familiares o narrativos cargados para esta figura.</p>'}</div>`;
+}
+function renderMythsSection(id){
+ const myths=getCodexMyths(id);
+ if(!myths.length)return '';
+ return `<div class="codex-detail-section codex-related-myths"><p class="eyebrow">MITOS Y RELATOS RELACIONADOS</p><div class="codex-myth-grid">${myths.map(myth=>`<article class="codex-myth-card"><span>${escapeHTML(myth.tradition)}</span><h4>${escapeHTML(myth.title)}</h4><p>${escapeHTML(myth.summary)}</p><div class="codex-myth-characters"><small>PERSONAJES VINCULADOS</small><div class="codex-chip-list">${myth.characters.filter(characterId=>GODS[characterId]&&characterId!==id).map(characterId=>`<button type="button" data-codex-related="${escapeHTML(characterId)}">${escapeHTML(GODS[characterId].name)} ↗</button>`).join('')||'<span>Esta ficha es el registro principal de este relato.</span>'}</div></div></article>`).join('')}</div></div>`;
+}
 export function renderCodexDetail(id){
  const g=GODS[id]; if(!g)return ''; const p=getCodexProfile(id); const coverage=Math.max(0,Math.min(10,Math.round(g.stats.size/12.4)));
  const lore=p?`<div class="codex-detail-section"><p class="eyebrow">TRADICIÓN Y MITO</p>${p.origin?`<p class="codex-detail-origin">${escapeHTML(p.origin)} · ${escapeHTML(p.nature||'')}</p>`:''}${detailList('NOMBRES Y EPÍTETOS',p.aliases)}${detailList('ÁMBITOS ASOCIADOS',p.domains)}${p.story?`<section class="codex-detail-block"><h4>RELATO</h4><p>${escapeHTML(p.story)}</p></section>`:''}${detailList('SÍMBOLOS',p.symbols)}${p.curiosity?`<section class="codex-detail-block codex-detail-curiosity"><h4>PARA TENER EN CUENTA</h4><p>${escapeHTML(p.curiosity)}</p></section>`:''}</div>`:`<div class="codex-detail-section codex-detail-pending"><p class="eyebrow">TRADICIÓN Y MITO</p><h4>Ficha mitológica por ampliar</h4><p>Esta ficha ya conserva la identidad y los datos jugables del personaje. La estructura admite sumar nombres alternativos, procedencia, relatos, ámbitos y símbolos sin tocar sus habilidades ni el combate.</p></div>`;
- return `<div class="codex-detail-hero" style="--god:${g.color}"><div class="codex-detail-symbol">${escapeHTML(g.symbol)}</div><div><p class="eyebrow">FICHA DEL CÓDICE / ${escapeHTML(kindLabel(g))}</p><h2 id="codex-detail-title">${escapeHTML(g.name)}</h2><p>${escapeHTML(g.title)}</p><div class="codex-role-tag">${escapeHTML(g.role)}</div></div></div><p class="codex-detail-intro">${escapeHTML(g.description)}</p>${lore}<div class="codex-detail-section"><p class="eyebrow">PERFIL DE COMBATE · CLASH OF GODS</p><section class="codex-detail-block codex-detail-skill"><h4>${escapeHTML(g.skill.name)} <span>· ${escapeHTML(g.skill.cooldown)} s de recarga</span></h4><p>${escapeHTML(g.skill.description)}</p></section><div class="codex-detail-stats"><div><span>VELOCIDAD</span><b>${g.stats.speed}<small>/10</small></b></div><div><span>COBERTURA</span><b>${coverage}<small>/10</small></b></div><div><span>POTENCIA</span><b>${g.stats.power}<small>/10</small></b></div></div><p class="codex-detail-footnote">Las habilidades y estadísticas de esta sección describen el personaje dentro del juego; no son una afirmación sobre el mito tradicional.</p></div>`;
+ return `<div class="codex-detail-hero" style="--god:${g.color}"><div class="codex-detail-symbol">${escapeHTML(g.symbol)}</div><div><p class="eyebrow">FICHA DEL CÓDICE / ${escapeHTML(kindLabel(g))}</p><h2 id="codex-detail-title">${escapeHTML(g.name)}</h2><p>${escapeHTML(g.title)}</p><div class="codex-role-tag">${escapeHTML(g.role)}</div></div></div><p class="codex-detail-intro">${escapeHTML(g.description)}</p>${lore}${renderConnectionSection(id,g)}${renderMythsSection(id)}<div class="codex-detail-section"><p class="eyebrow">PERFIL DE COMBATE · CLASH OF GODS</p><section class="codex-detail-block codex-detail-skill"><h4>${escapeHTML(g.skill.name)} <span>· ${escapeHTML(g.skill.cooldown)} s de recarga</span></h4><p>${escapeHTML(g.skill.description)}</p></section><div class="codex-detail-stats"><div><span>VELOCIDAD</span><b>${g.stats.speed}<small>/10</small></b></div><div><span>COBERTURA</span><b>${coverage}<small>/10</small></b></div><div><span>POTENCIA</span><b>${g.stats.power}<small>/10</small></b></div></div><p class="codex-detail-footnote">Las habilidades y estadísticas de esta sección describen el personaje dentro del juego; no son una afirmación sobre el mito tradicional.</p></div>`;
 }
-

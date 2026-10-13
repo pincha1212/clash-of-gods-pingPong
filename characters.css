@@ -44,3 +44,23 @@ body.codex-detail-open{overflow:hidden}
 .codex-detail-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:17px;padding:12px 13px;border:1px solid color-mix(in srgb,var(--god),transparent 65%);background:color-mix(in srgb,var(--god),transparent 96%);color:var(--god);font:700 10px sans-serif;letter-spacing:.12em;text-align:left;cursor:pointer;position:relative;z-index:1}
 .codex-detail-trigger:hover,.codex-detail-trigger:focus-visible{outline:2px solid var(--god);outline-offset:2px;background:color-mix(in srgb,var(--god),transparent 90%)}
 @media(max-width:560px){.codex-detail-modal{padding:0;align-items:stretch}.codex-detail-panel{width:100%;max-height:100dvh;border-left:0;border-right:0;padding:16px 17px calc(20px + env(safe-area-inset-bottom))}.codex-detail-hero{gap:13px;padding:20px 0 16px}.codex-detail-symbol{flex-basis:62px;width:62px;height:62px;font-size:30px}.codex-detail-hero h2{font-size:31px}.codex-detail-intro{font-size:12px}.codex-detail-stats>div{padding:10px 8px}.codex-detail-stats span{font-size:7px;letter-spacing:.06em}.codex-detail-stats b{font-size:23px}}
+
+/* Fase 3 del Códice: genealogía, vínculos y mitos conectados. */
+.codex-connections .codex-detail-origin{margin-bottom:18px}
+.codex-link-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.codex-link-card{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--line);background:#ffffff03;min-width:0}
+.codex-link-card>div{min-width:0}
+.codex-link-type{display:block;margin-bottom:5px;color:var(--god);font-size:8px;letter-spacing:.1em;text-transform:uppercase}
+.codex-link-card strong{display:block;color:var(--text);font:700 17px/1.2 'Barlow Condensed',sans-serif;overflow-wrap:anywhere}
+.codex-link-card p{margin:7px 0 0;font-size:10px;line-height:1.65;color:var(--muted)}
+.codex-link-card button{flex:0 0 auto;align-self:center;border:1px solid color-mix(in srgb,var(--god),transparent 65%);background:transparent;color:var(--god);padding:8px 9px;font:700 8px sans-serif;letter-spacing:.06em;cursor:pointer}
+.codex-link-card button:hover,.codex-link-card button:focus-visible,.codex-myth-characters button:hover,.codex-myth-characters button:focus-visible{outline:2px solid var(--god);outline-offset:2px}
+.codex-myth-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.codex-myth-card{min-width:0;padding:16px;border:1px solid var(--line);background:linear-gradient(145deg,#ffffff06,#ffffff01)}
+.codex-myth-card>span{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--god)}
+.codex-myth-card h4{margin:8px 0;font:700 21px/1.2 'Barlow Condensed',sans-serif;color:var(--text)}
+.codex-myth-card>p{margin:0;color:#b8bfd0;font-size:11px;line-height:1.75}
+.codex-myth-characters{margin-top:15px;padding-top:12px;border-top:1px solid var(--line)}
+.codex-myth-characters>small{display:block;margin-bottom:9px;font-size:8px;letter-spacing:.1em;color:var(--muted)}
+.codex-myth-characters .codex-chip-list button{padding:6px 8px;border:1px solid color-mix(in srgb,var(--god),transparent 70%);background:color-mix(in srgb,var(--god),transparent 96%);color:#d5d9e5;font-size:9px;cursor:pointer}
+@media(max-width:560px){.codex-link-list,.codex-myth-grid{grid-template-columns:1fr}.codex-link-card{gap:8px;padding:10px}.codex-link-card button{padding:8px 7px;font-size:7px}.codex-myth-card{padding:13px}}
