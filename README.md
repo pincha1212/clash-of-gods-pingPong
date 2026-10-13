@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.6
+# Clash of Gods — Divine Arena V0.2.2
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -28,7 +28,7 @@ Hay 35 arenas en total: se conservan las 30 originales y se agregan cinco arenas
 
 ## Power-ups de arena
 
-Hay 27 potenciadores que aparecen aleatoriamente durante la partida. Pueden coexistir hasta cinco objetos normales y, mientras haya espacio, aparece uno nuevo aproximadamente cada 2–3 segundos. La pelota recoge el objeto y el último jugador que la golpeó recibe el efecto correspondiente:
+Hay 25 potenciadores que aparecen aleatoriamente durante la partida. Pueden coexistir hasta cinco objetos normales y, mientras haya espacio, aparece uno nuevo aproximadamente cada 2–3 segundos. La pelota recoge el objeto y el último jugador que la golpeó recibe el efecto correspondiente:
 
 1. **Coloso:** aumenta temporalmente el tamaño de la paleta.
 2. **Égida:** bloquea una pelota que iba a salir por tu lado.
@@ -55,18 +55,17 @@ Hay 27 potenciadores que aparecen aleatoriamente durante la partida. Pueden coex
 23. **Segunda oportunidad:** activa un escudo temporal.
 24. **Juicio doble:** el próximo punto que ganes vale dos.
 25. **Aura cromática:** envuelve la paleta en un contorno cambiante.
-26. **Barricada rúnica:** al recogerla, invoca una formación aleatoria de muros rúnicos en el centro durante aproximadamente un segundo.
-27. **Tempestad divina:** transforma visualmente toda la arena, genera ráfagas que desvían la pelota y añade un efecto eléctrico temporal.
 
 Los objetos aparecen cuando está activada la opción **Objetos de arena**.
 
-## Barricadas y cambios de ambiente (V0.2.5)
+## Barricadas rúnicas (V0.2.2)
 
-- Las barricadas ya no aparecen automáticamente ni generan objetos extra. Solo aparecen cuando la pelota recoge el power-up **Barricada rúnica**.
-- La formación se elige entre cuatro patrones geométricos, dura aproximadamente un segundo y la pelota rebota en sus segmentos; las paletas no quedan bloqueadas.
-- **Tempestad divina** modifica el aspecto de toda la arena, añade trazos eléctricos y ráfagas que afectan la trayectoria de la pelota.
-- Eclipse, Prisma, Terremoto, Viento cruzado, Pozo gravitatorio y Trayectoria serpentina también alteran temporalmente la apariencia o las condiciones de la cancha.
-- Los efectos de ambiente se dibujan encima de la arena elegida y debajo de la pelota y las paletas, para conservar la legibilidad del combate.
+- Aparecen en el centro de la arena con cuatro patrones geométricos posibles.
+- Duran aproximadamente un segundo y desaparecen con un pulso visual.
+- La pelota rebota en los segmentos; las paletas no quedan bloqueadas.
+- Cada evento intenta generar dos power-ups cerca de la estructura, sujetos al límite de objetos disponibles.
+- Los tonos cian, violeta, dorado y rosa mantienen la estética oscura y luminosa del juego.
+- Los eventos se repiten con intervalos variables de aproximadamente 7,5–11 segundos.
 
 ## Ejecutar
 
@@ -88,103 +87,6 @@ Desde la carpeta del proyecto, ejecutar `python -m http.server 8000` y abrir `ht
 - **NO VERIFICADO:** partida interactiva completa en navegador real, balance de efectos, FPS medidos y controles en dispositivos físicos.
 
 
-## Mejoras de física V0.2.3
+## Versión acumulada V0.2.20
 
-- Las colisiones con paletas comprueban el recorrido de la pelota durante el fotograma para reducir los casos de atravesamiento a alta velocidad.
-- Las barricadas rúnicas usan una comprobación de segmento contra rectángulos ampliados por el radio de la pelota para detectar impactos en segmentos estrechos.
-- Al marcar un punto, la actualización de física termina en ese mismo fotograma; no se procesan objetos sobre la pelota recién reiniciada.
-- Se limita la velocidad de la pelota después de aplicar fuerzas y modificadores temporales.
-- El reinicio de potenciadores limpia los temporizadores y tamaños alterados de las paletas.
-- El intercambio de posición usa la altura configurada de la arena en vez de un valor fijo.
-
-## Verificación V0.2.3
-
-- **VERIFICADO:** comprobación de sintaxis de los módulos JavaScript activos.
-- **VERIFICADO:** pruebas automatizadas aisladas de colisión barrida con paleta, rebote de barricada, reinicio de potenciadores y cierre del procesamiento después de anotar.
-- **VERIFICADO:** integridad del delta y presencia de los archivos necesarios.
-- **NO VERIFICADO:** partida completa en navegador real, balance competitivo y pruebas en móviles físicos.
-
-## Aplicar la actualización V0.2.3
-
-1. Conserva una copia de seguridad de la carpeta actual.
-2. Extrae `clash-of-gods-delta-v0.2.3.zip` en una carpeta temporal.
-3. Copia los archivos del delta sobre la carpeta raíz del proyecto V0.2.2 y acepta reemplazar los archivos incluidos.
-4. Conserva `AUDITORIA-FUNCIONAL-V0.2.2.md` como informe de revisión de la versión base.
-5. Ejecuta el juego con un servidor local y revisa manualmente los flujos enumerados en el informe.
-
-El delta no reemplaza todos los archivos del proyecto; solo incluye los archivos modificados y el informe de auditoría.
-
-
-## Mejoras de combate V0.2.4
-
-- La dirección del golpe ahora responde de forma moderada al movimiento vertical de la paleta, dando más control para colocar la pelota.
-- Los contactos dentro de una franja de precisión (entre el 22 % y el 38 % de la mitad de la paleta desde el centro) producen un golpe preciso con un pequeño impulso y una señal audiovisual.
-- La pelota gana intensidad gradualmente a medida que crece el intercambio, con límite global para evitar velocidades extremas.
-- Se conserva el modificador de pelota pesada o relámpago al devolver la pelota; la velocidad base de cada efecto ya no se reemplaza por la velocidad normal en el siguiente golpe.
-- El ángulo de salida queda limitado para evitar trayectorias excesivamente verticales que alarguen intercambios sin avance horizontal.
-- El movimiento de paleta se mide tanto con teclado como con arrastre táctil; la CPU también genera una medida de movimiento compatible.
-
-## Verificación V0.2.4
-
-- **VERIFICADO:** sintaxis de todos los módulos JavaScript cargados por `index.html`.
-- **VERIFICADO:** pruebas automatizadas aisladas de las fórmulas de velocidad, límite de ángulo y cálculo de movimiento de paleta.
-- **NO VERIFICADO:** partida completa en navegador real, balance de la franja de precisión, sensación de control en pantalla táctil ni rendimiento en dispositivos físicos.
-
-## Aplicar la actualización V0.2.4
-
-1. Conserva una copia de tu carpeta V0.2.3.
-2. Extrae `clash-of-gods-delta-v0.2.4.zip` en una carpeta temporal.
-3. Copia los archivos incluidos en la raíz de tu proyecto V0.2.3 y acepta reemplazar los archivos correspondientes.
-4. Abre el juego y prueba golpes con la paleta en movimiento, golpes de precisión y los power-ups de pelota pesada y relámpago.
-
-Este delta no sustituye el proyecto completo.
-
-
-## Cambios de power-ups V0.2.5
-
-- Se agregan Barricada rúnica y Tempestad divina, para un total de 27 power-ups.
-- Se elimina la aparición autónoma y periódica de barricadas: la formación solo se activa al recoger su objeto.
-- Se amplían los efectos visuales de ambiente para Viento cruzado, Pozo gravitatorio, Trayectoria serpentina y Tempestad divina, sin reemplazar la identidad de la arena elegida.
-- Tempestad divina combina cambio ambiental, ráfagas físicas y un efecto temporal de pelota relámpago.
-
-## Verificación V0.2.5
-
-- **VERIFICADO:** sintaxis de los módulos JavaScript activos.
-- **VERIFICADO:** catálogo con 27 IDs únicos; activación automatizada de cada power-up; barricadas creadas al activar su power-up y sin temporizador de aparición automática.
-- **VERIFICADO:** integridad del delta.
-- **NO VERIFICADO:** partida completa en navegador real, legibilidad de todos los efectos en cada arena y rendimiento en dispositivos físicos.
-
-## Aplicar la actualización V0.2.5
-
-1. Conserva una copia de seguridad de tu proyecto V0.2.4.
-2. Extrae el delta en una carpeta temporal.
-3. Copia los archivos incluidos sobre la raíz del proyecto V0.2.4 y acepta reemplazar esos archivos.
-4. Activa Objetos de arena y comprueba que las barricadas solo aparezcan después de recoger el power-up correspondiente.
-5. Prueba Tempestad divina, Eclipse, Prisma y Viento cruzado en varias arenas.
-
-
-## Correcciones de Power-ups V0.2.6
-
-Esta actualización corrige interacciones del sistema existente; no agrega potenciadores nuevos.
-
-- **Bola pesada y Bola relámpago:** el cambio de velocidad se aplica al activar el efecto y se mantiene durante los rebotes. Ya no se fuerza una velocidad fija cada fotograma, lo que anulaba la aceleración progresiva del intercambio.
-- **Reemplazo de efectos de pelota:** si se recoge otro potenciador de pelota, se retira primero el modificador anterior para evitar acumular o arrastrar cambios de velocidad. Al terminar el efecto, la velocidad vuelve a una escala normal coherente con el intercambio.
-- **Tempestad divina:** usa el mismo control de duración y velocidad que Bola relámpago, sin un segundo mecanismo de aceleración que lo contradiga.
-- **Juicio doble:** se consume en el próximo punto disputado. Ya no queda guardado indefinidamente si el jugador que lo recogió pierde ese punto.
-- **Reinicio de partida y saque:** el estado del modificador de velocidad queda inicializado de forma explícita.
-
-## Verificación V0.2.6
-
-- **VERIFICADO:** sintaxis de los módulos JavaScript activos.
-- **VERIFICADO:** aplicación aislada de los 27 Power-ups, sin excepciones.
-- **VERIFICADO:** cambios de velocidad al activar, reemplazar y terminar Bola pesada/Bola relámpago.
-- **VERIFICADO:** consumo de Juicio doble en el punto siguiente, incluso si lo pierde quien lo recogió.
-- **VERIFICADO:** integridad del ZIP delta.
-- **NO VERIFICADO:** partida interactiva completa en navegador real y pruebas físicas en móvil.
-
-## Aplicar la actualización V0.2.6
-
-1. Conserva una copia de seguridad de tu proyecto V0.2.5.
-2. Extrae `clash-of-gods-delta-v0.2.6.zip` en una carpeta temporal.
-3. Copia los archivos del delta sobre la raíz del proyecto V0.2.5 y acepta reemplazar los archivos incluidos.
-4. No reemplaza el proyecto completo; contiene únicamente los archivos modificados y este README.
+Incluye los cambios acumulados desde la base completa V0.2.2 hasta V0.2.20. La corrección de V0.2.20 ajusta la detección de colisiones pelota-paleta durante el movimiento de la paleta. Las pruebas manuales en navegador y móvil siguen pendientes.
