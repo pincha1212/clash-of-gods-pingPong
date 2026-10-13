@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.24
+# Clash of Gods — Divine Arena V0.2.25
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -141,3 +141,20 @@ Incluye los cambios acumulados desde la base completa V0.2.2 hasta V0.2.21.
 - Las pelotas descendientes usan la colección y el mismo motor de física; heredan linaje/genética y cuentan para el límite operativo configurable `state.ballLimit` (64 por defecto).
 - No se agregaron esporas, hologramas ni efectos visuales de mutación; quedan para la siguiente etapa.
 - Pruebas de navegador y dispositivos físicos pendientes.
+
+
+## v0.2.25 — Base de corrupción individual por goles
+
+Esta sección describe el comportamiento vigente de Mutación y reemplaza las reglas de carga/modificadores descritas en las secciones históricas v0.2.22–v0.2.24.
+
+- La carga es individual por jugador (`p1` y `p2`) y persiste entre puntos durante una partida. Solo se reinicia al comenzar una partida nueva o al desactivar/cambiar el modo Mutación.
+- La carga aumenta únicamente cuando se confirma un gol contra ese jugador: base +15; bonificación de +5 si queda perdiendo por 2; +10 si queda perdiendo por 3 o más. Ganancia máxima por gol: +25; carga máxima: 100. La diferencia se calcula con el marcador ya actualizado.
+- Los umbrales individuales 25%, 50%, 75% y 100% quedan registrados como desbloqueados al cruzarse. Esta versión solo establece la base de progresión y sus eventos; todavía no implementa los poderes, eventos de arena ni Avatar.
+- El saque siguiente ya no borra la carga. Un bloqueo de gol por escudo tampoco suma corrupción porque no se confirma un gol.
+- Se retiraron de la ruta activa de Mutación los antiguos efectos de ralentización, inversión de controles y división celular, para no mezclar la base nueva con los poderes anteriores. La arquitectura general de pelotas múltiples permanece disponible para otros usos.
+- El indicador muestra por separado la carga de ambos jugadores.
+
+### Verificación v0.2.25
+
+- **VERIFICADO:** sintaxis de `mutation.js`, `physics.js`, `game.js` y `state.js`; pruebas aisladas de carga por lado, bonificación por desventaja, umbrales, tope y persistencia entre saques.
+- **NO VERIFICADO:** ejecución completa en navegador, partida real, CPU y móvil. Requiere prueba manual.
