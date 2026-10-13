@@ -14,11 +14,15 @@ function ensureMutationState() {
       ready: false,
       pendingEffects: [],
       sequence: 0,
+      thresholds: { 25: false, 50: false, 75: false },
+      modifiers: { slowP2: false, invertP2: false, divisionPhase: false },
       lastSource: null
     };
   }
   state.mutation.maxCharge = MUTATION_MAX_CHARGE;
   if (!Array.isArray(state.mutation.pendingEffects)) state.mutation.pendingEffects = [];
+  if (!state.mutation.thresholds || typeof state.mutation.thresholds !== 'object') state.mutation.thresholds = { 25: false, 50: false, 75: false };
+  if (!state.mutation.modifiers || typeof state.mutation.modifiers !== 'object') state.mutation.modifiers = { slowP2: false, invertP2: false, divisionPhase: false };
   return state.mutation;
 }
 
@@ -35,6 +39,9 @@ function publicStatus(mutation = ensureMutationState()) {
     maxCharge: mutation.maxCharge,
     ready: Boolean(mutation.ready),
     sequence: mutation.sequence,
+    thresholds: { ...mutation.thresholds },
+    modifiers: { ...mutation.modifiers },
+    stage: mutation.ready ? 100 : mutation.charge >= 75 ? 75 : mutation.charge >= 50 ? 50 : mutation.charge >= 25 ? 25 : 0,
     lastSource: mutation.lastSource ? { ...mutation.lastSource } : null
   };
 }
@@ -56,6 +63,8 @@ export function resetMutationState(active = state.mutationMode === 'mutation') {
     ready: false,
     pendingEffects: [],
     sequence: 0,
+    thresholds: { 25: false, 50: false, 75: false },
+    modifiers: { slowP2: false, invertP2: false, divisionPhase: false },
     lastSource: null
   };
   const status = publicStatus(state.mutation);
@@ -79,14 +88,20 @@ export function accumulateMutationCharge(amount = MUTATION_CHARGE_PER_HIT, sourc
     side: source.side === 'p1' || source.side === 'p2' ? source.side : null
   };
 
-  // Se solicita una resolución una única vez al completar la carga. Los efectos de juego
-  // se enchufarán en etapas posteriores; por ahora el resolvedor solo marca la carga como lista.
+  // Los umbrales solo se encolan al cruzarse. Su resolución ocurre después del choque,
+  // separada de la acumulación para no alterar la colisión que acaba de producirse.
+  for (const threshold of [25, 50, 75]) {
+    if (before < threshold && mutation.charge >= threshold && !mutation.thresholds[threshold]) {
+      mutation.thresholds[threshold] = true; // reserva inmediata: impide encolar duplicados
+      mutation.pendingEffects.push({
+        type: 'threshold-crossed', threshold,
+        sequence: mutation.sequence,
+        source: { ...mutation.lastSource }
+      });
+    }
+  }
   if (before < mutation.maxCharge && mutation.charge >= mutation.maxCharge) {
-    mutation.pendingEffects.push({
-      type: 'charge-ready',
-      sequence: mutation.sequence,
-      source: { ...mutation.lastSource }
-    });
+    mutation.pendingEffects.push({ type: 'charge-ready', sequence: mutation.sequence, source: { ...mutation.lastSource } });
   }
 
   const status = publicStatus(mutation);
@@ -103,18 +118,22 @@ export function resolveMutationEffects(context = {}) {
   const resolved = [];
   while (mutation.pendingEffects.length > 0) {
     const request = mutation.pendingEffects.shift();
-    if (request.type === 'charge-ready' && !mutation.ready) {
+    const eventContext = {
+      ballId: typeof context.ballId === 'string' ? context.ballId : null,
+      side: context.side === 'p1' || context.side === 'p2' ? context.side : null
+    };
+    if (request.type === 'threshold-crossed') {
+      const threshold = request.threshold;
+      if (threshold === 25) mutation.modifiers.slowP2 = true;
+      if (threshold === 50) mutation.modifiers.divisionPhase = true;
+      if (threshold === 75) mutation.modifiers.invertP2 = true;
+      const result = { type: 'threshold-crossed', threshold, sequence: request.sequence, charge: mutation.charge, source: request.source, context: eventContext, modifiers: { ...mutation.modifiers } };
+      resolved.push(result);
+      notify('mutation-threshold-reached', result);
+      notify('mutation-state-changed', publicStatus(mutation));
+    } else if (request.type === 'charge-ready' && !mutation.ready) {
       mutation.ready = true;
-      const result = {
-        type: 'charge-ready',
-        sequence: request.sequence,
-        charge: mutation.charge,
-        source: request.source,
-        context: {
-          ballId: typeof context.ballId === 'string' ? context.ballId : null,
-          side: context.side === 'p1' || context.side === 'p2' ? context.side : null
-        }
-      };
+      const result = { type: 'charge-ready', sequence: request.sequence, charge: mutation.charge, source: request.source, context: eventContext, modifiers: { ...mutation.modifiers } };
       resolved.push(result);
       notify('mutation-charge-ready', result);
     }
@@ -129,6 +148,8 @@ export function resetMutationRally() {
   mutation.charge = 0;
   mutation.ready = false;
   mutation.pendingEffects.length = 0;
+  mutation.thresholds = { 25: false, 50: false, 75: false };
+  mutation.modifiers = { slowP2: false, invertP2: false, divisionPhase: false };
   mutation.lastSource = null;
   const status = publicStatus(mutation);
   notify('mutation-state-changed', status);

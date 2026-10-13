@@ -152,9 +152,12 @@ export function updatePaddles(dt){
  if(!state.running||state.paused||state.finished)return;const {p1,p2}=state.paddles;
  const move=(p,up,down,side)=>{
   const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
-  if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);p.y=clamp((p.invert>0?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),topLimit,bottomLimit);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
-  let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
-  p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*dt*60,topLimit,bottomLimit);
+  const mutation=state.mutation?.active?state.mutation:null;
+  const mutationInvert=side==='p2'&&Boolean(mutation?.modifiers?.invertP2);
+  const mutationSpeed=side==='p2'&&mutation?.modifiers?.slowP2 ? 0.85 : 1;
+  if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);const inverted=(p.invert>0)!==mutationInvert;p.y=clamp((inverted?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),topLimit,bottomLimit);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
+  let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;if(mutationInvert)dir*=-1;
+  p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*mutationSpeed*getPaddleSpeedMultiplier(p)*dt*60,topLimit,bottomLimit);
   p.motion=dt>0?(p.y-oldY)/(dt*60):0;
  };
  move(p1,state.keys.KeyW||state.touch.up1,state.keys.KeyS||state.touch.down1,'p1');
@@ -162,7 +165,8 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2);
+  const mutation=state.mutation?.active?state.mutation:null,mutationInvert=Boolean(mutation?.modifiers?.invertP2),mutationSpeed=mutation?.modifiers?.slowP2 ? 0.85 : 1;
+  const target=(mutationInvert?SETTINGS.height-state.ball.y:state.ball.y)-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*mutationSpeed*getPaddleSpeedMultiplier(p2);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }
