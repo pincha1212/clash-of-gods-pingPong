@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.25
+# Clash of Gods — Divine Arena V0.2.26
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -158,3 +158,17 @@ Esta sección describe el comportamiento vigente de Mutación y reemplaza las re
 
 - **VERIFICADO:** sintaxis de `mutation.js`, `physics.js`, `game.js` y `state.js`; pruebas aisladas de carga por lado, bonificación por desventaja, umbrales, tope y persistencia entre saques.
 - **NO VERIFICADO:** ejecución completa en navegador, partida real, CPU y móvil. Requiere prueba manual.
+
+
+## v0.2.26 — Atmósfera de corrupción de Mutación
+
+- Se agrega una capa visual verde exclusiva del modo Mutación: niebla periférica, fisuras luminosas y esporas flotantes.
+- La atmósfera se dibuja por debajo de jugadores, pelota, potenciadores y efectos de combate para no dificultar su lectura.
+- El efecto respeta la calidad gráfica y la opción de reducir movimiento; no agrega dependencias ni modifica la física, las colisiones o el marcador.
+- Los modos normales no dibujan esta capa.
+- La base de corrupción individual de v0.2.25 se conserva: solo gana carga quien recibe el gol y la carga persiste entre puntos. Los poderes de los umbrales todavía no están implementados; por eso Mutación ya tiene una identidad visual, pero aún no todos sus efectos jugables.
+
+### Verificación v0.2.26
+
+- **VERIFICADO:** sintaxis estática de `game.js`; referencias visibles de versión en encabezado y pie; revisión estática de que la capa se ejecuta únicamente con `state.mutationMode === 'mutation'`.
+- **NO VERIFICADO:** apariencia en navegador, fluidez en móvil y prueba de una partida real. Requiere validación manual.
