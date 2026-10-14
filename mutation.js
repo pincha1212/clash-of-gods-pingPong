@@ -27,7 +27,7 @@ function makePlayerMutation() {
     powers: { ...POWER_DEFAULTS }
   };
 }
-function makeArenaEvent() { return { warning: 0, active: 0, cooldown: 4.2, direction: 1 }; }
+function makeArenaEvent() { return { warning: 0, active: 0, cooldown: 4.2, direction: 1, type: 'pulse', elapsed: 0 }; }
 
 function ensureMutationState() {
   if (!state.mutation || typeof state.mutation !== 'object') state.mutation = {};
@@ -57,9 +57,15 @@ function ensureMutationState() {
       if (!('lastSource' in player)) player.lastSource = null;
     }
   }
-  mutation.arenaEvent = { ...makeArenaEvent(), ...(mutation.arenaEvent || {}) };
+  if (!mutation.arenaEvent || typeof mutation.arenaEvent !== 'object') mutation.arenaEvent = makeArenaEvent();
+  else {
+    const eventDefaults = makeArenaEvent();
+    for (const [key, value] of Object.entries(eventDefaults)) if (!(key in mutation.arenaEvent)) mutation.arenaEvent[key] = value;
+  }
   for (const key of ['warning', 'active', 'cooldown']) mutation.arenaEvent[key] = Math.max(0, Number(mutation.arenaEvent[key]) || 0);
   mutation.arenaEvent.direction = mutation.arenaEvent.direction < 0 ? -1 : 1;
+  if (!['pulse', 'surge'].includes(mutation.arenaEvent.type)) mutation.arenaEvent.type = 'pulse';
+  mutation.arenaEvent.elapsed = Math.max(0, Number(mutation.arenaEvent.elapsed) || 0);
   return mutation;
 }
 
@@ -186,17 +192,23 @@ export function applyMutationArenaForce(ball, dt) {
   const event = ensureMutationState().arenaEvent;
   if (event.active <= 0 || !Number.isFinite(ball.vx) || !Number.isFinite(ball.vy)) return;
   const stage = getMutationArenaStage();
-  // Curvatura gradual y limitada: nunca invierte la velocidad horizontal ni impone
-  // una trayectoria nueva. El impulso se adapta a la velocidad actual de la pelota.
   const speed = Math.max(1, Math.hypot(ball.vx, ball.vy));
-  const strength = stage >= 4 ? 1.45 : stage >= 3 ? 1.0 : .62;
-  // Aceleración vertical pequeña y continua: conserva el sentido horizontal y no
-  // fuerza una nueva dirección de golpe. El componente vertical queda acotado.
+  const maxSpeed = Number(SETTINGS.maxBallSpeed) || 12;
+  if (event.type === 'surge') {
+    // Sobrecarga de savia: acelera gradualmente sin girar la pelota ni exceder el tope.
+    const rate = stage >= 4 ? .052 : stage >= 3 ? .040 : .028;
+    const nextSpeed = Math.min(maxSpeed, speed * (1 + rate * dt));
+    ball.vx = ball.vx / speed * nextSpeed;
+    ball.vy = ball.vy / speed * nextSpeed;
+    ball.speed = nextSpeed;
+    return;
+  }
+  // Pulso de infección: curva vertical gradual, con dirección anunciada y acotada.
+  const strength = stage >= 4 ? 1.35 : stage >= 3 ? .92 : .58;
   ball.vy += event.direction * strength * dt;
-  const verticalLimit = speed * .72;
+  const verticalLimit = speed * .68;
   ball.vy = Math.max(-verticalLimit, Math.min(verticalLimit, ball.vy));
   const nextSpeed = Math.hypot(ball.vx, ball.vy);
-  const maxSpeed = Number(SETTINGS.maxBallSpeed) || 12;
   if (nextSpeed > maxSpeed) { ball.vx = ball.vx / nextSpeed * maxSpeed; ball.vy = ball.vy / nextSpeed * maxSpeed; }
 }
 
@@ -247,20 +259,23 @@ export function updateMutationEffects(dt, ball = state.ball) {
     return;
   }
   if (event.active > 0) {
+    event.elapsed += dt;
     event.active = Math.max(0, event.active - dt);
-    if (event.active === 0) event.cooldown = arenaStage >= 4 ? 4.5 + Math.random() * 1.8 : arenaStage >= 3 ? 7 + Math.random() * 2.5 : 11 + Math.random() * 4;
+    if (event.active === 0) { event.elapsed = 0; event.cooldown = arenaStage >= 4 ? 4.5 + Math.random() * 1.8 : arenaStage >= 3 ? 7 + Math.random() * 2.5 : 11 + Math.random() * 4; }
   } else if (event.warning > 0) {
     event.warning = Math.max(0, event.warning - dt);
     if (event.warning === 0) {
       event.active = arenaStage >= 4 ? 1.85 : arenaStage >= 3 ? 1.55 : 1.2;
-      notify('god-message', { text: 'PULSO DE LA CANCHA MUTANTE', color: '#b9ff76' });
+      event.elapsed = 0;
+      notify('god-message', { text: event.type === 'surge' ? 'SOBRECARGA DE SAVIA · LA PELOTA ACELERA' : 'PULSO DE INFECCIÓN · TRAYECTORIA ALTERADA', color: '#b9ff76' });
     }
   } else {
     event.cooldown = Math.max(0, event.cooldown - dt);
     if (event.cooldown === 0) {
       event.warning = arenaStage >= 4 ? 1.15 : arenaStage >= 3 ? 1.25 : 1.45;
       event.direction = Math.random() < .5 ? -1 : 1;
-      notify('god-message', { text: 'LA CANCHA SE CONTRAE · PREPARATE', color: '#c5ff88' });
+      event.type = arenaStage >= 3 ? (Math.random() > .48 ? 'surge' : 'pulse') : (Math.random() > .78 ? 'surge' : 'pulse');
+      notify('god-message', { text: event.type === 'surge' ? 'SAVIA INESTABLE · PREPARATE PARA LA SOBRECARGA' : 'LA CANCHA SE CONTRAE · PREPARATE', color: '#c5ff88' });
     }
   }
 }
@@ -340,6 +355,8 @@ export function resetMutationRally() {
       power.avatarPending = false;
       power.avatarActive = 5.0;
       mutation.arenaEvent.warning = 0;
+      mutation.arenaEvent.type = 'pulse';
+      mutation.arenaEvent.elapsed = 0;
       mutation.arenaEvent.active = 1.8;
       mutation.arenaEvent.cooldown = 8;
       mutation.arenaEvent.direction = Math.random() < .5 ? -1 : 1;

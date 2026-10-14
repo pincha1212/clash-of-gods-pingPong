@@ -126,7 +126,9 @@ function updatePhysicsSingle(dt,isPrimary){
     const free=zones.filter(z=>!state.items.some(it=>Math.hypot(it.x-z.x,it.y-z.y)<45));
     const spot=free.length?free[Math.floor(Math.random()*free.length)]:{x:300+Math.random()*400,y:85+Math.random()*430};
     state.items.push({x:spot.x,y:spot.y,r:14,life:11,type:'mutation-vaccine'});
-    state.powerupSpawnTimer=8.5+Math.random()*3.5;
+    // La curación sigue siendo completa, pero la cancha dificulta conseguir vacunas al pudrirse.
+    const rot=Math.max(0,Math.min(100,state.mutation?.rot||0));
+    state.powerupSpawnTimer=9+Math.random()*3+rot*.07;
    }
   }else if(state.powerupSpawnTimer<=0&&state.items.length<5){
    const available=POWERUPS.filter(x=>x.id!=='aegis'||state.paddles.p1.shield<=0||state.paddles.p2.shield<=0);

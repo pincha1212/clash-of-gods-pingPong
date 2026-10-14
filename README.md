@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.30
+# Clash of Gods — Divine Arena V0.2.31
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -259,3 +259,18 @@ La v0.2.30 amplía la progresión de Mutación sin reemplazar los sistemas exist
 - **VERIFICADO:** integridad de los ZIP generados.
 - **VERIFICADO:** inspección estática de los cambios y pruebas aisladas de la progresión de pudrición, curación individual, fases y límites del impulso.
 - **NO VERIFICADO:** partida completa en navegador, balance real de los pulsos, lectura visual en pantalla pequeña y rendimiento en dispositivos físicos. Requiere prueba manual.
+
+
+## v0.2.31 — Pulido final de Mutación
+
+- Se corrige el ciclo de vida del estado de los eventos de cancha para que los temporizadores de aviso, actividad y recarga persistan correctamente entre fotogramas.
+- Se incorporan dos variantes de evento de cancha: **Pulso de infección**, que curva verticalmente la trayectoria con fuerza limitada, y **Sobrecarga de savia**, que aumenta la velocidad gradualmente sin cambiar el ángulo de la pelota.
+- Los eventos anuncian su tipo antes de activarse y usan señales visuales diferentes. La Sobrecarga puede aparecer con menor probabilidad desde la fase 2 y se vuelve más frecuente desde la fase 3, de modo que la cancha gana variedad sin sumar colisiones ni obstáculos nuevos.
+- Las vacunas mantienen su reducción de 12 puntos de corrupción, pero su aparición se espacía progresivamente con la pudrición global: aproximadamente 9–12 segundos al principio y 16–19 segundos al llegar al 100%, si el objeto anterior ya no está en cancha. La intención es conservar su valor sin que la curación se vuelva un ciclo demasiado frecuente que alargue excesivamente el duelo.
+- Los modos normales mantienen su frecuencia de power-ups y sus reglas. No se cambia el límite de velocidad de la pelota ni se introduce un motor de física nuevo.
+
+### Verificación v0.2.31
+
+- **VERIFICADO:** sintaxis estática de JavaScript e integridad de los ZIP.
+- **VERIFICADO:** pruebas aisladas de los dos tipos de evento, límite de velocidad, preservación de dirección en sobrecarga y cálculo de intervalo de vacunas.
+- **NO VERIFICADO:** partida completa en navegador y balance real en dispositivo físico. Requiere prueba manual.
