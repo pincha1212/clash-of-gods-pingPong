@@ -1,13 +1,13 @@
-# Clash of Gods — Divine Arena V0.2.33
+# Clash of Gods — Divine Arena V0.2.34
 
-Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 94 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
+Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
 ## Elenco
 
 - 33 dioses.
-- 30 héroes.
-- 15 titanes.
-- 16 monstruos.
+- 40 héroes.
+- 25 titanes.
+- 26 monstruos.
 
 ## Modos de juego
 
@@ -318,3 +318,17 @@ La v0.2.30 amplía la progresión de Mutación sin reemplazar los sistemas exist
 - **VERIFICADO:** IDs HTML únicos y referencias locales básicas.
 - **VERIFICADO:** integridad de los ZIP completo y delta.
 - **NO VERIFICADO:** navegación y partida completa en navegador real; no se realizó prueba interactiva de gameplay.
+
+
+## v0.2.34 — 30 personajes nuevos
+
+- Se incorporan 10 héroes, 10 titanes y 10 monstruos, con estadísticas, habilidades y perfiles del Códice.
+- Los nuevos personajes usan efectos de habilidad ya soportados por el combate; no se añadieron dependencias ni se alteró la física.
+- El catálogo pasa a 124 personajes: 33 dioses, 40 héroes, 25 titanes y 26 monstruos.
+- Se actualizan los contadores de la portada y del Códice.
+
+### Verificación v0.2.34
+
+- **VERIFICADO:** sintaxis de módulos JavaScript y unicidad de IDs del catálogo.
+- **VERIFICADO:** cada personaje nuevo tiene categoría, habilidad, estadísticas y tipo de poder compatible con el motor genérico existente.
+- **NO VERIFICADO:** prueba interactiva de las 30 habilidades en navegador real; requiere prueba manual de juego.
