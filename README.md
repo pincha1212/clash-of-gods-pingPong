@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.28
+# Clash of Gods — Divine Arena V0.2.29
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -221,3 +221,22 @@ Los poderes son compartidos por ambos jugadores. Se aplican sobre la física exi
 - **NO VERIFICADO:** partida completa en navegador. La ejecución de Chromium en este entorno quedó bloqueada por la política de navegación (`ERR_BLOCKED_BY_ADMINISTRATOR`); no se afirma haber probado el juego real.
 - **NO VERIFICADO:** equilibrio de los poderes, lectura de la arena y rendimiento en dispositivos físicos; requieren prueba manual de juego.
 
+
+
+## v0.2.29 — Pudrición persistente y progresión temprana
+
+La v0.2.29 separa la corrupción individual de la pudrición acumulada de la Cancha Mutante. La carga personal sigue aumentando por goles recibidos y puede bajar con vacunas; la pudrición del escenario, en cambio, solo aumenta durante el partido y no retrocede al curarse un jugador.
+
+- **Pudrición persistente:** comienza en 0% y aumenta lentamente con el tiempo de juego (0,12 puntos porcentuales por segundo activo). Los goles aceleran la evolución de la superficie. El contador se reinicia al comenzar una partida nueva.
+- **Fases de cancha:** la superficie usa la pudrición acumulada, no la carga actual del jugador. Umbrales visuales: 25%, 50% y 75%. Recoger una vacuna no borra las manchas ni las grietas ya extendidas.
+- **Eventos más tempranos:** los pulsos de la cancha pueden empezar en fase 2 (25% de pudrición), con menor fuerza y menor frecuencia. En fases superiores aumentan gradualmente la intensidad y frecuencia, siempre con aviso previo.
+- **Legibilidad y física:** el pulso modifica solo la velocidad vertical de la pelota existente, con intensidad escalada por fase y sin introducir una física paralela. Las líneas de cancha y las entidades se siguen dibujando por encima de la superficie.
+- **Modos normales:** la progresión de pudrición y los eventos siguen desactivados fuera de Mutación.
+- **Interfaz:** el nombre de la arena informa el porcentaje de pudrición y la fase, separado de los porcentajes individuales de corrupción.
+
+### Verificación v0.2.29
+
+- **VERIFICADO:** sintaxis JavaScript de todos los módulos.
+- **VERIFICADO:** pruebas aisladas de incremento temporal, aceleración al recibir goles, persistencia de pudrición al recoger una vacuna, avance de fases y desactivación fuera de Mutación.
+- **VERIFICADO:** integridad de los ZIP completo y delta.
+- **NO VERIFICADO:** partida completa en navegador y rendimiento en dispositivos físicos; requieren prueba manual.

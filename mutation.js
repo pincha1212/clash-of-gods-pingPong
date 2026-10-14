@@ -33,6 +33,8 @@ function ensureMutationState() {
   const mutation = state.mutation;
   mutation.active = state.mutationMode === 'mutation';
   mutation.maxCharge = MUTATION_MAX_CHARGE;
+  mutation.rot = Math.max(0, Math.min(100, Number(mutation.rot) || 0));
+  mutation.rotElapsed = Math.max(0, Number(mutation.rotElapsed) || 0);
   if (!mutation.players || typeof mutation.players !== 'object') mutation.players = {};
   for (const side of SIDES) {
     const player = mutation.players[side];
@@ -80,6 +82,7 @@ function publicStatus(mutation = ensureMutationState()) {
     active: Boolean(mutation.active), maxCharge: MUTATION_MAX_CHARGE, players,
     charge: players.p1.charge, ready: players.p1.ready || players.p2.ready,
     stage: Math.max(players.p1.stage, players.p2.stage),
+    rot: mutation.rot, rotElapsed: mutation.rotElapsed,
     arenaStage: getMutationArenaStage(), arenaEvent: { ...mutation.arenaEvent }
   };
 }
@@ -92,7 +95,7 @@ export function setMutationMode(mode) {
 export function resetMutationState(active = state.mutationMode === 'mutation') {
   state.mutationMode = active ? 'mutation' : 'off';
   state.mutation = {
-    active: Boolean(active), maxCharge: MUTATION_MAX_CHARGE,
+    active: Boolean(active), maxCharge: MUTATION_MAX_CHARGE, rot: 0, rotElapsed: 0,
     players: { p1: makePlayerMutation(), p2: makePlayerMutation() }, arenaEvent: makeArenaEvent()
   };
   const status = publicStatus(state.mutation);
@@ -109,6 +112,7 @@ export function registerMutationGoal(side, source = {}) {
   const player = mutation.players[side];
   const otherSide = side === 'p1' ? 'p2' : 'p1';
   const before = player.charge;
+  const previousArenaStage = getMutationArenaStage();
   player.concededStreak += 1;
   mutation.players[otherSide].concededStreak = 0;
   const baseGain = Math.min(12, player.concededStreak * 3);
@@ -119,6 +123,8 @@ export function registerMutationGoal(side, source = {}) {
   // Llegará a 99%, desbloqueará el Avatar y tendrá una última oportunidad antes del 100%.
   if (before < 90 && targetCharge >= MUTATION_MAX_CHARGE && !player.avatarUsed) targetCharge = 99;
   player.charge = Math.min(MUTATION_MAX_CHARGE, targetCharge);
+  // La pudrición del escenario es una memoria acumulativa del partido: las vacunas no la revierten.
+  mutation.rot = Math.min(100, Math.max(mutation.rot, player.charge * 0.62) + Math.max(4, (player.charge - before) * 0.7));
   player.lastGain = player.charge - before;
   player.lastSource = { type: 'goal-conceded', side, streak: player.concededStreak, ballId: typeof source.ballId === 'string' ? source.ballId : null };
 
@@ -139,6 +145,7 @@ export function registerMutationGoal(side, source = {}) {
   const status = publicStatus(mutation);
   const detail = { side, gain: player.lastGain, charge: player.charge, before, streak: player.concededStreak, baseGain, instability, unlockedNow, defeated: player.charge >= MUTATION_MAX_CHARGE, status };
   notify('mutation-charge-changed', status);
+  if (getMutationArenaStage() > previousArenaStage) notify('mutation-rot-stage-changed', { stage: getMutationArenaStage(), rot: mutation.rot, reason: 'goal' });
   notify('mutation-goal', detail);
   for (const threshold of unlockedNow) notify('mutation-threshold-reached', { side, threshold, charge: player.charge, streak: player.concededStreak });
   if (player.powers.avatarPending) notify('mutation-avatar-pending', { side, charge: player.charge });
@@ -168,20 +175,31 @@ export function reduceMutationCharge(side, amount = MUTATION_VACCINE_REDUCTION) 
 export function getMutationArenaStage() {
   const mutation = ensureMutationState();
   if (!mutation.active) return 0;
-  const highest = Math.max(mutation.players.p1.charge, mutation.players.p2.charge);
-  return highest >= 75 ? 4 : highest >= 50 ? 3 : highest >= 25 ? 2 : 1;
+  const rot = mutation.rot || 0;
+  return rot >= 75 ? 4 : rot >= 50 ? 3 : rot >= 25 ? 2 : 1;
 }
 export function getMutationArenaEvent() { return { ...ensureMutationState().arenaEvent }; }
 export function applyMutationArenaForce(ball, dt) {
   if (!ball || state.mutationMode !== 'mutation') return;
   const event = ensureMutationState().arenaEvent;
-  if (event.active > 0) ball.vy += event.direction * 3.6 * dt;
+  if (event.active > 0) {
+    const stage = getMutationArenaStage();
+    ball.vy += event.direction * (stage >= 4 ? 3.6 : stage >= 3 ? 2.8 : 1.8) * dt;
+  }
 }
 
 export function updateMutationEffects(dt, ball = state.ball) {
   const mutation = ensureMutationState();
   if (!mutation.active) return;
   dt = Math.max(0, Math.min(.05, Number(dt) || 0));
+  const previousArenaStage = getMutationArenaStage();
+  mutation.rotElapsed += dt;
+  // La cancha se pudre lentamente aunque nadie reciba goles. Cada gol acelera esa evolución.
+  mutation.rot = Math.min(100, mutation.rot + dt * 0.12);
+  if (getMutationArenaStage() > previousArenaStage) {
+    notify('mutation-rot-stage-changed', { stage: getMutationArenaStage(), rot: mutation.rot, reason: 'time' });
+    notify('god-message', { text: `LA CANCHA SE PUDRE · FASE ${getMutationArenaStage()}`, color: '#aaff69' });
+  }
   for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers;
     const hadShield = power.shieldTime > 0, hadRupture = power.ruptureBoost > 0;
@@ -208,23 +226,24 @@ export function updateMutationEffects(dt, ball = state.ball) {
   }
 
   const event = mutation.arenaEvent;
-  if (getMutationArenaStage() < 3) {
+  const arenaStage = getMutationArenaStage();
+  if (arenaStage < 2) {
     event.warning = 0; event.active = 0; event.cooldown = 4.2;
     return;
   }
   if (event.active > 0) {
     event.active = Math.max(0, event.active - dt);
-    if (event.active === 0) event.cooldown = 8 + Math.random() * 3;
+    if (event.active === 0) event.cooldown = arenaStage >= 4 ? 5 + Math.random() * 2 : arenaStage >= 3 ? 8 + Math.random() * 3 : 15 + Math.random() * 5;
   } else if (event.warning > 0) {
     event.warning = Math.max(0, event.warning - dt);
     if (event.warning === 0) {
-      event.active = 1.65;
+      event.active = arenaStage >= 4 ? 1.65 : arenaStage >= 3 ? 1.35 : 0.95;
       notify('god-message', { text: 'PULSO DE LA CANCHA MUTANTE', color: '#b9ff76' });
     }
   } else {
     event.cooldown = Math.max(0, event.cooldown - dt);
     if (event.cooldown === 0) {
-      event.warning = 1.35;
+      event.warning = arenaStage >= 4 ? 1.1 : arenaStage >= 3 ? 1.2 : 1.4;
       event.direction = Math.random() < .5 ? -1 : 1;
       notify('god-message', { text: 'LA CANCHA SE CONTRAE · PREPARATE', color: '#c5ff88' });
     }
@@ -319,7 +338,8 @@ export function resetMutationRally() {
   if (!SIDES.some(side => mutation.players[side].powers.avatarActive > 0)) {
     mutation.arenaEvent.warning = 0;
     mutation.arenaEvent.active = 0;
-    mutation.arenaEvent.cooldown = getMutationArenaStage() >= 3 ? 3.2 + Math.random() * 1.4 : 0;
+    const arenaStage = getMutationArenaStage();
+    mutation.arenaEvent.cooldown = arenaStage >= 4 ? 5 + Math.random() * 2 : arenaStage >= 3 ? 8 + Math.random() * 3 : arenaStage >= 2 ? 14 + Math.random() * 4 : 0;
   }
   return publicStatus(mutation);
 }
