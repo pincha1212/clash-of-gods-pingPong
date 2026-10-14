@@ -18,6 +18,7 @@ const POWER_DEFAULTS = Object.freeze({
 function makePlayerMutation() {
   return {
     charge: 0,
+    visualCharge: 0,
     unlocked: { 25: false, 50: false, 75: false, 90: false },
     lastGain: 0,
     lastSource: null,
@@ -41,6 +42,7 @@ function ensureMutationState() {
     if (!player || typeof player !== 'object') mutation.players[side] = makePlayerMutation();
     else {
       player.charge = Math.max(0, Math.min(MUTATION_MAX_CHARGE, Number(player.charge) || 0));
+      player.visualCharge = Math.max(0, Math.min(MUTATION_MAX_CHARGE, Number.isFinite(Number(player.visualCharge)) ? Number(player.visualCharge) : player.charge));
       if (!player.unlocked || typeof player.unlocked !== 'object') player.unlocked = {};
       for (const threshold of MUTATION_THRESHOLDS) player.unlocked[threshold] = player.charge >= threshold || Boolean(player.unlocked[threshold]);
       player.lastGain = Number(player.lastGain) || 0;
@@ -182,10 +184,20 @@ export function getMutationArenaEvent() { return { ...ensureMutationState().aren
 export function applyMutationArenaForce(ball, dt) {
   if (!ball || state.mutationMode !== 'mutation') return;
   const event = ensureMutationState().arenaEvent;
-  if (event.active > 0) {
-    const stage = getMutationArenaStage();
-    ball.vy += event.direction * (stage >= 4 ? 3.6 : stage >= 3 ? 2.8 : 1.8) * dt;
-  }
+  if (event.active <= 0 || !Number.isFinite(ball.vx) || !Number.isFinite(ball.vy)) return;
+  const stage = getMutationArenaStage();
+  // Curvatura gradual y limitada: nunca invierte la velocidad horizontal ni impone
+  // una trayectoria nueva. El impulso se adapta a la velocidad actual de la pelota.
+  const speed = Math.max(1, Math.hypot(ball.vx, ball.vy));
+  const strength = stage >= 4 ? 1.45 : stage >= 3 ? 1.0 : .62;
+  // Aceleración vertical pequeña y continua: conserva el sentido horizontal y no
+  // fuerza una nueva dirección de golpe. El componente vertical queda acotado.
+  ball.vy += event.direction * strength * dt;
+  const verticalLimit = speed * .72;
+  ball.vy = Math.max(-verticalLimit, Math.min(verticalLimit, ball.vy));
+  const nextSpeed = Math.hypot(ball.vx, ball.vy);
+  const maxSpeed = Number(SETTINGS.maxBallSpeed) || 12;
+  if (nextSpeed > maxSpeed) { ball.vx = ball.vx / nextSpeed * maxSpeed; ball.vy = ball.vy / nextSpeed * maxSpeed; }
 }
 
 export function updateMutationEffects(dt, ball = state.ball) {
@@ -202,6 +214,9 @@ export function updateMutationEffects(dt, ball = state.ball) {
   }
   for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers;
+    // La apariencia de la paleta persigue la carga real: la curación visual es gradual.
+    const visualStep = 28 * dt;
+    player.visualCharge += Math.max(-visualStep, Math.min(visualStep, player.charge - player.visualCharge));
     const hadShield = power.shieldTime > 0, hadRupture = power.ruptureBoost > 0;
     for (const key of ['pulseCooldown', 'pulsePenalty', 'shieldTime', 'shieldPenalty', 'ruptureCooldown', 'ruptureBoost', 'rupturePenalty', 'avatarActive', 'avatarPenalty']) power[key] = Math.max(0, power[key] - dt);
     if (hadShield && power.shieldTime === 0) power.shieldPenalty = .42;
@@ -233,17 +248,17 @@ export function updateMutationEffects(dt, ball = state.ball) {
   }
   if (event.active > 0) {
     event.active = Math.max(0, event.active - dt);
-    if (event.active === 0) event.cooldown = arenaStage >= 4 ? 5 + Math.random() * 2 : arenaStage >= 3 ? 8 + Math.random() * 3 : 15 + Math.random() * 5;
+    if (event.active === 0) event.cooldown = arenaStage >= 4 ? 4.5 + Math.random() * 1.8 : arenaStage >= 3 ? 7 + Math.random() * 2.5 : 11 + Math.random() * 4;
   } else if (event.warning > 0) {
     event.warning = Math.max(0, event.warning - dt);
     if (event.warning === 0) {
-      event.active = arenaStage >= 4 ? 1.65 : arenaStage >= 3 ? 1.35 : 0.95;
+      event.active = arenaStage >= 4 ? 1.85 : arenaStage >= 3 ? 1.55 : 1.2;
       notify('god-message', { text: 'PULSO DE LA CANCHA MUTANTE', color: '#b9ff76' });
     }
   } else {
     event.cooldown = Math.max(0, event.cooldown - dt);
     if (event.cooldown === 0) {
-      event.warning = arenaStage >= 4 ? 1.1 : arenaStage >= 3 ? 1.2 : 1.4;
+      event.warning = arenaStage >= 4 ? 1.15 : arenaStage >= 3 ? 1.25 : 1.45;
       event.direction = Math.random() < .5 ? -1 : 1;
       notify('god-message', { text: 'LA CANCHA SE CONTRAE · PREPARATE', color: '#c5ff88' });
     }
@@ -284,20 +299,17 @@ export function applyMutationPaddleHit(side, ball) {
     power.pulseCooldown = 1.8;
     power.pulsePenalty = .32;
     speed *= 1.07;
-    angle += (Math.random() - .5) * .34;
     labels.push('PULSO CAÓTICO');
   }
   if (player.unlocked[75] && power.ruptureCooldown <= 0) {
     power.ruptureCooldown = 2.7;
     power.ruptureBoost = .62;
     speed *= 1.09;
-    angle += (Math.random() - .5) * .16;
     labels.push('IMPULSO DE RUPTURA');
   }
   if (power.avatarActive > 0) {
     power.avatarPenalty = .36;
     speed *= 1.11;
-    angle += (Math.random() - .5) * .22;
     labels.push('AVATAR · PELOTA ALTERADA');
   }
   if (labels.length) {
@@ -339,7 +351,7 @@ export function resetMutationRally() {
     mutation.arenaEvent.warning = 0;
     mutation.arenaEvent.active = 0;
     const arenaStage = getMutationArenaStage();
-    mutation.arenaEvent.cooldown = arenaStage >= 4 ? 5 + Math.random() * 2 : arenaStage >= 3 ? 8 + Math.random() * 3 : arenaStage >= 2 ? 14 + Math.random() * 4 : 0;
+    mutation.arenaEvent.cooldown = arenaStage >= 4 ? 4.5 + Math.random() * 1.8 : arenaStage >= 3 ? 7 + Math.random() * 2.5 : arenaStage >= 2 ? 11 + Math.random() * 4 : 0;
   }
   return publicStatus(mutation);
 }

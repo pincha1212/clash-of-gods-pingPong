@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.29
+# Clash of Gods — Divine Arena V0.2.30
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -240,3 +240,22 @@ La v0.2.29 separa la corrupción individual de la pudrición acumulada de la Can
 - **VERIFICADO:** pruebas aisladas de incremento temporal, aceleración al recibir goles, persistencia de pudrición al recoger una vacuna, avance de fases y desactivación fuera de Mutación.
 - **VERIFICADO:** integridad de los ZIP completo y delta.
 - **NO VERIFICADO:** partida completa en navegador y rendimiento en dispositivos físicos; requieren prueba manual.
+
+
+## v0.2.30 — Pudrición visible, paletas infectadas y pelota irreversible
+
+La v0.2.30 amplía la progresión de Mutación sin reemplazar los sistemas existentes:
+
+- **Cancha:** más manchas, grietas conectadas y focos de savia desde las fases intermedias. La pudrición global avanza a 0,12 puntos porcentuales por segundo activo y nunca baja al recoger vacunas.
+- **Paletas:** muestran venas y aura verdes según la corrupción individual. La apariencia sigue la carga mediante una transición gradual, por lo que la vacuna visualmente va sanando la paleta sin borrar de golpe el efecto.
+- **Pelota:** acumula aura y venas según la pudrición global. Desde niveles altos aparecen rayos verdes alrededor; el efecto no se cura al recoger vacunas ni se reinicia entre puntos. Se reinicia al comenzar una partida nueva, junto con la pudrición de esa partida.
+- **Pulsos:** se acortan moderadamente los intervalos de eventos de fases intermedias y se alarga su ventana activa. El impulso físico aplica aceleración vertical gradual y acotada, mantiene el sentido horizontal y no fuerza una dirección nueva instantáneamente. Los poderes activados al golpear la paleta ya no agregan desviaciones aleatorias a la trayectoria.
+- **Rendimiento:** los rayos más detallados se omiten en calidad baja; los trazos de corrupción se dibujan en el canvas existente y no agregan dependencias ni entidades físicas.
+- **Modos normales:** los cambios visuales y de física de esta entrega están condicionados a Mutación.
+
+### Verificación v0.2.30
+
+- **VERIFICADO:** sintaxis de todos los archivos JavaScript mediante `node --check`.
+- **VERIFICADO:** integridad de los ZIP generados.
+- **VERIFICADO:** inspección estática de los cambios y pruebas aisladas de la progresión de pudrición, curación individual, fases y límites del impulso.
+- **NO VERIFICADO:** partida completa en navegador, balance real de los pulsos, lectura visual en pantalla pequeña y rendimiento en dispositivos físicos. Requiere prueba manual.
