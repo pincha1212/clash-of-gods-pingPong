@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.27
+# Clash of Gods — Divine Arena V0.2.28
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -179,3 +179,45 @@ Esta sección describe el comportamiento vigente de Mutación y reemplaza las re
 La identidad visual de Mutación ahora afecta al material del piso: manchas orgánicas verde oscuro, grietas angulosas y vetas discretas quedan integradas debajo de las marcas de cancha. La capa solo se genera con Mutación activa y respeta el nivel de calidad gráfica. La niebla y las partículas de v0.2.26 se mantienen como complemento, no como sustituto de la superficie corrompida.
 
 Esta actualización es visual: no cambia colisiones, física, marcador ni acumulación de corrupción. Los poderes de los umbrales siguen pendientes.
+
+## v0.2.28 — Mutación jugable y Cancha Mutante
+
+Esta versión convierte Mutación en una variante de supervivencia. Este apartado describe el comportamiento actual y sustituye cualquier descripción anterior que indique que los poderes de Mutación están pendientes.
+
+### Reglas de partido
+
+- El marcador tradicional no determina la victoria en Mutación: la puntuación no aumenta, el marcador queda oculto y el ajuste «Puntos para ganar» desaparece de la configuración mientras esta variante está seleccionada.
+- Cada gol recibido aumenta exclusivamente la corrupción del jugador que lo concede. La racha de goles recibidos suma +3, +6, +9 y +12 puntos porcentuales; desde el 50% se añade +1, y desde el 75% se añade +2, con un máximo de +14 por gol.
+- La racha de un jugador se corta cuando ese jugador consigue marcarle un gol al rival. La corrupción y los poderes desbloqueados persisten entre puntos, pero se reinician cuando comienza un partido nuevo.
+- Al alcanzar el 100% de corrupción, el jugador pierde y el rival gana por supervivencia. El Avatar se desbloquea en el 90% para que pueda activarse antes del límite final. Si un incremento saltara desde menos del 90% directamente al 100% y el jugador aún no hubiera usado el Avatar, la carga queda en 99% para garantizar esa última oportunidad; el siguiente gol recibido puede llevarlo al límite fatal.
+
+### Poderes automáticos compartidos
+
+- **25% — Pulso caótico:** los golpes a la pelota la aceleran y alteran ligeramente su ángulo; el jugador sufre una breve penalización de movimiento.
+- **50% — Escudo del abismo:** cuando se aproxima una pelota peligrosa, se activa automáticamente una protección temporal. Si la pelota llega a atravesar el extremo de la cancha durante la protección, el gol se evita; usar el escudo reduce brevemente el control del jugador. Si no consigue bloquear el gol, también deja una penalización corta.
+- **75% — Impulso de ruptura:** aumenta temporalmente el movimiento y potencia el golpe, seguido de una breve reducción de control.
+- **90% — Avatar de corrupción:** se activa una sola vez por jugador y partido, transforma visualmente la paleta y modifica temporalmente los golpes y el pulso de la arena. Los poderes y desbloqueos obtenidos se conservan aunque una vacuna reduzca el porcentaje.
+
+Los poderes son compartidos por ambos jugadores. Se aplican sobre la física existente de `physics.js`; no se añade un segundo motor de pelota.
+
+### Vacunas
+
+- En Mutación, los power-ups comunes no aparecen. En su lugar puede haber una vacuna especial, como máximo una en la cancha, con aparición ocasional.
+- Recoger una vacuna reduce la corrupción en 12 puntos porcentuales del jugador al que se atribuye el último golpe a la pelota. No borra poderes ya desbloqueados ni reinicia la racha de goles recibidos.
+- La aparición de vacunas respeta la opción de objetos de la configuración. Los modos normales conservan los power-ups originales.
+
+### Cancha Mutante
+
+- El piso se modifica por fases según la mayor corrupción entre los dos jugadores: fase 1 desde 0%, fase 2 desde 25%, fase 3 desde 50% y fase 4 desde 75%.
+- Las fases aumentan la densidad de manchas orgánicas, grietas y focos de savia verde oscura. La superficie se reconstruye cuando cambia la carga, sin recalcular texturas en cada fotograma.
+- A partir de la fase 3 hay un solo evento peligroso global a la vez: aviso previo, un pulso que altera ligeramente la trayectoria vertical de la pelota y un periodo de recuperación. No aparecen obstáculos sobre jugadores ni sobre la pelota.
+- La capa de suelo, los eventos y los poderes de Mutación solo funcionan con esta variante activa. Los modos normales mantienen sus reglas de marcador, catálogo de objetos y física habitual.
+
+### Verificación v0.2.28
+
+- **VERIFICADO:** sintaxis de todos los módulos JavaScript con `node --check`.
+- **VERIFICADO:** pruebas aisladas del módulo de Mutación para progresión por rachas, carga individual, vacuna y persistencia de desbloqueos, Avatar de uso único, escudo, Pulso, fuerza del evento de arena y modo Mutación desactivado.
+- **VERIFICADO:** empaquetado e integridad de los ZIP completo y delta.
+- **NO VERIFICADO:** partida completa en navegador. La ejecución de Chromium en este entorno quedó bloqueada por la política de navegación (`ERR_BLOCKED_BY_ADMINISTRATOR`); no se afirma haber probado el juego real.
+- **NO VERIFICADO:** equilibrio de los poderes, lectura de la arena y rendimiento en dispositivos físicos; requieren prueba manual de juego.
+

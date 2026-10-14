@@ -2,3 +2,11 @@
 
 /* Indicador funcional de carga: no dibuja aún los efectos mutacionales del campo. */
 .mutation-status{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;padding:9px 18px;border:1px solid #455536;border-top:0;background:#111a13;color:#b9dc86}.mutation-status.hidden{display:none}.mutation-status>.mutation-status-head{grid-column:1/-1}.mutation-player-charge{display:grid;grid-template-columns:1fr;gap:5px;min-width:0}.mutation-status-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:9px;letter-spacing:.12em}.mutation-status-head b{font-family:'Barlow Condensed';font-size:17px;letter-spacing:.04em;color:#d9ff9a}.mutation-charge-track{height:4px;background:#283525;overflow:hidden}.mutation-charge-track i{display:block;width:0;height:100%;background:#adff2f;transition:width .12s linear}.mutation-status small{font-size:8px;letter-spacing:.1em;color:#899b78}@media(max-width:560px){.mutation-status{grid-template-columns:1fr;gap:9px}.mutation-status>.mutation-status-head{grid-column:1}}
+
+/* v0.2.28 — La Mutación sustituye el marcador por corrupción como condición de derrota. */
+body[data-mutation-mode="mutation"] .scorebar{display:none!important}
+body[data-mutation-mode="mutation"] .result-score{display:none!important}
+body[data-mutation-mode="mutation"] #score-target-config{display:none!important}
+body[data-mutation-mode="mutation"] .mutation-status{border-color:#547c36;background:#0c180e;color:#d4ff9c}
+body[data-mutation-mode="mutation"] .mutation-charge-track i{background:linear-gradient(90deg,#4a9b36,#baff69)}
+body[data-mutation-mode="mutation"] .mutation-status-head b{color:#d9ff9a}

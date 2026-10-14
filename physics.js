@@ -3,7 +3,7 @@ import {SETTINGS} from './config.js';
 import {burst} from './effects.js';
 import {playTone} from './audio.js';
 import {POWERUPS,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType} from './powerups.js';
-import {accumulateMutationCharge} from './mutation.js';
+import {registerMutationGoal,reduceMutationCharge,updateMutationEffects,applyMutationArenaForce,applyMutationPaddleHit,getMutationMovementMultiplier,getMutationShieldScale,consumeMutationShield,resetMutationRally} from './mutation.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ballMagnitude=b=>Math.hypot(b.vx,b.vy)||1;
@@ -60,18 +60,19 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  if(perfect){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.07);burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'GOLPE PRECISO',color:p.color}}));}
  b.vx=dir*speed*Math.cos(angle);b.vy=speed*Math.sin(angle);b.speed=speed;b.lastHit=side;b.fire=0;b.color='#f6f4ed';state.rally++;
  if(p.aura>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.22);const magnitude=ballMagnitude(b);b.vx=b.vx/magnitude*speed;b.vy=b.vy/magnitude*speed;p.aura=0;p.counter=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'AURA DE CONTRAATAQUE',color:p.color}}));}
+ if(state.mutationMode==='mutation')applyMutationPaddleHit(side,b);
  burst(b.x,b.y,p.color,perfect?4:2,perfect?1.8:1.1);playTone(perfect?side==='p1'?560:680:side==='p1'?410:520,perfect?.075:.055,'triangle',perfect?.045:.035);return true;
 }
 
 export function serve(direction=Math.random()>.5?1:-1){
- const b=(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.color='#f6f4ed';b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;
+ const b=(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.color='#f6f4ed';b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;if(state.mutationMode==='mutation')resetMutationRally();
 }
 
 export function updatePhysics(dt){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const balls=ensureBallCollection().slice();if(state.serveTimer>0){state.ball=balls[0];updatePhysicsSingle(dt,true);return;}
- updatePowerups(dt);const primary=balls[0];const oldScores={p1:state.scores.p1,p2:state.scores.p2};
- for(let i=0;i<balls.length;i++){const b=balls[i];if(!state.balls.includes(b))continue;state.ball=b;updatePhysicsSingle(dt,i===0);if(state.finished||state.scores.p1!==oldScores.p1||state.scores.p2!==oldScores.p2||state.balls.length!==balls.length)break;}
+ updatePowerups(dt);const primary=balls[0];if(state.mutationMode==='mutation')updateMutationEffects(dt,primary);const oldScores={p1:state.scores.p1,p2:state.scores.p2};
+ for(let i=0;i<balls.length;i++){const b=balls[i];if(!state.balls.includes(b))continue;state.ball=b;updatePhysicsSingle(dt,i===0);if(state.finished||state.serveTimer>0||state.scores.p1!==oldScores.p1||state.scores.p2!==oldScores.p2||state.balls.length!==balls.length)break;}
  state.ball=state.balls[0]||primary;
 }
 
@@ -79,7 +80,7 @@ function updatePhysicsSingle(dt,isPrimary){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const b=state.ball;
  if(isPrimary){for(let i=state.items.length-1;i>=0;i--){state.items[i].life-=dt;if(state.items[i].life<=0)state.items.splice(i,1);}}
- if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);p.h=p.baseH*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1);p.y=clamp(p.y,0,SETTINGS.height-p.h);if(p.shield<=0)p.shieldMode='';}
+ if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);const mutationScale=state.mutationMode==='mutation'?getMutationShieldScale(side):1;p.h=p.baseH*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1)*mutationScale;p.y=clamp(p.y,0,SETTINGS.height-p.h);if(p.shield<=0)p.shieldMode='';}
  if(state.serveTimer>0){state.serveTimer=Math.max(0,state.serveTimer-dt);return;}
  if(isPrimary){
  if(state.mythicMode==='olympus'){state.mythicSurgeCooldown=Math.max(0,(state.mythicSurgeCooldown||0)-dt);state.mythicSurgeTime=Math.max(0,(state.mythicSurgeTime||0)-dt);if(state.mythicSurgeCooldown<=0&&state.mythicSurgeTime<=0){state.mythicSurgeTime=1.35;state.mythicSurgeCooldown=8.25;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL OLIMPO',color:'#ffe17a'}}));}}
@@ -110,15 +111,24 @@ function updatePhysicsSingle(dt,isPrimary){
  if(state.worldEffects?.curve>0)fieldForce+=Math.sin(now/105)*3.4;
  if(state.worldEffects?.storm>0)fieldForce+=Math.sin(now/170)*2.1;
  b.vy+=clamp(fieldForce,-4.8,4.8)*dt;
+ if(state.mutationMode==='mutation')applyMutationArenaForce(b,dt);
  if(isPrimary&&state.worldEffects?.quake>0){state.worldEffects.quakePulse=Math.max(0,(state.worldEffects.quakePulse||0)-dt);if(state.worldEffects.quakePulse<=0){b.vy+=((Math.random()-.5)*1.7);state.worldEffects.quakePulse=.55;}}
  // El modificador de velocidad se aplica al recoger el objeto y se conserva en los golpes.
  // No forzar la pelota a una velocidad fija cada fotograma: eso anulaba la aceleración del rally.
  capBallSpeed(b);
 
- // Generación de objetos; las barricadas solo se activan al recoger su power-up.
- if(isPrimary&&state.itemsEnabled&&state.mythicMode!=='boss-jormungandr'){
+ // Mutación reemplaza los potenciadores comunes por vacunas. Los modos normales conservan el catálogo actual.
+ if(isPrimary&&state.itemsEnabled&&(state.mythicMode!=='boss-jormungandr'||state.mutationMode==='mutation')){
   state.powerupSpawnTimer=(state.powerupSpawnTimer??1)-dt;
-  if(state.powerupSpawnTimer<=0&&state.items.length<5){
+  if(state.mutationMode==='mutation'){
+   if(state.powerupSpawnTimer<=0&&!state.items.some(item=>item.type==='mutation-vaccine')){
+    const zones=[{x:300,y:95},{x:500,y:130},{x:700,y:95},{x:330,y:500},{x:670,y:500},{x:500,y:470},{x:410,y:300},{x:590,y:300}];
+    const free=zones.filter(z=>!state.items.some(it=>Math.hypot(it.x-z.x,it.y-z.y)<45));
+    const spot=free.length?free[Math.floor(Math.random()*free.length)]:{x:300+Math.random()*400,y:85+Math.random()*430};
+    state.items.push({x:spot.x,y:spot.y,r:14,life:11,type:'mutation-vaccine'});
+    state.powerupSpawnTimer=8.5+Math.random()*3.5;
+   }
+  }else if(state.powerupSpawnTimer<=0&&state.items.length<5){
    const available=POWERUPS.filter(x=>x.id!=='aegis'||state.paddles.p1.shield<=0||state.paddles.p2.shield<=0);
    const pick=available[Math.floor(Math.random()*available.length)];
    const zones=[{x:300,y:95},{x:500,y:130},{x:700,y:95},{x:330,y:500},{x:670,y:500},{x:500,y:470},{x:410,y:300},{x:590,y:300}];
@@ -132,10 +142,19 @@ function updatePhysicsSingle(dt,isPrimary){
 
  if(b.x< -b.r||b.x>SETTINGS.width+b.r){
   const conceding=b.x<0?'p1':'p2',p=state.paddles[conceding];
-  if(p.shield>0){const shieldMode=p.shieldMode||'aegis';p.shield=0;p.shieldMode='';b.x=conceding==='p1'?p.x+p.w+b.r:p.x-b.r;b.vx=Math.abs(b.vx)*(conceding==='p1'?1:-1);if(shieldMode==='secondchance'){const speed=Math.min(SETTINGS.maxBallSpeed,ballMagnitude(b)*1.12),angle=Math.atan2(b.vy,b.vx)+(Math.random()-.5)*.22;b.vx=Math.cos(angle)*speed;b.vy=Math.sin(angle)*speed;b.speed=speed;}burst(b.x,b.y,p.color,6,2.3);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:shieldMode==='secondchance'?'SEGUNDA OPORTUNIDAD · CONTRAATAQUE':'BLOQUEO DIVINO',color:p.color}}));playTone(180,.18,'sawtooth',.04);return;}
-  const winner=conceding==='p1'?'p2':'p1',scorer=state.paddles[winner],doublePoint=scorer?.bonusPoint>0;state.scores[winner]+=doublePoint?2:1;
-  accumulateMutationCharge(conceding,state.scores,{ballId:b.id});
-  // Juicio doble corresponde al próximo punto, no al próximo punto que eventualmente gane el usuario.
+  if(p.shield>0){const shieldMode=p.shieldMode||'aegis';p.shield=0;p.shieldMode='';b.x=conceding==='p1'?p.x+p.w+b.r:p.x-b.r;b.vx=Math.abs(b.vx)*(conceding==='p1'?1:-1);if(shieldMode==='secondchance'){const speed=Math.min(SETTINGS.maxBallSpeed,ballMagnitude(b)*1.12),angle=Math.atan2(b.vy,b.vx)+(Math.random()-.5)*.22;b.vx=Math.cos(angle)*speed;b.vy=Math.sin(angle)*speed;b.speed=speed;}if(shieldMode==='mutation')consumeMutationShield(conceding);burst(b.x,b.y,p.color,6,2.3);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:shieldMode==='secondchance'?'SEGUNDA OPORTUNIDAD · CONTRAATAQUE':shieldMode==='mutation'?'ESCUDO DEL ABISMO · GOL EVITADO':'BLOQUEO DIVINO',color:shieldMode==='mutation'?'#9eff70':p.color}}));playTone(180,.18,'sawtooth',.04);return;}
+  const winner=conceding==='p1'?'p2':'p1',scorer=state.paddles[winner];
+  if(state.mutationMode==='mutation'){
+   const result=registerMutationGoal(conceding,{ballId:b.id});
+   for(const side of ['p1','p2'])if(state.paddles[side])state.paddles[side].bonusPoint=0;
+   burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),32,4.3);
+   playTone(180,.25,'sawtooth',.04);
+   window.dispatchEvent(new CustomEvent('mutation-goal-confirmed',{detail:{winner,loser:conceding,gain:result.gain||0,charge:result.charge||0,streak:result.streak||0,defeated:Boolean(result.defeated)}}));
+   if(result.defeated){state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner,loser:conceding,reason:'corruption',charge:result.charge}}));}
+   else serve(winner==='p1'?1:-1);
+   return;
+  }
+  const doublePoint=scorer?.bonusPoint>0;state.scores[winner]+=doublePoint?2:1;
   for(const side of ['p1','p2'])if(state.paddles[side])state.paddles[side].bonusPoint=0;
   if(doublePoint)window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DOBLE · +2',color:scorer.color}}));
   burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),45,5);playTone(180,.25,'sawtooth',.04);window.dispatchEvent(new CustomEvent('point-scored',{detail:{winner}}));
@@ -144,8 +163,8 @@ function updatePhysicsSingle(dt,isPrimary){
   return; // Evita recoger objetos o procesar eventos sobre la pelota reiniciada en el centro.
  }
  b.fire=0;b.color='#f6f4ed';b.glow=0;
- if(state.mythicMode==='boss-jormungandr')state.items.length=0;
- for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';applyPowerup(item.type,ownerSide);state.items.splice(i,1);}}
+ if(state.mythicMode==='boss-jormungandr'&&state.mutationMode!=='mutation')state.items.length=0;
+ for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';if(state.mutationMode==='mutation'){if(item.type==='mutation-vaccine'){const result=reduceMutationCharge(ownerSide);burst(item.x,item.y,'#a7ff7c',12,2.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:result.reduction?`VACUNA · -${result.reduction}% CORRUPCIÓN`:'VACUNA · CORRUPCIÓN ESTABILIZADA',color:'#a7ff7c'}}));}}else applyPowerup(item.type,ownerSide);state.items.splice(i,1);}}
 }
 
 export function updatePaddles(dt){
@@ -154,7 +173,7 @@ export function updatePaddles(dt){
   const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
   if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);const inverted=p.invert>0;p.y=clamp((inverted?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),topLimit,bottomLimit);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
   let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
-  p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*dt*60,topLimit,bottomLimit);
+  const mutationMultiplier=state.mutationMode==='mutation'?getMutationMovementMultiplier(side):1;p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*mutationMultiplier*dt*60,topLimit,bottomLimit);
   p.motion=dt>0?(p.y-oldY)/(dt*60):0;
  };
  move(p1,state.keys.KeyW||state.touch.up1,state.keys.KeyS||state.touch.down1,'p1');
@@ -162,7 +181,7 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2);
+  const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }
