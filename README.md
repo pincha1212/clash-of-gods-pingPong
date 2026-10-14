@@ -1,13 +1,23 @@
-# Clash of Gods — Divine Arena V0.2.32
+# Clash of Gods — Divine Arena V0.2.33
 
-Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
+Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 94 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
 ## Elenco
 
-- 30 dioses.
+- 33 dioses.
 - 30 héroes.
 - 15 titanes.
-- 15 monstruos.
+- 16 monstruos.
+
+## Modos de juego
+
+La preparación comienza con tres modos independientes:
+
+- **Clásico:** selección libre de personajes, elenco, arena y reglas.
+- **Crónicas mitológicas:** historias con contendientes y eventos definidos. No se combina con Mutación.
+- **Mutación:** modo independiente con Cancha Mutante, corrupción y vacunas. No utiliza reglas de Crónicas.
+
+El flujo de preparación separa la elección del modo, los personajes, los ajustes del combate y la revisión final. Volver a un paso conserva las elecciones compatibles; las crónicas fijan sus contendientes.
 
 ## Modos de elenco
 
@@ -24,7 +34,7 @@ En Titanes vs. monstruos, el jugador 1 selecciona un titán y el jugador 2 un mo
 
 El códice empieza por una pantalla de cuatro categorías: dioses, héroes, titanes y monstruos. Cada sección contiene las fichas de su categoría.
 
-Hay 35 arenas en total: se conservan las 30 originales y se agregan cinco arenas temáticas de Titanomaquia, Hidra, Kraken, Minotauro y Fenrir. Las arenas se pueden elegir con cualquier categoría de personajes.
+Hay 38 arenas en total: se conservan las 33 arenas del catálogo base y se agregan cinco arenas temáticas de Titanomaquia, Hidra, Kraken, Minotauro y Fenrir. Las arenas se pueden elegir con cualquier categoría de personajes.
 
 ## Power-ups de arena
 
@@ -290,3 +300,21 @@ La v0.2.30 amplía la progresión de Mutación sin reemplazar los sistemas exist
 - **VERIFICADO:** pruebas aisladas del tercer evento, alternancia de sus impulsos, conservación del sentido horizontal y límite de velocidad.
 - **VERIFICADO:** etiquetas actuales de arena sin el formato «FASE N/4».
 - **NO VERIFICADO:** partida completa en navegador y rendimiento/balance en dispositivos físicos; requiere prueba manual.
+
+
+## v0.2.33 — Nueva preparación de partida
+
+- Se agregó una pantalla inicial para elegir entre Clásico, Crónicas mitológicas y Mutación.
+- Mutación y Crónicas se excluyen entre sí; el inicio del combate refuerza esta regla.
+- Se ordenaron los ajustes por grupos y se agregó una pantalla final de revisión antes de entrar a la arena.
+- Se eliminó la elección duplicada del elenco en configuración; el elenco se cambia desde selección de personajes.
+- Se conserva la selección de personajes al volver entre pasos cuando corresponde.
+- Se corrigió la descripción del catálogo: 94 personajes (33 dioses, 30 héroes, 15 titanes y 16 monstruos).
+
+### Verificación v0.2.33
+
+- **VERIFICADO:** sintaxis de los módulos JavaScript con `node --check`.
+- **VERIFICADO:** el catálogo exporta 94 personajes y 38 arenas sin IDs duplicados; los conteos por categoría suman 94.
+- **VERIFICADO:** IDs HTML únicos y referencias locales básicas.
+- **VERIFICADO:** integridad de los ZIP completo y delta.
+- **NO VERIFICADO:** navegación y partida completa en navegador real; no se realizó prueba interactiva de gameplay.
