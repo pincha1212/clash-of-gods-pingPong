@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.31
+# Clash of Gods — Divine Arena V0.2.32
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 90 personajes, 35 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -274,3 +274,19 @@ La v0.2.30 amplía la progresión de Mutación sin reemplazar los sistemas exist
 - **VERIFICADO:** sintaxis estática de JavaScript e integridad de los ZIP.
 - **VERIFICADO:** pruebas aisladas de los dos tipos de evento, límite de velocidad, preservación de dirección en sobrecarga y cálculo de intervalo de vacunas.
 - **NO VERIFICADO:** partida completa en navegador y balance real en dispositivo físico. Requiere prueba manual.
+
+
+## v0.2.32 — Cierre de contenido de Mutación
+
+- Se añade un tercer evento de cancha: **Latido del núcleo**. La cancha lo anuncia con ondas concéntricas; al activarse, aplica dos impulsos verticales graduales en sentidos opuestos. No invierte directamente el movimiento horizontal ni supera el límite de velocidad configurado.
+- La selección de eventos se amplía por etapa. El Latido puede aparecer desde la fase intermedia y gana presencia en las etapas avanzadas, junto con el Pulso de infección y la Sobrecarga de savia.
+- Cada evento muestra una señal visual y un aviso textual propios para anticipar su comportamiento.
+- El título de la arena deja de mostrar un contador de fases del tipo «FASE 4/4». Ahora presenta el estado narrativo de la cancha: **Contaminación**, **Infección**, **Descomposición** o **Corrupción total**. La última etapa se presenta como un estado completo, no como un progreso pendiente.
+- No se agregan obstáculos físicos, dependencias ni cambios a las reglas de los modos normales.
+
+### Verificación v0.2.32
+
+- **VERIFICADO:** sintaxis de JavaScript e integridad de los ZIP.
+- **VERIFICADO:** pruebas aisladas del tercer evento, alternancia de sus impulsos, conservación del sentido horizontal y límite de velocidad.
+- **VERIFICADO:** etiquetas actuales de arena sin el formato «FASE N/4».
+- **NO VERIFICADO:** partida completa en navegador y rendimiento/balance en dispositivos físicos; requiere prueba manual.

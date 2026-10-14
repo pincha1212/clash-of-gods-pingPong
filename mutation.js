@@ -27,7 +27,8 @@ function makePlayerMutation() {
     powers: { ...POWER_DEFAULTS }
   };
 }
-function makeArenaEvent() { return { warning: 0, active: 0, cooldown: 4.2, direction: 1, type: 'pulse', elapsed: 0 }; }
+function makeArenaEvent() { return { warning: 0, active: 0, duration: 0, cooldown: 4.2, direction: 1, type: 'pulse', elapsed: 0 }; }
+function getArenaStageName(stage = getMutationArenaStage()) { return ['INACTIVA', 'CONTAMINACIÓN', 'INFECCIÓN', 'DESCOMPOSICIÓN', 'CORRUPCIÓN TOTAL'][stage] || 'INACTIVA'; }
 
 function ensureMutationState() {
   if (!state.mutation || typeof state.mutation !== 'object') state.mutation = {};
@@ -62,9 +63,9 @@ function ensureMutationState() {
     const eventDefaults = makeArenaEvent();
     for (const [key, value] of Object.entries(eventDefaults)) if (!(key in mutation.arenaEvent)) mutation.arenaEvent[key] = value;
   }
-  for (const key of ['warning', 'active', 'cooldown']) mutation.arenaEvent[key] = Math.max(0, Number(mutation.arenaEvent[key]) || 0);
+  for (const key of ['warning', 'active', 'duration', 'cooldown']) mutation.arenaEvent[key] = Math.max(0, Number(mutation.arenaEvent[key]) || 0);
   mutation.arenaEvent.direction = mutation.arenaEvent.direction < 0 ? -1 : 1;
-  if (!['pulse', 'surge'].includes(mutation.arenaEvent.type)) mutation.arenaEvent.type = 'pulse';
+  if (!['pulse', 'surge', 'heartbeat'].includes(mutation.arenaEvent.type)) mutation.arenaEvent.type = 'pulse';
   mutation.arenaEvent.elapsed = Math.max(0, Number(mutation.arenaEvent.elapsed) || 0);
   return mutation;
 }
@@ -203,9 +204,13 @@ export function applyMutationArenaForce(ball, dt) {
     ball.speed = nextSpeed;
     return;
   }
-  // Pulso de infección: curva vertical gradual, con dirección anunciada y acotada.
-  const strength = stage >= 4 ? 1.35 : stage >= 3 ? .92 : .58;
-  ball.vy += event.direction * strength * dt;
+  // El pulso y el latido alteran el componente vertical sin invertir el sentido horizontal.
+  const strength = event.type === 'heartbeat'
+    ? (stage >= 4 ? 1.05 : stage >= 3 ? .78 : .52)
+    : (stage >= 4 ? 1.35 : stage >= 3 ? .92 : .58);
+  const secondBeat = event.type === 'heartbeat' && event.duration > 0 && event.elapsed >= event.duration * .5;
+  const direction = secondBeat ? -event.direction : event.direction;
+  ball.vy += direction * strength * dt;
   const verticalLimit = speed * .68;
   ball.vy = Math.max(-verticalLimit, Math.min(verticalLimit, ball.vy));
   const nextSpeed = Math.hypot(ball.vx, ball.vy);
@@ -222,7 +227,7 @@ export function updateMutationEffects(dt, ball = state.ball) {
   mutation.rot = Math.min(100, mutation.rot + dt * 0.12);
   if (getMutationArenaStage() > previousArenaStage) {
     notify('mutation-rot-stage-changed', { stage: getMutationArenaStage(), rot: mutation.rot, reason: 'time' });
-    notify('god-message', { text: `LA CANCHA SE PUDRE · FASE ${getMutationArenaStage()}`, color: '#aaff69' });
+    notify('god-message', { text: `LA CANCHA MUTÓ · ${getArenaStageName()}`, color: '#aaff69' });
   }
   for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers;
@@ -261,21 +266,27 @@ export function updateMutationEffects(dt, ball = state.ball) {
   if (event.active > 0) {
     event.elapsed += dt;
     event.active = Math.max(0, event.active - dt);
-    if (event.active === 0) { event.elapsed = 0; event.cooldown = arenaStage >= 4 ? 4.5 + Math.random() * 1.8 : arenaStage >= 3 ? 7 + Math.random() * 2.5 : 11 + Math.random() * 4; }
+    if (event.active === 0) { event.elapsed = 0; event.duration = 0; event.cooldown = arenaStage >= 4 ? 4.5 + Math.random() * 1.8 : arenaStage >= 3 ? 7 + Math.random() * 2.5 : 11 + Math.random() * 4; }
   } else if (event.warning > 0) {
     event.warning = Math.max(0, event.warning - dt);
     if (event.warning === 0) {
-      event.active = arenaStage >= 4 ? 1.85 : arenaStage >= 3 ? 1.55 : 1.2;
+      event.active = arenaStage >= 4 ? 1.9 : arenaStage >= 3 ? 1.6 : 1.25;
+      event.duration = event.active;
       event.elapsed = 0;
-      notify('god-message', { text: event.type === 'surge' ? 'SOBRECARGA DE SAVIA · LA PELOTA ACELERA' : 'PULSO DE INFECCIÓN · TRAYECTORIA ALTERADA', color: '#b9ff76' });
+      const eventMessage = event.type === 'surge' ? 'SOBRECARGA DE SAVIA · LA PELOTA ACELERA' : event.type === 'heartbeat' ? 'LATIDO DEL NÚCLEO · DOBLE PULSO' : 'PULSO DE INFECCIÓN · TRAYECTORIA ALTERADA';
+      notify('god-message', { text: eventMessage, color: '#b9ff76' });
     }
   } else {
     event.cooldown = Math.max(0, event.cooldown - dt);
     if (event.cooldown === 0) {
       event.warning = arenaStage >= 4 ? 1.15 : arenaStage >= 3 ? 1.25 : 1.45;
       event.direction = Math.random() < .5 ? -1 : 1;
-      event.type = arenaStage >= 3 ? (Math.random() > .48 ? 'surge' : 'pulse') : (Math.random() > .78 ? 'surge' : 'pulse');
-      notify('god-message', { text: event.type === 'surge' ? 'SAVIA INESTABLE · PREPARATE PARA LA SOBRECARGA' : 'LA CANCHA SE CONTRAE · PREPARATE', color: '#c5ff88' });
+      const roll = Math.random();
+      if (arenaStage === 2) event.type = roll < .45 ? 'pulse' : roll < .72 ? 'surge' : 'heartbeat';
+      else if (arenaStage === 3) event.type = roll < .34 ? 'pulse' : roll < .66 ? 'surge' : 'heartbeat';
+      else event.type = roll < .30 ? 'pulse' : roll < .65 ? 'surge' : 'heartbeat';
+      const warningMessage = event.type === 'surge' ? 'SAVIA INESTABLE · PREPARATE PARA LA SOBRECARGA' : event.type === 'heartbeat' ? 'EL NÚCLEO LATE · PREPARATE PARA DOS PULSOS' : 'LA CANCHA SE CONTRAE · PREPARATE';
+      notify('god-message', { text: warningMessage, color: '#c5ff88' });
     }
   }
 }
