@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { ARENAS } from './config.js';
 
-// Sistema único de modificadores para Clásico y crónicas compatibles.
+// Modificadores ambientales editables para el modo Clásico. Las crónicas conservan sus sistemas propios.
 const REPEAT_COOLDOWN = 9.5;
 const WARNING_DURATION = 1.4;
 const GUST_DURATION = 1.25;
@@ -30,16 +30,9 @@ export const ARENA_MODIFIER_PROFILES = {
     vritra: { label: 'RETENCIÓN DE LAS AGUAS', kind: 'tide', axis: 'x', color: '#80c6d6', force: .60, ambient: .08, warning: 1.6, activeDuration: 1.0, cooldown: 10.5 },
     typhon: { label: 'VENDAVAL DE TIFÓN', kind: 'wind', axis: 'y', color: '#e8c2c9', force: .88, ambient: .13, warning: 1.25, activeDuration: 2.0, cooldown: 8.6 }
   },
-  modes: {
-    olympus: { label: 'RÁFAGA DEL OLIMPO', kind: 'celestial', axis: 'y', color: '#ffe17a', force: .70, ambient: .08, warning: 1.5, activeDuration: 1.0, cooldown: 8.25, stageEvery: 0, stageMessages: [] },
-    ragnarok: { label: 'RÁFAGA DEL RAGNARÖK', kind: 'frost', axis: 'y', color: '#a9d6df', force: .70, ambient: .10, warning: 1.5, activeDuration: 1.05, cooldown: 8.5, stageEvery: 15, stageMessages: ['EL VIENTO DEL NORTE DESPIERTA','LAS RAÍCES DE MIDGARD SE QUIEBRAN','EL CIELO DEL RAGNARÖK SE ABRE','EL FIN DE LOS DIOSES SE ACERCA'] },
-    throne: { label: 'ECLIPSE DEL JUICIO', kind: 'solar', axis: 'y', color: '#cf8064', force: .58, ambient: .08, warning: 1.6, activeDuration: .9, cooldown: 9, stageEvery: 12, stageMessages: ['EL CONSEJO DIVINO SE REÚNE','EL DESIERTO RECLAMA SU PRECIO','EL SOL ENTRA EN ECLIPSE','EL TRONO EXIGE UN HEREDERO'] },
-    waters: { label: 'OLEADA DE INDRA', kind: 'tide', axis: 'x', color: '#83d8e8', force: .64, ambient: .10, warning: 1.5, activeDuration: 1.0, cooldown: 9, stageEvery: 14, stageMessages: ['LA TIERRA SE RESQUEBRAJA','VRITRA RETIENE LAS AGUAS','EL VAJRA ROMPE LA OSCURIDAD','LAS AGUAS VUELVEN AL MUNDO'] }
-  }
 };
 const INITIAL_COOLDOWN = 7.5;
 const MAX_TOTAL_FORCE = 1.25;
-const CLASSIC_CHRONICLES = new Set(['olympus', 'ragnarok', 'throne', 'waters', 'boss-typhon']);
 
 function inactiveState() {
   return { enabled: false, elapsed: 0, cooldown: 0, warning: 0, active: 0, direction: 1, cycle: 0, profileId: '' };
@@ -51,9 +44,6 @@ function selectedArena() {
 
 function currentProfile() {
   const mode = state.mythicMode || 'classic';
-  const modeProfile = ARENA_MODIFIER_PROFILES.modes[mode];
-  if (modeProfile) return { ...modeProfile, id: `mode:${mode}`, name: mode };
-  if (mode === 'boss-typhon') return { ...ARENA_MODIFIER_PROFILES.arenas.typhon, id: 'mode:boss-typhon', name: 'Tifón' };
   const arena = selectedArena();
   if (!arena) return null;
   const explicit = ARENA_MODIFIER_PROFILES.arenas[arena.id];
@@ -64,11 +54,10 @@ function currentProfile() {
 export function isArenaModifierEnabled() {
   if (state.mutationMode === 'mutation') return false;
   const mode = state.mythicMode || 'classic';
-  // Jörmungandr mantiene su mecánica especial de cierre de arena/colisiones.
-  // Su geometría no debe mezclarse con el modificador ambiental genérico.
-  if (mode === 'boss-jormungandr') return false;
-  if (mode === 'classic') return Boolean(selectedArena());
-  return CLASSIC_CHRONICLES.has(mode) && Boolean(ARENA_MODIFIER_PROFILES.modes[mode] || mode === 'boss-typhon');
+  // Todas las crónicas (incluidos ambos jefes) conservan sus eventos originales.
+  // El gestor genérico solo funciona en Clásico para evitar duplicar fuerzas y avisos.
+  if (mode !== 'classic') return false;
+  return Boolean(selectedArena());
 }
 
 function notify(text, color) {
