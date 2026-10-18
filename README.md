@@ -1,6 +1,10 @@
-# Clash of Gods — Divine Arena V0.2.35
+# Clash of Gods — Divine Arena V0.2.37
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
+
+## Arena Events — V0.2.37
+
+Un único gestor controla los modificadores ambientales de Clásico y de las crónicas compatibles, con perfiles por familia, overrides por arena, aviso previo, duración y fuerza limitada. El jefe Jörmungandr conserva su cierre geométrico de arena; Mutación mantiene su sistema propio para evitar acumulaciones de fuerzas. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 
 ## Elenco
 
@@ -347,3 +351,36 @@ La v0.2.30 amplía la progresión de Mutación sin reemplazar los sistemas exist
 - **VERIFICADO:** sintaxis de los módulos, integración con el bucle actual y pruebas unitarias del ciclo de aviso/ráfaga, alternancia de dirección y desactivación por modo/arena.
 - **VERIFICADO:** revisión estática del reinicio de estado al sacar y de su limpieza en salida y final de partida.
 - **NO VERIFICADO:** balance de la ráfaga durante una partida real, controles físicos en móviles y rendimiento en dispositivos de gama baja; requiere prueba manual en navegador/dispositivo.
+
+
+## v0.2.36 — Cobertura ambiental de arenas
+
+- Se amplían los eventos ambientales de Clásico a todas las arenas seleccionables del catálogo.
+- Las familias de arena aplican impulsos moderados en el eje horizontal o vertical, con aviso previo, duración limitada y dirección alternada.
+- Raijin conserva su perfil de tormenta como piloto de referencia.
+- Crónicas mantiene los eventos específicos de cada crónica y de sus jefes; Mutación conserva sus eventos exclusivos para evitar superponer fuerzas ambientales.
+- Se respetan las opciones de calidad gráfica y movimiento reducido en el renderizado del aviso.
+
+### Verificación v0.2.36
+
+- Validación de sintaxis de módulos JavaScript y pruebas automatizadas del ciclo de eventos y fuerzas por familia.
+- No se declara una partida real en navegador como verificada.
+
+
+Arena modifier configuration and compatibility: see `ARENA_MODIFIERS.md`.
+
+
+## v0.2.37 — Sistema unificado y perfiles de arena
+
+- Centraliza los ciclos de aviso, activación, duración y enfriamiento de Clásico y de las crónicas compatibles en `arena-events.js`.
+- Añade perfiles explícitos para Raijin, Zeus, Poseidón, Thor, Jörmungandr, Horus, Seth, Indra, Vritra y Tifón; el resto hereda valores editables por familia.
+- Olympus y Ragnarök presentan sus escenarios asociados a Zeus y Thor, respectivamente, en lugar de depender accidentalmente de la selección anterior.
+- Retira la aplicación duplicada de fuerzas para Olympus, Ragnarök, Throne, Waters y Tifón desde `physics.js`.
+- Mutación permanece aislada; Jörmungandr conserva su mecánica geométrica especial para no mezclar el cierre de límites con fuerzas genéricas.
+- Añade `ARENA_MODIFIERS.md` con los puntos de edición, campos de perfil y reglas de compatibilidad.
+
+### Verificación v0.2.37
+
+- Sintaxis comprobada en todos los módulos JavaScript.
+- Pruebas automatizadas de catálogo (38 arenas, IDs únicos y estilos), perfiles Classic y cinco modos de crónica, límites de fuerza y exclusión de Mutación/Jörmungandr.
+- No se pudo completar una partida interactiva en un navegador real en este entorno.
