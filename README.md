@@ -1,4 +1,4 @@
-# Clash of Gods — Divine Arena V0.2.34
+# Clash of Gods — Divine Arena V0.2.35
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
@@ -332,3 +332,18 @@ La v0.2.30 amplía la progresión de Mutación sin reemplazar los sistemas exist
 - **VERIFICADO:** sintaxis de módulos JavaScript y unicidad de IDs del catálogo.
 - **VERIFICADO:** cada personaje nuevo tiene categoría, habilidad, estadísticas y tipo de poder compatible con el motor genérico existente.
 - **NO VERIFICADO:** prueba interactiva de las 30 habilidades en navegador real; requiere prueba manual de juego.
+
+
+## v0.2.35 — Primera arena con modificador jugable
+
+- La arena de Raijin ahora presenta una identidad visual de tormenta y se denomina **Raijin · Tormenta divina**.
+- Se añade una corriente ambiental suave y ráfagas verticales alternadas, con aviso previo de 1,4 segundos y activación temporal de 1,25 segundos.
+- La fuerza de arena se suma al cálculo ambiental existente de `physics.js` y comparte su límite; no crea colisiones, otro motor de física ni un bucle separado.
+- Los avisos y trazos de viento se dibujan en los márgenes, respetando movimiento reducido y calidad gráfica baja.
+- El piloto solo se activa en Clásico con `arenaId === 'raijin'`; queda desactivado en Crónicas y Mutación. Los power-ups mantienen su lógica propia. El estado se reinicia en cada saque y se limpia al cambiar de arena, salir al menú o terminar la partida.
+
+### Verificación v0.2.35
+
+- **VERIFICADO:** sintaxis de los módulos, integración con el bucle actual y pruebas unitarias del ciclo de aviso/ráfaga, alternancia de dirección y desactivación por modo/arena.
+- **VERIFICADO:** revisión estática del reinicio de estado al sacar y de su limpieza en salida y final de partida.
+- **NO VERIFICADO:** balance de la ráfaga durante una partida real, controles físicos en móviles y rendimiento en dispositivos de gama baja; requiere prueba manual en navegador/dispositivo.

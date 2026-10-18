@@ -139,7 +139,7 @@ const ARENA_FAMILIES=[
  {style:'moon',label:'Santuario lunar',bg:'#0d1020',field:'#191b32',accent:'#b9c4f4',line:'#5c628c'},
  {style:'wild',label:'Jardín ancestral',bg:'#09170f',field:'#14281d',accent:'#8fd39b',line:'#486c51'}
 ];
-const DIVINE_ARENAS=Object.values(GODS).filter(god=>!god.kind||god.kind==='god').map((god,index)=>{const family=ARENA_FAMILIES[index%ARENA_FAMILIES.length];return {id:god.id,name:`${god.name} · ${family.label}`,godId:god.id,style:family.style,bg:family.bg,field:family.field,accent:god.color||family.accent,line:family.line};});
+const DIVINE_ARENAS=Object.values(GODS).filter(god=>!god.kind||god.kind==='god').map((god,index)=>{const family=ARENA_FAMILIES[index%ARENA_FAMILIES.length];if(god.id==='raijin')return {id:god.id,name:'Raijin · Tormenta divina',godId:god.id,style:'storm',bg:'#07121b',field:'#10242c',accent:god.color||'#70dce4',line:'#456d7a'};return {id:god.id,name:`${god.name} · ${family.label}`,godId:god.id,style:family.style,bg:family.bg,field:family.field,accent:god.color||family.accent,line:family.line};});
 const EXTRA_ARENAS=[
  {id:'arena_titanomachy',name:'Titanomaquia · Cumbre primordial',style:'temple',bg:'#17121d',field:'#2b2030',accent:'#d5b078',line:'#806a55'},
  {id:'arena_abyss_hydra',name:'Foso de la Hidra',style:'wild',bg:'#071a15',field:'#123329',accent:'#8bcf91',line:'#426e5c'},
