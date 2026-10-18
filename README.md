@@ -1,8 +1,8 @@
-# Clash of Gods — Divine Arena V0.2.37
+# Clash of Gods — Divine Arena V0.2.38
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
-## Arena Events — V0.2.37
+## Arena Events — V0.2.38
 
 Un único gestor controla los modificadores ambientales de Clásico y de las crónicas compatibles, con perfiles por familia, overrides por arena, aviso previo, duración y fuerza limitada. El jefe Jörmungandr conserva su cierre geométrico de arena; Mutación mantiene su sistema propio para evitar acumulaciones de fuerzas. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 
@@ -384,3 +384,8 @@ Arena modifier configuration and compatibility: see `ARENA_MODIFIERS.md`.
 - Sintaxis comprobada en todos los módulos JavaScript.
 - Pruebas automatizadas de catálogo (38 arenas, IDs únicos y estilos), perfiles Classic y cinco modos de crónica, límites de fuerza y exclusión de Mutación/Jörmungandr.
 - No se pudo completar una partida interactiva en un navegador real en este entorno.
+
+
+## Matriz de compatibilidad — V0.2.38
+
+Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis crónicas: arena visual efectiva, eventos, fuerzas, reglas especiales, potenciadores, habilidades y elementos que deben conservarse. Esta entrega es documental y no cambia la lógica de juego. La matriz separa lo confirmado en código de las pruebas manuales pendientes.
