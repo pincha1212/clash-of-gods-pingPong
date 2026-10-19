@@ -1,8 +1,8 @@
-# Clash of Gods — Divine Arena V0.2.42
+# Clash of Gods — Divine Arena V0.2.43
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 7 arenas compartidas por mitología, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
-## Arenas compartidas — V0.2.42
+## Arenas compartidas — V0.2.43
 
 El modo Clásico usa siete escenarios compartidos: seis mitologías y un campo primordial colectivo. `arena-events.js` mantiene un perfil de modificador por escenario, en vez de repetir perfiles por personaje. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 
@@ -417,7 +417,7 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - Pruebas estáticas: 38 arenas clasificadas, siete categorías, 38 perfiles, cero IDs duplicados y cero arenas sin categoría. Prueba visual/jugable en navegador pendiente.
 
 
-## V0.2.42 — una arena compartida por mitología
+## V0.2.43 — una arena compartida por mitología
 
 - Se reemplazaron las 38 opciones individuales por siete escenarios compartidos: seis mitologías y un campo primordial colectivo.
 - Los personajes conservan sus habilidades y estadísticas; el escenario ya no se duplica por personaje.
@@ -425,3 +425,12 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - Los identificadores de arena anteriores se migran a la arena compartida correspondiente al abrir el selector.
 - Olimpo utiliza la arena griega y Ragnarök la nórdica. Las Crónicas y los jefes conservan sus escenarios dedicados; Mutación sigue usando su cancha propia.
 - Verificado: sintaxis de los módulos JavaScript, siete arenas, siete perfiles, IDs únicos y compatibilidad de migración. No se realizó una prueba interactiva en navegador; el gameplay real sigue pendiente de playtest.
+
+
+## V0.2.43 — clasificación cultural completa
+
+- Se amplía el catálogo a 17 arenas compartidas, incluyendo tradiciones chinas, mesopotámicas, celtas/irlandesas, artúricas, persas, grecorromanas, anglosajonas, germánicas, medievales europeas y del Antiguo Cercano Oriente.
+- Se añade `CHARACTER_CULTURAL_CLASSIFICATION` con una asignación cultural y arena para cada uno de los 124 personajes.
+- La pantalla de selección muestra la cultura de ambos personajes y su arena sugerida sin forzar la elección manual.
+- Se añaden patrones visuales y perfiles ambientales explícitos para las nuevas arenas.
+- Crónicas, jefes y Mutación conservan sus sistemas independientes.

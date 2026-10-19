@@ -15,7 +15,17 @@ export const ARENA_MODIFIER_PROFILES = {
     arena_egyptian: makeProfile('PULSO DE LA BARCA SOLAR','solar','solar-pulse','halo','y','#f5c56b',.58,.06,1.65,.85,10.7,2.2),
     arena_indian: makeProfile('GIRO DEL MANDALA','cósmico','spiral','spiral','x','#e8a0d0',.58,.05,1.6,.95,10.5,1.6),
     arena_mexica: makeProfile('VIENTO DE QUETZALCÓATL','aéreo','sand-shear','sand','x','#78d6a3',.57,.06,1.55,.95,10.3,1.8),
-    arena_primordial: makeProfile('RUPTURA PRIMORDIAL','primordial','alternating-shear','quake','y','#d5b078',.62,.05,1.55,.95,10.5,2.0)
+    arena_primordial: makeProfile('RUPTURA PRIMORDIAL','primordial','alternating-shear','quake','y','#d5b078',.62,.05,1.55,.95,10.5,2.0),
+    arena_chinese: makeProfile('BRISA DE LOS INMORTALES','viento celeste','crosswind','gust','x','#f0c36c',.55,.05,1.55,.95,10.5,1.6),
+    arena_mesopotamian: makeProfile('CORRIENTE DE LOS DOS RÍOS','fluvial','pulse','ripple','y','#d9ae68',.54,.05,1.6,.9,10.8,1.5),
+    arena_celtic: makeProfile('ALIENTO DEL BOSQUE ANTIGUO','bosque','crosswind','gust','x','#9ad18a',.52,.05,1.55,.9,10.8,1.5),
+    arena_arthurian: makeProfile('ECO DEL GRIAL','arcano','pulse','halo','y','#c6d5e8',.54,.05,1.6,.9,10.8,1.5),
+    arena_persian: makeProfile('VIENTO DE LAS SAGAS','abrasador','crosswind','sand','x','#e7a16f',.55,.05,1.55,.9,10.6,1.6),
+    arena_roman: makeProfile('IMPULSO DEL FORO','solar','pulse','lightning','y','#e3c18b',.55,.05,1.6,.9,10.8,1.6),
+    arena_anglo_saxon: makeProfile('RÁFAGA DEL SALÓN','viento','crosswind','gust','x','#c5b98a',.53,.05,1.55,.9,10.8,1.5),
+    arena_germanic: makeProfile('CORRIENTE DE LAS SAGAS','gélido','cold-front','frost','x','#c6a77c',.53,.05,1.55,.9,10.8,1.5),
+    arena_medieval_europe: makeProfile('PULSO DE LAS LEYENDAS','arcano','alternating-shear','halo','y','#b8b4d9',.53,.05,1.55,.9,10.8,1.5),
+    arena_levantine: makeProfile('MAREA DEL ANTIGUO ORIENTE','fluvial','pulse','ripple','y','#91d4d2',.53,.05,1.55,.9,10.8,1.5)
   }
 };
 const INITIAL_COOLDOWN = 7.5;
