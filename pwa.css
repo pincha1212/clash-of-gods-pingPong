@@ -1,0 +1,14 @@
+.pwa-controls{display:flex;align-items:center;gap:7px;min-width:0}
+.network-status{display:inline-flex;align-items:center;gap:6px;color:#9fe875;font-size:9px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.network-status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor}
+.network-status.is-offline{color:#ffb86b}
+.install-button,.update-button{white-space:nowrap}
+.update-button:not([hidden]){border-color:#e8bd72;color:#e8bd72}
+.pwa-help{position:relative;z-index:4;display:flex;align-items:center;justify-content:center;gap:20px;padding:12px clamp(16px,5vw,76px);border-bottom:1px solid #e8bd7240;background:#171522;color:#e9e3d4;font-size:12px;line-height:1.6}
+.pwa-help[hidden]{display:none}
+.pwa-help p{margin:0;max-width:900px}
+.pwa-help button{flex:0 0 auto;border:0;background:transparent;color:inherit;font-size:22px;padding:0 6px}
+@media(max-width:900px){.network-status{font-size:8px}.pwa-controls{gap:5px}.install-button,.update-button{padding:9px 8px;font-size:8px;letter-spacing:.08em}}
+@media(max-width:620px){.pwa-controls{gap:5px}.network-status{font-size:0;gap:0}.network-status:before{width:7px;height:7px}.install-button,.update-button{padding:8px 7px;font-size:7px;letter-spacing:.03em}.topbar{gap:8px}.wordmark{gap:8px}.pwa-help{font-size:11px;gap:8px;padding:10px 14px}}
+@media(max-width:380px){.install-button,.update-button{max-width:66px;white-space:normal;line-height:1.2}.wordmark{font-size:9px}.mark{width:24px;height:24px}}
+@media(max-width:620px){.gear-button{padding:8px 9px}#sound-toggle{width:32px;padding:8px 0;font-size:0;letter-spacing:0}#sound-toggle:before{content:"♫";font-size:14px;line-height:1}}

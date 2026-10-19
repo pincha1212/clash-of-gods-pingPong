@@ -1,3 +1,33 @@
+
+## V0.2.47 — PWA instalable y juego sin conexión
+
+Clash of Gods ahora incorpora una capa de aplicación web progresiva (PWA) sin dependencias de servidor ni servicios externos:
+
+- `manifest.webmanifest` define el nombre, identidad, iconos, inicio independiente y alcance de la aplicación.
+- `sw.js` precarga el shell completo del juego y sus módulos locales en una caché versionada. La primera instalación requiere abrir el juego una vez con conexión; después, la navegación y los recursos esenciales se sirven desde la caché.
+- `pwa.js` registra el service worker solo en HTTPS o `localhost`, informa el estado de conexión, solicita instalación cuando el navegador lo permite y ofrece instrucciones manuales cuando no expone el diálogo de instalación. Las actualizaciones se anuncian y se aplican con una recarga controlada.
+- `pwa.css` adapta los controles a escritorio y móvil. Los iconos PNG incluyen tamaños de 192 y 512 px, además de una variante maskable.
+- Se eliminó la importación remota de Google Fonts: el diseño utiliza fuentes locales del sistema para que el juego no dependa de una petición externa al iniciar sin internet.
+- El shell se mantiene como una instantánea versionada y coherente: al instalar una nueva versión, la caché anterior se retira después de que la nueva instalación se completa. El guardado local del juego no se elimina.
+
+### Uso y despliegue
+
+1. Publicá **la carpeta completa** en un host HTTPS estático (o ejecutá un servidor local en `localhost`). No abras `index.html` mediante `file://`: los service workers no funcionan desde archivos locales.
+2. Abrí el juego con internet una vez y esperá a que el service worker se active.
+3. Usá **INSTALAR APP** si el navegador ofrece instalación; en iOS, seguí las instrucciones de Compartir → Agregar a pantalla de inicio.
+4. Una vez cargado el shell, probá activar el modo avión y volver a abrir la aplicación. El juego no necesita una API remota para sus modos actuales.
+5. Para publicar una actualización, desplegá todos los archivos de la nueva versión juntos. El navegador detectará el nuevo `sw.js`, preparará la caché y mostrará **ACTUALIZAR** cuando esté lista.
+
+La instalación nativa y los requisitos concretos de interfaz dependen del navegador y sistema operativo. El service worker necesita HTTPS, salvo en `localhost`.
+
+### Verificación V0.2.47
+
+- `npm run check:syntax`: sintaxis de los 18 módulos alcanzables desde las entradas activas (`game.js` y `pwa.js`) y del service worker.
+- `npm run test:pwa`: manifest, iconos, controles de instalación/conexión, actualización, fallback offline y respuestas HTTP 200 para todas las rutas del shell.
+- `npm run test:abilities`: **APROBADO** tras reconstruir correctamente V0.2.46 aplicando también su parche de `physics.js`: 248/248 activaciones semánticas, 124/124 ventanas útiles de IA y regresiones de Seth, teclado, contraataques, CPU y escudos.
+- `npm run test:pwa`: **APROBADO** en pruebas estáticas y simulación del ciclo del service worker.
+- El smoke test de navegador real se intentó, pero Chromium en el entorno de ejecución bloqueó la navegación con `ERR_BLOCKED_BY_ADMINISTRATOR`; por eso no se declara validada una instalación real ni una sesión visual completa en modo avión. La prueba de red HTTP y las simulaciones offline se informan por separado.
+
 # Clash of Gods — Divine Arena V0.2.46
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 17 arenas culturales compartidas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
