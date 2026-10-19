@@ -1,48 +1,229 @@
 import {state} from './state.js';
-import {GODS,SETTINGS} from './config.js';
+import {GODS, SETTINGS} from './config.js';
 import {burst} from './effects.js';
 import {playTone} from './audio.js';
-export function activateAbility(side){if(!state.running||state.paused||state.finished||!state.skillsEnabled)return;const p=state.paddles[side],r=state.paddles[side==='p1'?'p2':'p1'],god=GODS[state.selected[side]],initialShield=p?.shield||0;if(!p||p.cooldown>0||p.abilityTime>0)return;const b=state.ball;const effectiveness=1;p.cooldown=god.skill.cooldown*(effectiveness>1?.85:effectiveness<1?1.15:1);p.abilityTime=1.05;p.abilityEffect=god.id;burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);playTone(330+Math.random()*180,.12,'triangle',.05);
- switch(god.id){case'raijin':r.slow=1.7*effectiveness;burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;case'fujin':{const target=b.y-p.h/2;p.y=clamp(target,0,SETTINGS.height-p.h);p.y=clamp(p.y,0,SETTINGS.height-p.h);p.abilityEffect='fujin';burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;}case'kagutsuchi':{const current=Math.hypot(b.vx,b.vy)||b.speed;const next=Math.min(SETTINGS.maxBallSpeed,current*(1.32+(effectiveness-1)*.5));const factor=next/current;b.vx*=factor;b.vy*=factor;b.speed=next;b.specialEffect='kagutsuchi';b.effectTime=1.1;burst(b.x,b.y,god.color,5,2);break;}case'susanoo':p.shield=effectiveness;burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;case'amaterasu':p.grow=2*effectiveness;p.skillGrowScale=1.65;p.h=p.baseH*1.65;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);p.abilityEffect='amaterasu';burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;case'inari':r.invert=1.5*effectiveness;burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;case'hades':r.shrink=2*effectiveness;r.skillShrinkScale=.62;r.h=r.baseH*.62;r.y=clamp(r.y,0,SETTINGS.height-r.h);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;case'athena':p.counter=2*effectiveness;p.abilityEffect='athena';burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;case'zeus':{r.slow=1.15*effectiveness;const speed=Math.hypot(b.vx,b.vy)||b.speed;const next=Math.min(SETTINGS.maxBallSpeed,speed*(1.2+(effectiveness-1)*.3));b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='zeus';b.effectTime=1.05;burst(b.x,b.y,god.color,6,2.2);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,2);break;}case'anubis':{const danger=side==='p1'?b.x<245&&b.vx<0:b.x>755&&b.vx>0;if(danger){b.x=side==='p1'?Math.max(90,p.x+p.w+Math.max(28,b.r+10)):Math.min(910,p.x-Math.max(28,b.r+10));b.y=clamp(b.y,45,SETTINGS.height-45);const speed=Math.max(SETTINGS.ballSpeed,Math.hypot(b.vx,b.vy));b.vx=(side==='p1'?1:-1)*speed*.92;b.vy=(Math.random()-.5)*speed*.7;b.speed=speed;b.specialEffect='anubis';b.effectTime=.8;burst(b.x,b.y,god.color,5,2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DE LA DUAT · RESCATE',color:god.color}}));}else{p.shield=1.7*effectiveness;p.abilityEffect='anubis';burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);}break;}case'thor':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.min(SETTINGS.maxBallSpeed,speed*(1.23+(effectiveness-1)*.25));b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='thor';b.effectTime=.8;burst(b.x,b.y,god.color,6,2.2);break;}case'medusa':r.invert=1.15*effectiveness;r.slow=.65*effectiveness;b.specialEffect='medusa';b.effectTime=.75;burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;case'gaia':p.grow=2*effectiveness;p.skillGrowScale=1.65;p.h=p.baseH*1.65;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);p.abilityEffect='gaia';break;case'thoth':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.max(4.5,speed*.78);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='thoth';b.effectTime=.8;break;}case'kali':r.shrink=1.7*effectiveness;r.skillShrinkScale=.62;r.h=r.baseH*.62;r.y=clamp(r.y,0,SETTINGS.height-r.h);{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.min(SETTINGS.maxBallSpeed,speed*1.12);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='kali';b.effectTime=.8;}break;case'apollo':p.counter=1.5*effectiveness;p.abilityEffect='apollo';break;
- case'isis':{p.shield=2*effectiveness;p.abilityEffect='isis';burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;}
- case'ares':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.min(SETTINGS.maxBallSpeed,speed*1.3);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;p.counter=1.2;p.abilityEffect='ares';b.specialEffect='ares';b.effectTime=.8;break;}
- case'artemis':{const speed=Math.hypot(b.vx,b.vy)||b.speed;b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?4.2:-4.2),-8,8);b.vx=Math.sign(b.vx||1)*Math.sqrt(Math.max(1,speed*speed-b.vy*b.vy));b.specialEffect='artemis';b.effectTime=.8;break;}
- case'hermes':{p.y=clamp(b.y-p.h/2,0,SETTINGS.height-p.h);p.abilityEffect='hermes';burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;}
- case'freyja':{p.grow=1.8;p.skillGrowScale=1.5;p.h=p.baseH*1.5;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.max(4.8,speed*.84);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;p.abilityEffect='freyja';break;}
- case'hel':{r.slow=1.8;r.abilityEffect='hel';break;}
- case'ra':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.min(SETTINGS.maxBallSpeed,speed*1.25);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='ra';b.effectTime=.85;break;}
- case'shiva':{b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?4:-4),-8,8);r.shrink=1.5;r.skillShrinkScale=.72;r.h=r.baseH*.72;r.y=clamp(r.y,0,SETTINGS.height-r.h);b.specialEffect='shiva';b.effectTime=.8;break;}
- case'tsukuyomi':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.max(4.5,speed*.72);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='tsukuyomi';b.effectTime=.8;break;}
- case'horus':{p.counter=2*effectiveness;p.aimBonus=.22;p.abilityEffect='horus';break;}
- case'seth':{r.slow=1.25*effectiveness;b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?3.2:-3.2),-8,8);b.specialEffect='seth';b.effectTime=.85;burst(b.x,b.y,god.color,6,2);break;}
- case'indra':{p.counter=2*effectiveness;p.abilityEffect='indra';break;}
- case'persephone':{p.grow=1.8;p.skillGrowScale=1.45;p.h=p.baseH*1.45;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);p.shield=1.3;p.abilityEffect='persephone';break;}
- }
- if(god.kind==='hero'||god.kind==='titan'||god.kind==='monster'){
-  const heroPower=god.heroPower||god.abilityPower||'counter';
-  const speed=Math.hypot(b.vx,b.vy)||b.speed;
-  const setSpeed=mult=>{const next=Math.min(SETTINGS.maxBallSpeed,Math.max(4.5,speed*mult));b.vx=(b.vx/speed)*next;b.vy=(b.vy/speed)*next;b.speed=next;};
-  switch(heroPower){
-   case'speed':setSpeed(1.25);b.specialEffect=god.id;b.effectTime=.75;break;
-   case'slowcounter':{const next=Math.max(4.5,speed*.78);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;p.counter=1.4;b.specialEffect=god.id;b.effectTime=.75;break;}
-   case'speedshrink':{setSpeed(1.18);r.shrink=1.5;r.skillShrinkScale=.7;r.h=r.baseH*.7;r.y=clamp(r.y,0,SETTINGS.height-r.h);b.specialEffect=god.id;b.effectTime=.75;break;}
-   case'slowcurve':{const next=Math.max(4.5,speed*.8);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?3:-3),-8,8);b.specialEffect=god.id;b.effectTime=.75;break;}
-   case'grow':case'growshield':case'growcounter':p.grow=1.8;p.skillGrowScale=1.55;p.h=p.baseH*1.55;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);if(heroPower==='growshield')p.shield=1.2;if(heroPower==='growcounter'){p.counter=1.3;setSpeed(1.08);}break;
-   case'curve':case'dashcurve':case'speedcurve':case'nezha':b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?3.5:-3.5),-8,8);if(heroPower==='speedcurve'||heroPower==='nezha')setSpeed(1.12);if(heroPower==='dashcurve')p.y=clamp(b.y-p.h/2,0,SETTINGS.height-p.h);b.specialEffect=god.id;b.effectTime=.75;break;
-   case'dash':case'shielddash':p.y=clamp(b.y-p.h/2,0,SETTINGS.height-p.h);if(heroPower==='shielddash')p.shield=1.2;break;
-   case'shield':case'shieldslow':case'countershield':p.shield=1.6;if(heroPower==='countershield')p.counter=1.2;if(heroPower==='shieldslow')b.vx*=.88,b.vy*=.88;break;
-   case'slow':case'slowr':case'shieldslow':{const next=Math.max(4.5,speed*.78);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;if(heroPower==='slowr')r.slow=1.1;if(heroPower==='shieldslow')p.shield=1.3;b.specialEffect=god.id;b.effectTime=.75;break;}
-   case'counter':case'speedcounter':case'dashcounter':p.counter=1.5;if(heroPower==='speedcounter')setSpeed(1.08);if(heroPower==='dashcounter')p.y=clamp(b.y-p.h/2,0,SETTINGS.height-p.h);break;
-   case'invert':r.invert=1.35;b.specialEffect=god.id;b.effectTime=.7;break;
-   default:p.counter=1.2;break;
-  }
-  p.abilityEffect=god.id;burst(p.x+p.w/2,p.y+p.h/2,god.color,4,1.5);
- }
- if(god.id==='poseidon'){b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?3.8:-3.8)*effectiveness,-8,8);r.slow=.65*effectiveness;b.specialEffect='poseidon';b.effectTime=.9;burst(b.x,b.y,god.color,5,2);}
- if(god.id==='loki'){r.invert=1.7*effectiveness;b.specialEffect='loki';b.effectTime=.8;burst(r.x+r.w/2,r.y+r.h/2,god.color,5,2);}
- if(god.id==='odin'){const speed=Math.hypot(b.vx,b.vy)||b.speed;const next=Math.max(4.8,speed*(effectiveness>1?.72:effectiveness<1?.9:.8));b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='odin';b.effectTime=.7;burst(b.x,b.y,god.color,5,1.8);}
- if(god.id==='quetzalcoatl'){b.vy=Math.max(-8,Math.min(8,b.vy+(b.y<SETTINGS.height/2?3.4:-3.4)*effectiveness));b.specialEffect='quetzalcoatl';b.effectTime=.7;burst(b.x,b.y,god.color,5,1.8);}
- if(p.shield>0&&p.shield!==initialShield)p.shieldMode='ability';
- window.dispatchEvent(new CustomEvent('god-message',{detail:{text:god.skill.name,color:god.color}}));
+
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+const MIN_BALL_SPEED=4.5;
+const MAX_BALL_SPEED=()=>Number.isFinite(SETTINGS.maxBallSpeed)?SETTINGS.maxBallSpeed:14;
+
+function measuredBallSpeed(ball){
+  const measured=Math.hypot(Number(ball?.vx)||0,Number(ball?.vy)||0);
+  if(Number.isFinite(measured)&&measured>0.001)return measured;
+  const fallback=Number(ball?.speed);
+  return Number.isFinite(fallback)&&fallback>0?fallback:(SETTINGS.ballSpeed||7.2);
 }
-function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+// Actualiza vx, vy y speed a la vez: la velocidad almacenada nunca se queda
+// desincronizada de la magnitud del vector después de una habilidad.
+function setBallSpeed(ball,targetSpeed){
+  const vx=Number(ball.vx)||0,vy=Number(ball.vy)||0;
+  const actual=Math.hypot(vx,vy);
+  const angle=actual>0.001?Math.atan2(vy,vx):(ball.lastHit==='p2'?Math.PI:0);
+  const speed=clamp(Number(targetSpeed)||MIN_BALL_SPEED,MIN_BALL_SPEED,MAX_BALL_SPEED());
+  ball.vx=Math.cos(angle)*speed;
+  ball.vy=Math.sin(angle)*speed;
+  ball.speed=speed;
+  return speed;
+}
+
+function scaleBallSpeed(ball,multiplier,minSpeed=MIN_BALL_SPEED){
+  const current=measuredBallSpeed(ball);
+  const next=clamp(current*multiplier,minSpeed,MAX_BALL_SPEED());
+  return setBallSpeed(ball,next);
+}
+
+// Las habilidades de trayectoria apuntan hacia el centro de la cancha, pero
+// conservan la rapidez del balón. No suman velocidad vertical accidentalmente.
+function curveBallTowardCenter(ball,strength=2.5){
+  const speed=clamp(measuredBallSpeed(ball),MIN_BALL_SPEED,MAX_BALL_SPEED());
+  const midpoint=SETTINGS.height/2;
+  const verticalSign=Math.abs(ball.y-midpoint)<8
+    ? Math.sign(Number(ball.vy)|| (ball.lastHit==='p1'?1:-1))
+    : (ball.y<midpoint?1:-1);
+  const verticalMagnitude=Math.min(speed*.68,Math.max(2.8,Math.abs(Number(ball.vy)||0)*.55+strength));
+  const horizontalMagnitude=Math.sqrt(Math.max(1,speed*speed-verticalMagnitude*verticalMagnitude));
+  const horizontalSign=Math.sign(Number(ball.vx)||0)||(ball.lastHit==='p2'?-1:1);
+  ball.vx=horizontalSign*horizontalMagnitude;
+  ball.vy=verticalSign*verticalMagnitude;
+  ball.speed=Math.hypot(ball.vx,ball.vy);
+}
+
+function markBall(ball,god,duration=.8){
+  ball.specialEffect=god.id;
+  ball.effectTime=duration;
+}
+
+function setShield(p,duration){
+  p.shield=Math.max(Number(p.shield)||0,duration);
+  // No se pisa un escudo especial más fuerte obtenido de un potenciador.
+  if(p.shieldMode!=='secondchance'&&p.shieldMode!=='mutation')p.shieldMode='ability';
+}
+
+function armCounter(p,power=1.5,aimBonus=0){
+  p.counter=Math.max(Number(p.counter)||0,power);
+  if(aimBonus)p.aimBonus=Math.max(Number(p.aimBonus)||0,aimBonus);
+}
+
+function growPaddle(p,duration,scale=1.55){
+  const oldHeight=p.h;
+  p.grow=Math.max(Number(p.grow)||0,duration);
+  p.skillGrowScale=scale;
+  p.h=p.baseH*scale;
+  p.y=clamp(p.y-(p.h-oldHeight)/2,0,SETTINGS.height-p.h);
+}
+
+function shrinkPaddle(p,duration,scale=.7){
+  const oldHeight=p.h;
+  p.shrink=Math.max(Number(p.shrink)||0,duration);
+  p.skillShrinkScale=scale;
+  p.h=p.baseH*scale;
+  p.y=clamp(p.y+(oldHeight-p.h)/2,0,SETTINGS.height-p.h);
+}
+
+function dashToBall(p,ball){
+  p.y=clamp(ball.y-p.h/2,0,SETTINGS.height-p.h);
+}
+
+const OFFENSIVE_DIRECT=new Set([
+  'raijin','kagutsuchi','inari','hades','zeus','quetzalcoatl','poseidon','loki','thor',
+  'medusa','kali','ra','shiva','artemis','hel','ares','seth','vritra'
+]);
+const DEFENSIVE_DIRECT=new Set([
+  'fujin','susanoo','amaterasu','athena','anubis','gaia','thoth','apollo','isis',
+  'hermes','freyja','odin','tsukuyomi','horus','indra','persephone'
+]);
+const OFFENSIVE_POWERS=new Set(['speed','speedshrink','slowcurve','curve','speedcurve','nezha','invert','slowr','curveslowr','speedcounter']);
+const DEDICATED_ABILITY_IDS=new Set(['raijin','fujin','kagutsuchi','susanoo','amaterasu','inari','hades','athena','zeus','anubis','thor','medusa','gaia','thoth','kali','apollo','isis','ares','artemis','hermes','freyja','hel','ra','shiva','tsukuyomi','horus','seth','indra','persephone','poseidon','loki','odin','quetzalcoatl']);
+const GENERIC_ABILITY_POWERS=new Set(['speed','slow','slowr','curve','slowcurve','speedcurve','nezha','dash','dashcurve','shielddash','grow','growshield','growcounter','shield','shieldslow','countershield','counter','slowcounter','speedcounter','dashcounter','speedshrink','invert','curveslowr']);
+
+/**
+ * Devuelve si la CPU debería gastar su habilidad en el estado de pelota actual.
+ * Ya no depende de una tirada aleatoria por fotograma: cada personaje espera una
+ * ventana útil, lo que hace observables también las habilidades de control.
+ */
+export function getAbilityAIProfile(god){
+  if(!god)return 'none';
+  if(OFFENSIVE_DIRECT.has(god.id))return 'attack';
+  if(DEFENSIVE_DIRECT.has(god.id))return 'defense';
+  const power=god.heroPower||god.abilityPower||'';
+  return OFFENSIVE_POWERS.has(power)?'attack':'defense';
+}
+
+export function shouldCPUUseAbility(){
+  const p=state.paddles?.p2;
+  const god=GODS[state.selected?.p2];
+  const ball=state.ball;
+  if(!state.running||state.paused||state.finished||!state.skillsEnabled||state.mode!=='cpu')return false;
+  if(!p||!god||!ball||p.cooldown>0||p.abilityTime>0||(state.serveTimer||0)>0)return false;
+  const profile=getAbilityAIProfile(god);
+  if(profile==='attack'&&ball.vx<-.35&&ball.x>360)return true;
+  if(profile==='defense'&&ball.vx>.35&&ball.x>650&&ball.x<SETTINGS.width+ball.r)return true;
+  return false;
+}
+
+export function activateAbility(side){
+  if(!['p1','p2'].includes(side)||!state.running||state.paused||state.finished||!state.skillsEnabled)return false;
+  if((state.serveTimer||0)>0)return false; // evita gastar la recarga durante el saque.
+  const p=state.paddles?.[side];
+  const r=state.paddles?.[side==='p1'?'p2':'p1'];
+  const god=GODS[state.selected?.[side]];
+  const ball=state.ball;
+  if(!p||!r||!god||!ball||p.cooldown>0||p.abilityTime>0)return false;
+  // Una ficha nueva no debe gastar enfriamiento si nadie implementó su efecto.
+  const archetypePower=god.heroPower||god.abilityPower||'counter';
+  const hasGenericImplementation=['hero','titan','monster'].includes(god.kind)&&GENERIC_ABILITY_POWERS.has(archetypePower);
+  if(!DEDICATED_ABILITY_IDS.has(god.id)&&!hasGenericImplementation)return false;
+
+  const effectiveness=1;
+  p.cooldown=god.skill.cooldown*(effectiveness>1?.85:effectiveness<1?1.15:1);
+  p.abilityTime=1.05;
+  p.abilityEffect=god.id;
+  burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);
+  playTone(330+Math.random()*180,.12,'triangle',.05);
+
+  switch(god.id){
+    case 'raijin': r.slow=Math.max(r.slow||0,1.7*effectiveness);break;
+    case 'fujin': dashToBall(p,ball);break;
+    case 'kagutsuchi': scaleBallSpeed(ball,1.32);markBall(ball,god,1.1);break;
+    case 'susanoo': setShield(p,2.0);burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;
+    case 'amaterasu': growPaddle(p,2*effectiveness,1.65);break;
+    case 'inari': r.invert=Math.max(r.invert||0,1.5*effectiveness);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
+    case 'hades': shrinkPaddle(r,2*effectiveness,.62);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
+    case 'athena': armCounter(p,2*effectiveness);break;
+    case 'zeus': r.slow=Math.max(r.slow||0,1.15*effectiveness);scaleBallSpeed(ball,1.2);markBall(ball,god,1.05);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,2);break;
+    case 'anubis': {
+      const danger=side==='p1'?ball.x<245&&ball.vx<0:ball.x>755&&ball.vx>0;
+      if(danger){
+        ball.x=side==='p1'?Math.max(90,p.x+p.w+Math.max(28,ball.r+10)):Math.min(910,p.x-Math.max(28,ball.r+10));
+        ball.y=clamp(ball.y,45,SETTINGS.height-45);
+        const speed=clamp(Math.max(SETTINGS.ballSpeed,measuredBallSpeed(ball)),MIN_BALL_SPEED,MAX_BALL_SPEED());
+        const angle=(Math.random()-.5)*.64;
+        ball.vx=(side==='p1'?1:-1)*Math.cos(angle)*speed;
+        ball.vy=Math.sin(angle)*speed;
+        ball.speed=speed;
+        markBall(ball,god,.8);
+        burst(ball.x,ball.y,god.color,5,2);
+        window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DE LA DUAT · RESCATE',color:god.color}}));
+      }else setShield(p,1.9*effectiveness);
+      break;
+    }
+    case 'thor': scaleBallSpeed(ball,1.23);markBall(ball,god,.8);burst(ball.x,ball.y,god.color,6,2.2);break;
+    case 'medusa': r.invert=Math.max(r.invert||0,1.15*effectiveness);r.slow=Math.max(r.slow||0,.65*effectiveness);markBall(ball,god,.75);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
+    case 'gaia': growPaddle(p,2*effectiveness,1.65);break;
+    case 'thoth': scaleBallSpeed(ball,.78);markBall(ball,god,.8);break;
+    case 'kali': shrinkPaddle(r,1.7*effectiveness,.62);scaleBallSpeed(ball,1.12);markBall(ball,god,.8);break;
+    case 'apollo': armCounter(p,1.5*effectiveness);break;
+    case 'isis': setShield(p,2*effectiveness);break;
+    case 'ares': scaleBallSpeed(ball,1.3);armCounter(p,1.2);markBall(ball,god,.8);break;
+    case 'artemis': curveBallTowardCenter(ball,3.5);markBall(ball,god,.8);break;
+    case 'hermes': dashToBall(p,ball);break;
+    case 'freyja': growPaddle(p,1.8,1.5);scaleBallSpeed(ball,.84,4.8);break;
+    case 'hel': r.slow=Math.max(r.slow||0,1.8);break;
+    case 'ra': scaleBallSpeed(ball,1.25);markBall(ball,god,.85);break;
+    case 'shiva': curveBallTowardCenter(ball,3.1);shrinkPaddle(r,1.5*effectiveness,.72);markBall(ball,god,.8);break;
+    case 'tsukuyomi': scaleBallSpeed(ball,.72);markBall(ball,god,.8);break;
+    case 'horus': armCounter(p,2*effectiveness,.22);break;
+    case 'seth': r.slow=Math.max(r.slow||0,1.8*effectiveness);curveBallTowardCenter(ball,4.25);markBall(ball,god,1.3);burst(ball.x,ball.y,god.color,12,2.8);burst(r.x+r.w/2,r.y+r.h/2,god.color,7,2.1);break;
+    case 'indra': armCounter(p,2*effectiveness);markBall(ball,god,.65);break;
+    case 'persephone': growPaddle(p,1.8,1.45);setShield(p,1.8);break;
+    case 'poseidon': curveBallTowardCenter(ball,3.2);r.slow=Math.max(r.slow||0,.65*effectiveness);markBall(ball,god,.9);burst(ball.x,ball.y,god.color,5,2);break;
+    case 'loki': r.invert=Math.max(r.invert||0,1.7*effectiveness);markBall(ball,god,.8);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,2);break;
+    case 'odin': scaleBallSpeed(ball,.8,4.8);markBall(ball,god,.7);break;
+    case 'quetzalcoatl': curveBallTowardCenter(ball,2.9);markBall(ball,god,.7);break;
+  }
+
+  if((god.kind==='hero'||god.kind==='titan'||god.kind==='monster')&&!DEDICATED_ABILITY_IDS.has(god.id)){
+    const heroPower=god.heroPower||god.abilityPower||'counter';
+    switch(heroPower){
+      case 'speed': scaleBallSpeed(ball,1.25);markBall(ball,god,.75);break;
+      case 'slowcounter': scaleBallSpeed(ball,.78);armCounter(p,1.4);markBall(ball,god,.75);break;
+      case 'speedshrink': scaleBallSpeed(ball,1.18);shrinkPaddle(r,1.5,.7);markBall(ball,god,.75);break;
+      case 'slowcurve': scaleBallSpeed(ball,.8);curveBallTowardCenter(ball,2.2);markBall(ball,god,.75);break;
+      case 'grow': growPaddle(p,1.8,1.55);break;
+      case 'growshield': growPaddle(p,1.8,1.55);setShield(p,1.7);break;
+      case 'growcounter': growPaddle(p,1.8,1.55);armCounter(p,1.3);break;
+      case 'curve': curveBallTowardCenter(ball,2.6);markBall(ball,god,.75);break;
+      case 'dashcurve': dashToBall(p,ball);curveBallTowardCenter(ball,2.6);markBall(ball,god,.75);break;
+      case 'speedcurve': case 'nezha': scaleBallSpeed(ball,1.12);curveBallTowardCenter(ball,2.6);markBall(ball,god,.75);break;
+      case 'dash': dashToBall(p,ball);break;
+      case 'shielddash': dashToBall(p,ball);setShield(p,1.7);break;
+      case 'shield': setShield(p,1.8);break;
+      case 'countershield': setShield(p,1.8);armCounter(p,1.2);break;
+      case 'shieldslow': setShield(p,1.8);scaleBallSpeed(ball,.88);markBall(ball,god,.75);break;
+      case 'slow': scaleBallSpeed(ball,.78);markBall(ball,god,.75);break;
+      case 'slowr': scaleBallSpeed(ball,.78);r.slow=Math.max(r.slow||0,1.1);markBall(ball,god,.75);break;
+      case 'counter': armCounter(p,1.5);break;
+      case 'speedcounter': armCounter(p,1.5);scaleBallSpeed(ball,1.08);break;
+      case 'dashcounter': dashToBall(p,ball);armCounter(p,1.5);break;
+      case 'invert': r.invert=Math.max(r.invert||0,1.35);markBall(ball,god,.7);break;
+      case 'curveslowr': curveBallTowardCenter(ball,2.8);r.slow=Math.max(r.slow||0,1.1);markBall(ball,god,.8);break;
+      default: armCounter(p,1.2);break;
+    }
+    p.abilityEffect=god.id;
+    burst(p.x+p.w/2,p.y+p.h/2,god.color,4,1.5);
+  }
+
+  window.dispatchEvent(new CustomEvent('god-message',{detail:{text:god.id==='seth'?'TORMENTA DEL DESIERTO · CURVA + LENTITUD':god.skill.name,color:god.color}}));
+  return true;
+}

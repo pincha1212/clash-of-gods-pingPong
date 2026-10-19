@@ -1,17 +1,20 @@
-# Clash of Gods — Divine Arena V0.2.45
+# Clash of Gods — Divine Arena V0.2.46
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 17 arenas culturales compartidas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
-## V0.2.45 — auditoría y corrección de habilidades
+## V0.2.46 — auditoría funcional de las 124 habilidades
 
-- Corregida la ejecución de las habilidades de Horus, Seth e Indra, que estaban descritas en sus fichas pero no aplicaban un efecto propio.
-- Horus prepara un contraataque y añade un ajuste pequeño al ángulo de la próxima devolución; el ajuste se consume en el golpe.
-- Seth desvía la trayectoria vertical de la pelota y ralentiza brevemente al rival.
-- Indra prepara un contraataque potenciado para la próxima devolución.
-- Añadido `AUDITORIA_V0.2.45.md` con el alcance, las comprobaciones ejecutadas y las pruebas manuales que aún faltan.
-- No se modificaron los gestores de Crónicas, jefes ni Mutación.
+- Auditadas las 124 habilidades con aserciones por tipo de efecto y comprobación de coherencia entre la descripción y el comportamiento; el resultado reproducible está en `AUDITORIA_HABILIDADES_V0.2.46.md`.
+- Corregidas las habilidades de trayectoria para conservar la magnitud del vector de velocidad; antes, varias curvas cambiaban la velocidad real sin actualizar `ball.speed`.
+- Arreglada la IA para usar habilidades en ventanas tácticas en lugar de depender de una probabilidad muy baja calculada en cada fotograma.
+- Aplicados los efectos de ralentización e inversión también a la paleta controlada por la CPU.
+- Los contraataques ahora consumen su carga y escalan moderadamente con el valor asignado; se muestra una marca mientras el contraataque está preparado.
+- Corregidas asignaciones que no cumplían la descripción: Rostam y Cú Chulainn aceleran la pelota y cargan el próximo golpe; Kraken curva la pelota y ralentiza al rival; Momotarō describe explícitamente su escudo y aumento de cobertura.
+- Reforzada la habilidad de Seth: cambia de forma evidente la trayectoria, ralentiza al rival durante 1,8 s y muestra un vórtice de arena en la pelota y en la paleta. Su perfil dedicado ya no se ejecuta dos veces junto con el perfil genérico de curva.
+- Evita gastar habilidades durante el saque y amplía ventanas de escudo que podían expirar antes de que llegara la pelota.
+- Informe completo: `AUDITORIA_HABILIDADES_V0.2.46.md`. Las pruebas automatizadas no reemplazan las pruebas de partida en navegador.
 
-## Arenas compartidas — V0.2.45
+## Arenas compartidas — V0.2.46
 
 El modo Clásico usa 17 escenarios culturales compartidos, uno por tradición o familia mitológica representada. `arena-events.js` mantiene un perfil de modificador por escenario, en vez de repetir perfiles por personaje. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 

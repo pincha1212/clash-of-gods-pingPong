@@ -46,7 +46,7 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier();
  const rallyFloor=baseSpeed*(1+Math.min(state.rally,16)*.018);
  let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(rallyFloor,ballMagnitude(b)*1.012));
- if(p.counter>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.24);p.counter=0;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'CONTRAATAQUE',color:p.color}}));}
+ if(p.counter>0){const charge=clamp(Number(p.counter)||1.5,1,2);const counterMultiplier=1.24+Math.max(0,charge-1.5)*.08-Math.max(0,1.5-charge)*.06;speed=Math.min(SETTINGS.maxBallSpeed,speed*counterMultiplier);p.counter=0;b.specialEffect=p.godId||'';b.effectTime=.55;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'CONTRAATAQUE',color:p.color}}));}
  // El movimiento vertical de la paleta influye sutilmente en el ángulo:
  // permite apuntar con intención sin hacer que el control sea impredecible.
  const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
@@ -187,7 +187,7 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const target=state.ball.y-p2.h/2,diff=target-p2.y,max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
+  const target=state.ball.y-p2.h/2;let diff=target-p2.y;if(p2.invert>0)diff*=-1;const max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }

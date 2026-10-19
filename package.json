@@ -1,0 +1,9 @@
+{
+  "name": "clash-of-gods",
+  "version": "0.2.46",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:abilities": "node tests/audit-abilities.mjs"
+  }
+}
