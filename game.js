@@ -1,4 +1,4 @@
-import {GODS,SETTINGS,ARENAS} from './config.js';
+import {GODS,SETTINGS,ARENAS,ARENA_MYTHOLOGIES} from './config.js';
 import {state,createBall,createPaddle} from './state.js';
 import {renderGodCard,renderCodex,renderCodexDetail,countCodexKind,getCodexRoles} from './characters.js';
 import {showScreen} from './navigation.js';
@@ -325,7 +325,7 @@ function init(){
  syncCodexTools();
  document.getElementById('codex-button').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');});
  const arenaSelect=document.getElementById('arena-select');
- arenaSelect.innerHTML=ARENAS.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');arenaSelect.value=state.arenaId;arenaSelect.addEventListener('change',()=>{clearArenaEventState();state.arenaId=arenaSelect.value;buildArenaCache();});
+ const arenaGroups=new Map();for(const arena of ARENAS){const mythology=ARENA_MYTHOLOGIES[arena.id]||'Mitología por clasificar';if(!arenaGroups.has(mythology))arenaGroups.set(mythology,[]);arenaGroups.get(mythology).push(arena);}arenaSelect.innerHTML=[...arenaGroups.entries()].map(([mythology,arenas])=>`<optgroup label="${mythology}">${arenas.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}</optgroup>`).join('');arenaSelect.value=state.arenaId;arenaSelect.addEventListener('change',()=>{clearArenaEventState();state.arenaId=arenaSelect.value;buildArenaCache();});
  buildArenaCache();setupInput();setupSettings();bindUI();renderSelection();state.preparationMode='classic';syncPreparationUI();updateHUD();
 }
 init();

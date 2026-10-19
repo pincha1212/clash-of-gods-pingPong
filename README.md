@@ -1,8 +1,8 @@
-# Clash of Gods — Divine Arena V0.2.40
+# Clash of Gods — Divine Arena V0.2.41
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
-## Arena Events — V0.2.40
+## Arena Events — V0.2.41
 
 El gestor `arena-events.js` controla los modificadores ambientales individualizados del modo Clásico, con un perfil explícito por cada arena y sin fallback por familia visual. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 
@@ -398,7 +398,7 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - Validación estática y de sintaxis; prueba manual de navegador pendiente.
 
 
-## V0.2.40 — modificadores individualizados por arena
+## V0.2.41 — modificadores individualizados por arena
 
 - El catálogo del modo Clásico contiene un perfil explícito para cada una de las 38 arenas seleccionables; se eliminó la sustitución silenciosa por familias visuales.
 - Cada perfil declara identidad del fenómeno, patrón físico, firma visual, fuerza, variación ambiental, aviso, duración y enfriamiento.
@@ -406,3 +406,12 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - Las firmas visuales solo aparecen durante aviso o activación. No se dibuja un efecto permanente extra sobre el mapa.
 - Las crónicas, los jefes y Mutación conservan sus sistemas dedicados; este catálogo solo se activa en Clásico.
 - Verificación automática: sintaxis JS, cobertura de 38 IDs, patrones conocidos, fases de aviso/activación, límite de fuerza y desactivación en modos protegidos. Falta prueba manual de juego en navegador.
+
+
+## V0.2.41 — arenas agrupadas por mitología
+
+- El selector de arenas del modo Clásico ahora organiza las 38 opciones en siete categorías mitológicas mediante grupos desplegables.
+- Se añadieron metadatos explícitos de clasificación y vínculos entre las arenas de Hidra, Kraken, Minotauro y Fenrir y sus personajes.
+- Se creó `ARENAS_POR_MITOLOGIA.md`, que inventaría las arenas existentes y lista los 87 personajes del plantel que aún no tienen arena seleccionable propia. Los escenarios fijos de Jörmungandr y Tifón se distinguen de las arenas seleccionables.
+- No se modificaron perfiles físicos, habilidades, power-ups ni eventos de crónicas.
+- Pruebas estáticas: 38 arenas clasificadas, siete categorías, 38 perfiles, cero IDs duplicados y cero arenas sin categoría. Prueba visual/jugable en navegador pendiente.

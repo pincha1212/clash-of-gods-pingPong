@@ -148,4 +148,30 @@ const EXTRA_ARENAS=[
  {id:'arena_fenrir_wastes',name:'Yermo de Fenrir',style:'storm',bg:'#10131d',field:'#202638',accent:'#b2b6c7',line:'#626b86'}
 ];
 export const ARENAS=[...DIVINE_ARENAS,...EXTRA_ARENAS];
+
+// Clasificación explícita para ordenar el selector sin alterar identidades ni mecánicas.
+export const ARENA_MYTHOLOGIES = {
+  raijin:'Mitología japonesa', fujin:'Mitología japonesa', kagutsuchi:'Mitología japonesa',
+  susanoo:'Mitología japonesa', amaterasu:'Mitología japonesa', inari:'Mitología japonesa',
+  tsukuyomi:'Mitología japonesa',
+  hades:'Mitología griega', athena:'Mitología griega', zeus:'Mitología griega',
+  poseidon:'Mitología griega', medusa:'Mitología griega', gaia:'Mitología griega',
+  apollo:'Mitología griega', ares:'Mitología griega', artemis:'Mitología griega',
+  hermes:'Mitología griega', persephone:'Mitología griega',
+  arena_titanomachy:'Arenas mitológicas especiales', arena_abyss_hydra:'Mitología griega',
+  arena_kraken_trench:'Mitología griega', arena_minotaur_labyrinth:'Mitología griega',
+  odin:'Mitología nórdica', loki:'Mitología nórdica', thor:'Mitología nórdica',
+  freyja:'Mitología nórdica', hel:'Mitología nórdica', arena_fenrir_wastes:'Mitología nórdica',
+  anubis:'Mitología egipcia', thoth:'Mitología egipcia', isis:'Mitología egipcia',
+  ra:'Mitología egipcia', horus:'Mitología egipcia', seth:'Mitología egipcia',
+  kali:'Tradiciones de India', shiva:'Tradiciones de India', indra:'Tradiciones de India',
+  quetzalcoatl:'Mitología mexica'
+};
+
+// Los escenarios extra están vinculados explícitamente a sus criaturas cuando corresponde.
+// Titanomaquia representa un acontecimiento/campo mitológico y no un personaje individual.
+export const ARENA_CHARACTER_LINKS = {
+  arena_abyss_hydra:'hydra', arena_kraken_trench:'kraken',
+  arena_minotaur_labyrinth:'minotaur', arena_fenrir_wastes:'fenrir'
+};
 export const SETTINGS = {width:1000,height:600,winScore:7,ballSpeed:7.2,maxBallSpeed:15,paddleWidth:13,basePaddleHeight:100,skillEnabled:true,itemsEnabled:true};
