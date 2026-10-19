@@ -13,6 +13,9 @@ export function activateAbility(side){if(!state.running||state.paused||state.fin
  case'ra':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.min(SETTINGS.maxBallSpeed,speed*1.25);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='ra';b.effectTime=.85;break;}
  case'shiva':{b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?4:-4),-8,8);r.shrink=1.5;r.skillShrinkScale=.72;r.h=r.baseH*.72;r.y=clamp(r.y,0,SETTINGS.height-r.h);b.specialEffect='shiva';b.effectTime=.8;break;}
  case'tsukuyomi':{const speed=Math.hypot(b.vx,b.vy)||b.speed,next=Math.max(4.5,speed*.72);b.vx=b.vx/speed*next;b.vy=b.vy/speed*next;b.speed=next;b.specialEffect='tsukuyomi';b.effectTime=.8;break;}
+ case'horus':{p.counter=2*effectiveness;p.aimBonus=.22;p.abilityEffect='horus';break;}
+ case'seth':{r.slow=1.25*effectiveness;b.vy=clamp(b.vy+(b.y<SETTINGS.height/2?3.2:-3.2),-8,8);b.specialEffect='seth';b.effectTime=.85;burst(b.x,b.y,god.color,6,2);break;}
+ case'indra':{p.counter=2*effectiveness;p.abilityEffect='indra';break;}
  case'persephone':{p.grow=1.8;p.skillGrowScale=1.45;p.h=p.baseH*1.45;p.y=clamp(p.y-(p.h-p.baseH)/2,0,SETTINGS.height-p.h);p.shield=1.3;p.abilityEffect='persephone';break;}
  }
  if(god.kind==='hero'||god.kind==='titan'||god.kind==='monster'){

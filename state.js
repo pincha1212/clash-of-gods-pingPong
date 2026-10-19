@@ -5,7 +5,7 @@ export const state = {
   ball:null,balls:[],ballLimit:64,nextBallId:1,paddles:{p1:null,p2:null}, particles:[], items:[], temporaryWalls:[], powerupSpawnTimer:1.1, countdown:0, serveTimer:0, rally:0,
   soundEnabled:true, audioContext:null, lastWinner:null, worldEffects:{eclipse:0,quake:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0}, ballPower:{type:'',time:0,baseSpeed:0}
 };
-export function createPaddle(side,god){return {side,godId:god.id,x:side==='p1'?28:959,y:250,w:SETTINGS_PADDLE_WIDTH(),h:god.stats.size,baseH:god.stats.size,speed:god.stats.speed,color:god.color,motion:0,slow:0,invert:0,shield:0,shieldMode:'',grow:0,shrink:0,skillGrowScale:1.65,skillShrinkScale:.62,powerGrow:0,powerShrink:0,freeze:0,palette:0,bonusPoint:0,counter:0,cooldown:0,abilityTime:0,abilityEffect:'',haste:0,aura:0};}
+export function createPaddle(side,god){return {side,godId:god.id,x:side==='p1'?28:959,y:250,w:SETTINGS_PADDLE_WIDTH(),h:god.stats.size,baseH:god.stats.size,speed:god.stats.speed,color:god.color,motion:0,slow:0,invert:0,shield:0,shieldMode:'',grow:0,shrink:0,skillGrowScale:1.65,skillShrinkScale:.62,powerGrow:0,powerShrink:0,freeze:0,palette:0,bonusPoint:0,counter:0,aimBonus:0,cooldown:0,abilityTime:0,abilityEffect:'',haste:0,aura:0};}
 function SETTINGS_PADDLE_WIDTH(){return 13;}
 let fallbackBallId=1;
 export function createBall(options={}){

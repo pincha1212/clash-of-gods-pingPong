@@ -56,7 +56,7 @@ function clearBallPower(ball){
  }
  state.ballPower=EMPTY_BALL_POWER();
 }
-export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0};state.ballPower=EMPTY_BALL_POWER();for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert'])p[key]=0;p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
+export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0};state.ballPower=EMPTY_BALL_POWER();for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert','aimBonus'])p[key]=0;p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
 function summonRuneBarricades(){
  const cx=SETTINGS.width/2,cy=SETTINGS.height/2;
  const layouts=[

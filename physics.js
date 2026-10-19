@@ -50,7 +50,7 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  // El movimiento vertical de la paleta influye sutilmente en el ángulo:
  // permite apuntar con intención sin hacer que el control sea impredecible.
  const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
- let angle=norm*1.08+paddleMotion*.20;
+ let angle=norm*1.08+paddleMotion*.20+(p.aimBonus>0?Math.sign(norm||1)*p.aimBonus:0);p.aimBonus=0;
  if(getBallPowerType()==='chaos')angle+=(Math.random()-.5)*.7;
  if(getBallPowerType()==='ricochet')angle+=(Math.random()-.5)*1.0;
  if(state.worldEffects?.prism>0)angle+=Math.sin((performance.now?.()||0)/180)*.12;
