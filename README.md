@@ -1,10 +1,10 @@
-# Clash of Gods — Divine Arena V0.2.38
+# Clash of Gods — Divine Arena V0.2.40
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
-## Arena Events — V0.2.38
+## Arena Events — V0.2.40
 
-Un único gestor controla los modificadores ambientales de Clásico y de las crónicas compatibles, con perfiles por familia, overrides por arena, aviso previo, duración y fuerza limitada. El jefe Jörmungandr conserva su cierre geométrico de arena; Mutación mantiene su sistema propio para evitar acumulaciones de fuerzas. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
+El gestor `arena-events.js` controla los modificadores ambientales individualizados del modo Clásico, con un perfil explícito por cada arena y sin fallback por familia visual. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 
 ## Elenco
 
@@ -389,3 +389,20 @@ Arena modifier configuration and compatibility: see `ARENA_MODIFIERS.md`.
 ## Matriz de compatibilidad — V0.2.38
 
 Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis crónicas: arena visual efectiva, eventos, fuerzas, reglas especiales, potenciadores, habilidades y elementos que deben conservarse. Esta entrega es documental y no cambia la lógica de juego. La matriz separa lo confirmado en código de las pruebas manuales pendientes.
+
+
+## V0.2.39 — auditoría de duplicación de eventos
+- Se restauraron los eventos originales de Olimpo, Ragnarök, Trono, Aguas y Tifón, incluidos sus estados y efectos visuales existentes.
+- El gestor genérico de `arena-events.js` queda limitado a Clásico; no añade eventos a las crónicas.
+- Jörmungandr mantiene exclusivamente su cierre de arena dedicado.
+- Validación estática y de sintaxis; prueba manual de navegador pendiente.
+
+
+## V0.2.40 — modificadores individualizados por arena
+
+- El catálogo del modo Clásico contiene un perfil explícito para cada una de las 38 arenas seleccionables; se eliminó la sustitución silenciosa por familias visuales.
+- Cada perfil declara identidad del fenómeno, patrón físico, firma visual, fuerza, variación ambiental, aviso, duración y enfriamiento.
+- Los patrones usan la única integración física existente en `physics.js`; no crean un segundo bucle de actualización ni nuevas colisiones/obstáculos.
+- Las firmas visuales solo aparecen durante aviso o activación. No se dibuja un efecto permanente extra sobre el mapa.
+- Las crónicas, los jefes y Mutación conservan sus sistemas dedicados; este catálogo solo se activa en Clásico.
+- Verificación automática: sintaxis JS, cobertura de 38 IDs, patrones conocidos, fases de aviso/activación, límite de fuerza y desactivación en modos protegidos. Falta prueba manual de juego en navegador.
