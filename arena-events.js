@@ -1,53 +1,21 @@
 import { state } from './state.js';
-import { ARENAS } from './config.js';
+import { ARENAS, LEGACY_ARENA_MIGRATION } from './config.js';
 
-// Perfiles propios de las 38 arenas del modo Clásico. No hay fallback por familia:
-// cada arena declara su fenómeno, firma física, señal visual y ritmo de aparición.
-// Las crónicas mantienen sus eventos dedicados y no pasan por este catálogo.
+// Un perfil de evento por arena compartida. Solo actúa en Clásico;
+// Crónicas, jefes y Mutación mantienen sus gestores dedicados.
 const makeProfile = (label, kind, behavior, visual, axis, color, force, ambient, warning, activeDuration, cooldown, rate = 1) => ({
   label, kind, behavior, visual, axis, color, force, ambient, warning, activeDuration, cooldown, rate
 });
 
 export const ARENA_MODIFIER_PROFILES = {
   arenas: {
-    raijin: makeProfile('DESCARGA DE RAIJIN','eléctrico','pulse','lightning','y','#9defff',.78,.07,1.65,.82,10.5,2.8),
-    fujin: makeProfile('CORREDOR DE FUJIN','viento','crosswind','gust','x','#a9f1df',.82,.10,1.4,1.15,9.4,1.7),
-    kagutsuchi: makeProfile('LENGUA DE KAGUTSUCHI','térmico','thermal-wave','flame','y','#ff9b62',.66,.08,1.55,1.0,10.2,2.3),
-    susanoo: makeProfile('OLEAJE DE SUSANOO','marino','surge','wave','x','#75c9f4',.74,.10,1.5,1.2,9.8,1.5),
-    amaterasu: makeProfile('ALBA DE AMATERASU','solar','solar-pulse','halo','y','#ffe69b',.62,.07,1.7,.88,10.7,2.5),
-    inari: makeProfile('SENDERO DE INARI','natural','drift','leaves','x','#a8e69b',.58,.09,1.5,1.0,10.1,1.3),
-    hades: makeProfile('ALIENTO DEL INFRAMUNDO','ctónico','undertow','rift','y','#c49bce',.68,.06,1.6,1.05,10.6,1.9),
-    athena: makeProfile('ÉGIDA DE ATENEA','defensivo','guard-pulse','shield','x','#d5e4f5',.56,.06,1.7,.78,11.2,2.4),
-    odin: makeProfile('PRESAGIO DE ODÍN','rúnico','rune-shear','runes','y','#c6b5ff',.68,.08,1.55,.95,10.4,2.1),
-    quetzalcoatl: makeProfile('CORRIENTE DE QUETZALCÓATL','aéreo','spiral','spiral','x','#8be6c4',.65,.08,1.55,1.05,10.0,1.8),
-    zeus: makeProfile('DESCARGA DEL OLIMPO','eléctrico','pulse','lightning','y','#ffe17a',.72,.07,1.6,.9,10.5,2.7),
-    anubis: makeProfile('BALANZA DE ANUBIS','juicio','judgement-wave','scales','x','#e7c38b',.58,.06,1.6,.9,10.8,1.6),
-    poseidon: makeProfile('MAREA DE POSEIDÓN','marino','surge','wave','x','#83d8ff',.74,.10,1.5,1.2,10.0,1.5),
-    loki: makeProfile('FINTA DE LOKI','engaño','feint','mirage','y','#c7a6ed',.61,.08,1.4,.85,9.7,3.1),
-    thor: makeProfile('TRUENO DE THOR','tormenta','thunder-step','lightning','y','#b8eaff',.76,.07,1.5,.92,10.2,2.9),
-    medusa: makeProfile('MIRADA DE MEDUSA','petrificante','stone-pulse','gaze','x','#9bd6d0',.55,.06,1.7,.8,11.0,2.0),
-    gaia: makeProfile('LATIDO DE GAIA','primordial','earth-pulse','quake','y','#a6d78c',.64,.08,1.6,1.0,10.4,1.4),
-    thoth: makeProfile('GLIFO DE THOTH','arcano','glyph-shift','runes','x','#e6d6a4',.57,.06,1.7,.82,10.9,2.2),
-    kali: makeProfile('DANZA DE KALI','caótico','alternating-shear','cross','y','#f1a1c3',.69,.07,1.45,.92,9.8,2.6),
-    apollo: makeProfile('ARCO DE APOLO','solar','solar-pulse','halo','y','#ffd18a',.63,.07,1.6,.9,10.6,2.4),
-    isis: makeProfile('VELO DE ISIS','místico','veil-drift','veil','x','#b9d9ff',.55,.08,1.65,1.0,10.8,1.2),
-    ares: makeProfile('EMBESTIDA DE ARES','bélico','charge','spear','x','#f28d80',.82,.05,1.35,.82,9.5,2.0),
-    artemis: makeProfile('FLECHA DE ARTEMISA','cazador','arrow-burst','arrow','y','#c8e5b1',.67,.06,1.55,.75,10.0,3.0),
-    hermes: makeProfile('PASO DE HERMES','veloz','slipstream','speed','x','#f0d99b',.60,.10,1.35,.75,9.3,3.2),
-    freyja: makeProfile('MANTO DE FREYJA','arcano','veil-drift','veil','y','#e7a9d5',.56,.07,1.65,.9,10.9,1.7),
-    hel: makeProfile('FRÍO DE HEL','gélido','cold-front','frost','x','#b5d6f1',.65,.06,1.6,1.1,10.7,1.4),
-    ra: makeProfile('CORONA DE RA','solar','solar-pulse','halo','y','#ffcf70',.68,.08,1.55,.9,10.2,2.5),
-    shiva: makeProfile('GIRO DE SHIVA','cósmico','spiral','spiral','x','#9cc7ff',.72,.06,1.55,1.0,10.3,1.9),
-    tsukuyomi: makeProfile('FASE DE TSUKUYOMI','lunar','lunar-tide','moon','y','#bfc9ff',.54,.07,1.7,.85,11.0,1.3),
-    persephone: makeProfile('BROTACIÓN DE PERSÉFONE','estacional','seasonal-surge','petals','x','#b8dfa0',.58,.08,1.55,1.0,10.5,1.5),
-    horus: makeProfile('VUELO DE HORUS','aéreo','crosswind','wings','y','#f1cf76',.60,.07,1.6,.9,10.5,1.8),
-    seth: makeProfile('TORBELLINO DE SETH','arena','sand-shear','sand','x','#e9a46f',.62,.07,1.5,1.0,10.4,2.0),
-    indra: makeProfile('VAJRA DE INDRA','eléctrico','thunder-step','lightning','y','#b3e8f2',.65,.07,1.6,.9,10.5,2.8),
-    arena_titanomachy: makeProfile('COLISIÓN TITÁNICA','primordial','alternating-shear','quake','y','#d5b078',.72,.06,1.5,1.0,10.2,2.2),
-    arena_abyss_hydra: makeProfile('LATIGAZO DE LA HIDRA','monstruoso','multi-surge','heads','x','#8bcf91',.69,.08,1.45,.95,9.9,2.7),
-    arena_kraken_trench: makeProfile('TIRÓN DEL KRAKEN','abisal','undertow','tentacles','x','#68a8c9',.74,.06,1.55,1.15,10.1,1.6),
-    arena_minotaur_labyrinth: makeProfile('GIRO DEL LABERINTO','laberíntico','maze-shear','maze','y','#c98e67',.62,.06,1.55,.9,10.5,2.0),
-    arena_fenrir_wastes: makeProfile('AULLIDO DE FENRIR','gélido','cold-front','frost','x','#b2b6c7',.76,.07,1.4,1.1,9.8,1.7)
+    arena_japanese: makeProfile('CORRIENTE DE LOS KAMI','viento','crosswind','gust','x','#a9f1df',.62,.07,1.5,1.0,10.0,1.7),
+    arena_greek: makeProfile('DESCARGA DEL OLIMPO','eléctrico','pulse','lightning','y','#ffe17a',.66,.06,1.6,.88,10.5,2.4),
+    arena_norse: makeProfile('FRENTE DE NIFLHEIM','gélido','cold-front','frost','x','#b8d5f2',.58,.06,1.6,1.0,10.5,1.4),
+    arena_egyptian: makeProfile('PULSO DE LA BARCA SOLAR','solar','solar-pulse','halo','y','#f5c56b',.58,.06,1.65,.85,10.7,2.2),
+    arena_indian: makeProfile('GIRO DEL MANDALA','cósmico','spiral','spiral','x','#e8a0d0',.58,.05,1.6,.95,10.5,1.6),
+    arena_mexica: makeProfile('VIENTO DE QUETZALCÓATL','aéreo','sand-shear','sand','x','#78d6a3',.57,.06,1.55,.95,10.3,1.8),
+    arena_primordial: makeProfile('RUPTURA PRIMORDIAL','primordial','alternating-shear','quake','y','#d5b078',.62,.05,1.55,.95,10.5,2.0)
   }
 };
 const INITIAL_COOLDOWN = 7.5;
@@ -58,7 +26,9 @@ function inactiveState() {
 }
 
 function selectedArena() {
-  return ARENAS.find(arena => arena.id === state.arenaId) || ARENAS[0];
+  const id = ARENAS.some(arena => arena.id === state.arenaId) ? state.arenaId : (LEGACY_ARENA_MIGRATION[state.arenaId] || 'arena_japanese');
+  if (state.arenaId !== id) state.arenaId = id;
+  return ARENAS.find(arena => arena.id === id) || ARENAS[0];
 }
 
 function currentProfile() {

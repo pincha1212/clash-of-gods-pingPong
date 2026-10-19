@@ -1,10 +1,10 @@
-# Clash of Gods — Divine Arena V0.2.41
+# Clash of Gods — Divine Arena V0.2.42
 
-Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 38 arenas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
+Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 7 arenas compartidas por mitología, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
-## Arena Events — V0.2.41
+## Arenas compartidas — V0.2.42
 
-El gestor `arena-events.js` controla los modificadores ambientales individualizados del modo Clásico, con un perfil explícito por cada arena y sin fallback por familia visual. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
+El modo Clásico usa siete escenarios compartidos: seis mitologías y un campo primordial colectivo. `arena-events.js` mantiene un perfil de modificador por escenario, en vez de repetir perfiles por personaje. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 
 ## Elenco
 
@@ -38,7 +38,7 @@ En Titanes vs. monstruos, el jugador 1 selecciona un titán y el jugador 2 un mo
 
 El códice empieza por una pantalla de cuatro categorías: dioses, héroes, titanes y monstruos. Cada sección contiene las fichas de su categoría.
 
-Hay 38 arenas en total: se conservan las 33 arenas del catálogo base y se agregan cinco arenas temáticas de Titanomaquia, Hidra, Kraken, Minotauro y Fenrir. Las arenas se pueden elegir con cualquier categoría de personajes.
+El modo Clásico dispone de siete arenas compartidas: japonesa, griega, nórdica, egipcia, india, mexica y un campo primordial colectivo. Cualquier elenco puede jugar en cualquiera de ellas; las habilidades siguen siendo propias de cada personaje. Los escenarios de Crónicas, jefes y Mutación permanecen independientes.
 
 ## Power-ups de arena
 
@@ -415,3 +415,13 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - Se creó `ARENAS_POR_MITOLOGIA.md`, que inventaría las arenas existentes y lista los 87 personajes del plantel que aún no tienen arena seleccionable propia. Los escenarios fijos de Jörmungandr y Tifón se distinguen de las arenas seleccionables.
 - No se modificaron perfiles físicos, habilidades, power-ups ni eventos de crónicas.
 - Pruebas estáticas: 38 arenas clasificadas, siete categorías, 38 perfiles, cero IDs duplicados y cero arenas sin categoría. Prueba visual/jugable en navegador pendiente.
+
+
+## V0.2.42 — una arena compartida por mitología
+
+- Se reemplazaron las 38 opciones individuales por siete escenarios compartidos: seis mitologías y un campo primordial colectivo.
+- Los personajes conservan sus habilidades y estadísticas; el escenario ya no se duplica por personaje.
+- Los modificadores ambientales de Clásico se redujeron a siete perfiles explícitos, uno por escenario compartido.
+- Los identificadores de arena anteriores se migran a la arena compartida correspondiente al abrir el selector.
+- Olimpo utiliza la arena griega y Ragnarök la nórdica. Las Crónicas y los jefes conservan sus escenarios dedicados; Mutación sigue usando su cancha propia.
+- Verificado: sintaxis de los módulos JavaScript, siete arenas, siete perfiles, IDs únicos y compatibilidad de migración. No se realizó una prueba interactiva en navegador; el gameplay real sigue pendiente de playtest.

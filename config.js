@@ -131,47 +131,37 @@ export const GODS = {
 };
 
 // Todos los dioses tienen una arena temática seleccionable. Seis familias visuales se reutilizan con paletas únicas.
-const ARENA_FAMILIES=[
- {style:'temple',label:'Templo',bg:'#0b101b',field:'#172033',accent:'#cba86b',line:'#6e6657'},
- {style:'storm',label:'Tormenta',bg:'#07121b',field:'#10242c',accent:'#70dce4',line:'#456d7a'},
- {style:'inferno',label:'Abismo ígneo',bg:'#170c12',field:'#2b151c',accent:'#f17a55',line:'#75433d'},
- {style:'ocean',label:'Santuario marino',bg:'#061522',field:'#0c2638',accent:'#65bde9',line:'#3c7188'},
- {style:'moon',label:'Santuario lunar',bg:'#0d1020',field:'#191b32',accent:'#b9c4f4',line:'#5c628c'},
- {style:'wild',label:'Jardín ancestral',bg:'#09170f',field:'#14281d',accent:'#8fd39b',line:'#486c51'}
+// Seis arenas compartidas por mitología + un campo colectivo especial.
+// Los personajes conservan sus habilidades; el escenario ya no depende del personaje individual.
+export const ARENAS = [
+ {id:'arena_japanese',name:'Santuario de los kami',style:'shrine',bg:'#07121b',field:'#10242c',accent:'#70dce4',line:'#456d7a'},
+ {id:'arena_greek',name:'Cumbre del Olimpo',style:'olympus',bg:'#101322',field:'#1c2338',accent:'#ffe17a',line:'#6e718e'},
+ {id:'arena_norse',name:'Raíces de Yggdrasil',style:'yggdrasil',bg:'#0b111c',field:'#172333',accent:'#b8d5f2',line:'#536b88'},
+ {id:'arena_egyptian',name:'Templo de la barca solar',style:'solar',bg:'#1a100b',field:'#302016',accent:'#f5c56b',line:'#8a6341'},
+ {id:'arena_indian',name:'Mandala cósmico',style:'mandala',bg:'#160b1a',field:'#29172d',accent:'#e8a0d0',line:'#79537e'},
+ {id:'arena_mexica',name:'Jardín de la Serpiente Emplumada',style:'quetzal',bg:'#071a18',field:'#10302b',accent:'#78d6a3',line:'#3f8170'},
+ {id:'arena_primordial',name:'Titanomaquia · Campo primordial',style:'primordial',bg:'#17121d',field:'#2b2030',accent:'#d5b078',line:'#806a55'}
 ];
-const DIVINE_ARENAS=Object.values(GODS).filter(god=>!god.kind||god.kind==='god').map((god,index)=>{const family=ARENA_FAMILIES[index%ARENA_FAMILIES.length];if(god.id==='raijin')return {id:god.id,name:'Raijin · Tormenta divina',godId:god.id,style:'storm',bg:'#07121b',field:'#10242c',accent:god.color||'#70dce4',line:'#456d7a'};return {id:god.id,name:`${god.name} · ${family.label}`,godId:god.id,style:family.style,bg:family.bg,field:family.field,accent:god.color||family.accent,line:family.line};});
-const EXTRA_ARENAS=[
- {id:'arena_titanomachy',name:'Titanomaquia · Cumbre primordial',style:'temple',bg:'#17121d',field:'#2b2030',accent:'#d5b078',line:'#806a55'},
- {id:'arena_abyss_hydra',name:'Foso de la Hidra',style:'wild',bg:'#071a15',field:'#123329',accent:'#8bcf91',line:'#426e5c'},
- {id:'arena_kraken_trench',name:'Fosa del Kraken',style:'ocean',bg:'#04121f',field:'#0b2b40',accent:'#68a8c9',line:'#376b88'},
- {id:'arena_minotaur_labyrinth',name:'Laberinto del Minotauro',style:'inferno',bg:'#1b1010',field:'#30201a',accent:'#c98e67',line:'#74513b'},
- {id:'arena_fenrir_wastes',name:'Yermo de Fenrir',style:'storm',bg:'#10131d',field:'#202638',accent:'#b2b6c7',line:'#626b86'}
-];
-export const ARENAS=[...DIVINE_ARENAS,...EXTRA_ARENAS];
 
-// Clasificación explícita para ordenar el selector sin alterar identidades ni mecánicas.
 export const ARENA_MYTHOLOGIES = {
-  raijin:'Mitología japonesa', fujin:'Mitología japonesa', kagutsuchi:'Mitología japonesa',
-  susanoo:'Mitología japonesa', amaterasu:'Mitología japonesa', inari:'Mitología japonesa',
-  tsukuyomi:'Mitología japonesa',
-  hades:'Mitología griega', athena:'Mitología griega', zeus:'Mitología griega',
-  poseidon:'Mitología griega', medusa:'Mitología griega', gaia:'Mitología griega',
-  apollo:'Mitología griega', ares:'Mitología griega', artemis:'Mitología griega',
-  hermes:'Mitología griega', persephone:'Mitología griega',
-  arena_titanomachy:'Arenas mitológicas especiales', arena_abyss_hydra:'Mitología griega',
-  arena_kraken_trench:'Mitología griega', arena_minotaur_labyrinth:'Mitología griega',
-  odin:'Mitología nórdica', loki:'Mitología nórdica', thor:'Mitología nórdica',
-  freyja:'Mitología nórdica', hel:'Mitología nórdica', arena_fenrir_wastes:'Mitología nórdica',
-  anubis:'Mitología egipcia', thoth:'Mitología egipcia', isis:'Mitología egipcia',
-  ra:'Mitología egipcia', horus:'Mitología egipcia', seth:'Mitología egipcia',
-  kali:'Tradiciones de India', shiva:'Tradiciones de India', indra:'Tradiciones de India',
-  quetzalcoatl:'Mitología mexica'
+ arena_japanese:'Mitología japonesa',
+ arena_greek:'Mitología griega',
+ arena_norse:'Mitología nórdica',
+ arena_egyptian:'Mitología egipcia',
+ arena_indian:'Tradiciones de India',
+ arena_mexica:'Mitología mexica',
+ arena_primordial:'Campos mitológicos especiales'
 };
 
-// Los escenarios extra están vinculados explícitamente a sus criaturas cuando corresponde.
-// Titanomaquia representa un acontecimiento/campo mitológico y no un personaje individual.
-export const ARENA_CHARACTER_LINKS = {
-  arena_abyss_hydra:'hydra', arena_kraken_trench:'kraken',
-  arena_minotaur_labyrinth:'minotaur', arena_fenrir_wastes:'fenrir'
+// Migración de los identificadores antiguos a su arena compartida. Mantiene compatibilidad
+// si algún módulo externo conserva una selección de V0.2.41.
+export const LEGACY_ARENA_MIGRATION = {
+ raijin:'arena_japanese',fujin:'arena_japanese',kagutsuchi:'arena_japanese',susanoo:'arena_japanese',amaterasu:'arena_japanese',inari:'arena_japanese',tsukuyomi:'arena_japanese',
+ hades:'arena_greek',athena:'arena_greek',zeus:'arena_greek',poseidon:'arena_greek',medusa:'arena_greek',gaia:'arena_greek',apollo:'arena_greek',ares:'arena_greek',artemis:'arena_greek',hermes:'arena_greek',persephone:'arena_greek',arena_abyss_hydra:'arena_greek',arena_kraken_trench:'arena_greek',arena_minotaur_labyrinth:'arena_greek',
+ odin:'arena_norse',loki:'arena_norse',thor:'arena_norse',freyja:'arena_norse',hel:'arena_norse',arena_fenrir_wastes:'arena_norse',
+ anubis:'arena_egyptian',thoth:'arena_egyptian',isis:'arena_egyptian',ra:'arena_egyptian',horus:'arena_egyptian',seth:'arena_egyptian',
+ kali:'arena_indian',shiva:'arena_indian',indra:'arena_indian',
+ quetzalcoatl:'arena_mexica',arena_titanomachy:'arena_primordial'
 };
+
 export const SETTINGS = {width:1000,height:600,winScore:7,ballSpeed:7.2,maxBallSpeed:15,paddleWidth:13,basePaddleHeight:100,skillEnabled:true,itemsEnabled:true};
