@@ -9,23 +9,23 @@ const makeProfile = (label, kind, behavior, visual, axis, color, force, ambient,
 
 export const ARENA_MODIFIER_PROFILES = {
   arenas: {
-    arena_japanese: makeProfile('CORRIENTE DE LOS KAMI','viento','crosswind','gust','x','#a9f1df',.62,.07,1.5,1.0,10.0,1.7),
-    arena_greek: makeProfile('DESCARGA DEL OLIMPO','eléctrico','pulse','lightning','y','#ffe17a',.66,.06,1.6,.88,10.5,2.4),
-    arena_norse: makeProfile('FRENTE DE NIFLHEIM','gélido','cold-front','frost','x','#b8d5f2',.58,.06,1.6,1.0,10.5,1.4),
-    arena_egyptian: makeProfile('PULSO DE LA BARCA SOLAR','solar','solar-pulse','halo','y','#f5c56b',.58,.06,1.65,.85,10.7,2.2),
-    arena_indian: makeProfile('GIRO DEL MANDALA','cósmico','spiral','spiral','x','#e8a0d0',.58,.05,1.6,.95,10.5,1.6),
-    arena_mexica: makeProfile('VIENTO DE QUETZALCÓATL','aéreo','sand-shear','sand','x','#78d6a3',.57,.06,1.55,.95,10.3,1.8),
-    arena_primordial: makeProfile('RUPTURA PRIMORDIAL','primordial','alternating-shear','quake','y','#d5b078',.62,.05,1.55,.95,10.5,2.0),
-    arena_chinese: makeProfile('BRISA DE LOS INMORTALES','viento celeste','crosswind','gust','x','#f0c36c',.55,.05,1.55,.95,10.5,1.6),
-    arena_mesopotamian: makeProfile('CORRIENTE DE LOS DOS RÍOS','fluvial','pulse','ripple','y','#d9ae68',.54,.05,1.6,.9,10.8,1.5),
-    arena_celtic: makeProfile('ALIENTO DEL BOSQUE ANTIGUO','bosque','crosswind','gust','x','#9ad18a',.52,.05,1.55,.9,10.8,1.5),
-    arena_arthurian: makeProfile('ECO DEL GRIAL','arcano','pulse','halo','y','#c6d5e8',.54,.05,1.6,.9,10.8,1.5),
-    arena_persian: makeProfile('VIENTO DE LAS SAGAS','abrasador','crosswind','sand','x','#e7a16f',.55,.05,1.55,.9,10.6,1.6),
-    arena_roman: makeProfile('IMPULSO DEL FORO','solar','pulse','lightning','y','#e3c18b',.55,.05,1.6,.9,10.8,1.6),
-    arena_anglo_saxon: makeProfile('RÁFAGA DEL SALÓN','viento','crosswind','gust','x','#c5b98a',.53,.05,1.55,.9,10.8,1.5),
-    arena_germanic: makeProfile('CORRIENTE DE LAS SAGAS','gélido','cold-front','frost','x','#c6a77c',.53,.05,1.55,.9,10.8,1.5),
-    arena_medieval_europe: makeProfile('PULSO DE LAS LEYENDAS','arcano','alternating-shear','halo','y','#b8b4d9',.53,.05,1.55,.9,10.8,1.5),
-    arena_levantine: makeProfile('MAREA DEL ANTIGUO ORIENTE','fluvial','pulse','ripple','y','#91d4d2',.53,.05,1.55,.9,10.8,1.5)
+    arena_japanese: makeProfile('ALIENTO DE LOS KAMI','viento espiritual','kami-crosswind','torii','x','#a9f1df',.55,.045,1.7,1.05,10.5,1.55),
+    arena_greek: makeProfile('RAYO DEL OLIMPO','tormenta divina','olympian-bolt','thundercrest','y','#ffe17a',.60,.04,1.75,.9,10.8,2.1),
+    arena_norse: makeProfile('FRENTE DE NIFLHEIM','frente gélido','niflheim-front','yggdrasil-pulse','x','#b8d5f2',.53,.04,1.7,1.05,10.8,1.35),
+    arena_egyptian: makeProfile('ECLIPSE DE LA BARCA SOLAR','eclipse solar','solar-eclipse','solar-disk','y','#f5c56b',.54,.04,1.8,.9,11.0,1.9),
+    arena_indian: makeProfile('GIRO DEL MANDALA','órbita cósmica','mandala-orbit','yantra','x','#e8a0d0',.52,.035,1.7,1.0,10.8,1.5),
+    arena_mexica: makeProfile('SERPIENTE DE VIENTO','viento emplumado','feathered-serpent','feathered-serpent','x','#78d6a3',.53,.04,1.65,1.0,10.6,1.65),
+    arena_primordial: makeProfile('FISURA DE LA TITANOMAQUIA','fractura primordial','titan-rift','titan-rift','y','#d5b078',.58,.035,1.7,1.0,10.8,1.8),
+    arena_chinese: makeProfile('NUBES DE LOS INMORTALES','nube celeste','immortal-cloud','dragon-cloud','x','#f0c36c',.50,.035,1.65,1.0,10.8,1.5),
+    arena_mesopotamian: makeProfile('CRECIDA DE LOS DOS RÍOS','crecida fluvial','twin-river','cuneiform-wave','y','#d9ae68',.50,.035,1.7,.95,11.0,1.45),
+    arena_celtic: makeProfile('ALIENTO DEL BOSQUE ANTIGUO','pulso del bosque','ancient-grove','knotwork','x','#9ad18a',.49,.035,1.65,.95,11.0,1.45),
+    arena_arthurian: makeProfile('RESONANCIA DEL GRIAL','resonancia arcana','grail-resonance','grail','y','#c6d5e8',.50,.035,1.7,.95,11.0,1.45),
+    arena_persian: makeProfile('ASCENSO DEL SIMURG','corriente térmica','simurgh-thermal','simurgh','y','#e7a16f',.51,.035,1.65,.95,10.8,1.5),
+    arena_roman: makeProfile('MARCHA DE LAS LEGIONES','impulso rítmico','legion-march','laurel','x','#e3c18b',.51,.035,1.65,.95,11.0,1.5),
+    arena_anglo_saxon: makeProfile('RUNAS DEL SALÓN','pulso rúnico','mead-hall-rune','mead-hall','y','#c5b98a',.49,.035,1.65,.95,11.0,1.45),
+    arena_germanic: makeProfile('CACERÍA SALVAJE','ráfaga de cacería','wild-hunt','wild-hunt','x','#c6a77c',.51,.035,1.65,.95,10.8,1.5),
+    arena_medieval_europe: makeProfile('CRUCE DE LEYLINES','corriente arcana','leyline-shift','leyline','y','#b8b4d9',.49,.035,1.65,.95,11.0,1.45),
+    arena_levantine: makeProfile('MAREA DE LA LUNA CRECIENTE','marea lunar','crescent-tide','crescent-tide','y','#91d4d2',.50,.035,1.7,.95,11.0,1.45)
   }
 };
 const INITIAL_COOLDOWN = 7.5;
@@ -165,6 +165,23 @@ export function getArenaForces() {
       case 'thunder-step': y = dir * profile.force * (Math.sin(t * 3.2) > -.15 ? 1 : .25); break;
       case 'multi-surge': x = dir * profile.force * (.45 + .55 * Math.abs(Math.sin(t * 3.5))); y = Math.sin(t * 2.6) * profile.force * .2; break;
       case 'maze-shear': y = dir * profile.force * .58; x = Math.sin(t * 2.7) * profile.force * .42; break;
+      case 'kami-crosswind': x = dir * profile.force * (.42 + .58 * Math.abs(Math.sin(t * 1.8))); y = Math.sin(t * 3.1) * profile.force * .22; break;
+      case 'olympian-bolt': y = dir * profile.force * (.32 + .48 * Math.max(0, Math.sin(t * 2.1))); x = (Math.sin(t * 5.2) > .72 ? dir : 0) * profile.force * .42; break;
+      case 'niflheim-front': x = dir * profile.force * (.58 + .25 * Math.sin(t * 1.1) + .17 * Math.max(0, Math.sin(t * 3.0))); y = Math.sin(t * 1.6) * profile.force * .14; break;
+      case 'solar-eclipse': y = dir * profile.force * (.25 + .65 * (0.5 + 0.5 * Math.sin(t * 1.35))); x = Math.sin(t * .8) * profile.force * .18; break;
+      case 'mandala-orbit': x = Math.cos(t * 1.9) * profile.force * .62; y = Math.sin(t * 1.9) * profile.force * .62; break;
+      case 'feathered-serpent': x = dir * profile.force * (.48 + .22 * Math.sin(t * 2.2)); y = Math.sin(t * 3.2) * profile.force * .46; break;
+      case 'titan-rift': y = dir * profile.force * (.45 + .35 * Math.abs(Math.sin(t * 1.7))); x = (Math.sin(t * .9) > .35 ? 1 : -1) * profile.force * .22; break;
+      case 'immortal-cloud': x = dir * profile.force * (.38 + .34 * Math.abs(Math.sin(t * 1.5))); y = Math.sin(t * 2.0 + Math.PI / 3) * profile.force * .34; break;
+      case 'twin-river': y = dir * profile.force * (.3 + .55 * Math.abs(Math.sin(t * 2.0))); x = Math.sin(t * 1.2) * profile.force * .28; break;
+      case 'ancient-grove': x = Math.sin(t * 1.55) * profile.force * .72; y = dir * profile.force * (.18 + .24 * Math.max(0, Math.sin(t * 2.4))); break;
+      case 'grail-resonance': y = dir * profile.force * (.25 + .55 * Math.abs(Math.sin(t * 2.3))); x = Math.sin(t * 3.4) * profile.force * .2; break;
+      case 'simurgh-thermal': y = dir * profile.force * (.4 + .35 * Math.max(0, Math.sin(t * 1.6))); x = Math.sin(t * 2.1) * profile.force * .38; break;
+      case 'legion-march': x = dir * profile.force * (Math.sin(t * 2.5) > -.2 ? .78 : .28); y = Math.sin(t * 1.25) * profile.force * .16; break;
+      case 'mead-hall-rune': y = dir * profile.force * (Math.sin(t * 2.8) > -.25 ? .72 : .24); x = Math.sin(t * 1.7) * profile.force * .16; break;
+      case 'wild-hunt': x = dir * profile.force * (.28 + .62 * Math.max(0, Math.sin(t * 2.7))); y = Math.sin(t * 4.1) * profile.force * .2; break;
+      case 'leyline-shift': x = Math.sin(t * 1.35) * profile.force * .38; y = dir * profile.force * (.38 + .3 * Math.abs(Math.sin(t * 2.0))); break;
+      case 'crescent-tide': y = dir * profile.force * (.28 + .58 * (Math.sin(t * .9) ** 2)); x = Math.sin(t * .9 + 1.2) * profile.force * .18; break;
       default: if (profile.axis === 'x') x = dir * profile.force; else y = dir * profile.force;
     }
   }
@@ -217,7 +234,7 @@ export function drawArenaEvent(ctx) {
   ctx.strokeStyle = color; ctx.lineWidth = warning ? 1.8 : 2.2;
   ctx.globalAlpha = warning ? 0.62 : 0.76;
   ctx.setLineDash(warning ? [6, 6] : []);
-  const directional = ['crosswind','surge','undertow','drift','charge','arrow-burst','slipstream','cold-front','thunder-step'].includes(profile.behavior);
+  const directional = profile.behavior !== 'mandala-orbit';
   if (directional) {
     for (let side = 0; side < 2; side++) {
       const anchorX = axis === 'x' ? (side === 0 ? 120 : 880) : (side === 0 ? 64 : 936);
@@ -270,11 +287,78 @@ export function drawArenaEvent(ctx) {
     case 'mirage':
       for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(Math.sin(phase + i) * 12, 0, 24 + i * 20, 18 + i * 12, Math.sin(phase * .2) * .08, 0, Math.PI * 2); ctx.stroke(); }
       break;
+    case 'torii':
+      for (let i = 0; i < 3; i++) { const y = -34 + i * 28; ctx.beginPath(); ctx.moveTo(-52, y); ctx.lineTo(52, y); ctx.moveTo(-40, y); ctx.lineTo(-40, y + 16); ctx.moveTo(40, y); ctx.lineTo(40, y + 16); ctx.stroke(); }
+      break;
+    case 'thundercrest':
+      ctx.beginPath(); ctx.moveTo(-8,-52); ctx.lineTo(20,-18); ctx.lineTo(2,-18); ctx.lineTo(24,10); ctx.lineTo(-4,2); ctx.lineTo(-18,38); ctx.lineTo(-14,5); ctx.lineTo(-34,12); ctx.closePath(); ctx.stroke();
+      for (let r=22;r<=48;r+=13) { ctx.beginPath(); ctx.arc(0,0,r,Math.PI*1.1,Math.PI*1.9); ctx.stroke(); }
+      break;
+    case 'yggdrasil-pulse':
+      ctx.beginPath(); ctx.moveTo(0,48); ctx.lineTo(0,-48); ctx.moveTo(0,-12); ctx.lineTo(-34,-38); ctx.moveTo(0,-22); ctx.lineTo(33,-44); ctx.moveTo(0,15); ctx.lineTo(-40,38); ctx.moveTo(0,22); ctx.lineTo(42,40); ctx.stroke();
+      for (let r=12;r<=34;r+=11) { ctx.beginPath(); ctx.arc(0,-18,r,0,Math.PI*2); ctx.stroke(); }
+      break;
+    case 'solar-disk':
+      for (let r=14;r<=42;r+=14) { ctx.beginPath(); ctx.arc(0,0,r+pulse*.3,0,Math.PI*2); ctx.stroke(); }
+      for (let i=0;i<12;i++) { const a=i*Math.PI/6; ctx.beginPath(); ctx.moveTo(Math.cos(a)*47,Math.sin(a)*47); ctx.lineTo(Math.cos(a)*58,Math.sin(a)*58); ctx.stroke(); }
+      break;
+    case 'yantra':
+      for (let i=0;i<4;i++) { const r=18+i*10; ctx.beginPath(); ctx.moveTo(0,-r); ctx.lineTo(r*.72,r*.65); ctx.lineTo(-r*.72,r*.65); ctx.closePath(); ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.stroke();
+      break;
+    case 'feathered-serpent':
+      for (let i=-2;i<=2;i++) { ctx.beginPath(); ctx.moveTo(-54,i*12); ctx.quadraticCurveTo(-15,i*12-18,0,i*12); ctx.quadraticCurveTo(18,i*12+18,54,i*12); ctx.stroke(); }
+      for (let i=0;i<7;i++) { const x=-36+i*12; ctx.beginPath(); ctx.moveTo(x,-28); ctx.lineTo(x+7,-38-(i%2)*5); ctx.lineTo(x+13,-27); ctx.stroke(); }
+      break;
+    case 'titan-rift':
+      ctx.beginPath(); ctx.moveTo(-18,-54); ctx.lineTo(5,-27); ctx.lineTo(-10,-8); ctx.lineTo(17,12); ctx.lineTo(-3,30); ctx.lineTo(12,52); ctx.stroke();
+      for (let i=0;i<3;i++) { ctx.beginPath(); ctx.ellipse(0,0,28+i*13,12+i*8,phase*.08,0,Math.PI*2); ctx.stroke(); }
+      break;
+    case 'dragon-cloud':
+      for (let i=0;i<3;i++) { const y=-24+i*24; ctx.beginPath(); ctx.moveTo(-55,y); ctx.bezierCurveTo(-35,y-22, -15,y+22, 5,y); ctx.bezierCurveTo(25,y-22,45,y+22,55,y); ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(0,0,13,0,Math.PI*2); ctx.stroke();
+      break;
+    case 'cuneiform-wave':
+      for (let i=-2;i<=2;i++) { const y=i*16; ctx.beginPath(); ctx.moveTo(-54,y); ctx.lineTo(-34,y-8); ctx.lineTo(-14,y+8); ctx.lineTo(6,y-8); ctx.lineTo(26,y+8); ctx.lineTo(48,y); ctx.stroke(); }
+      for (let i=0;i<5;i++) { ctx.beginPath(); ctx.moveTo(-36+i*18,-42); ctx.lineTo(-30+i*18,-31); ctx.stroke(); }
+      break;
+    case 'knotwork':
+      for (let i=0;i<4;i++) { ctx.beginPath(); ctx.ellipse(0,0,18+i*10,30+i*5,(i%2?1:-1)*.6,0,Math.PI*2); ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.stroke();
+      break;
+    case 'grail':
+      ctx.beginPath(); ctx.moveTo(-30,-35); ctx.lineTo(30,-35); ctx.lineTo(20,-5); ctx.quadraticCurveTo(0,15,-20,-5); ctx.closePath(); ctx.moveTo(0,14); ctx.lineTo(0,38); ctx.moveTo(-19,39); ctx.lineTo(19,39); ctx.stroke();
+      for (let r=22;r<=44;r+=11) { ctx.beginPath(); ctx.arc(0,-5,r,Math.PI*1.05,Math.PI*1.95); ctx.stroke(); }
+      break;
+    case 'simurgh':
+      ctx.beginPath(); ctx.moveTo(0,35); ctx.bezierCurveTo(-10,5,-48,5,-48,-28); ctx.bezierCurveTo(-25,-18,-14,-36,0,-48); ctx.bezierCurveTo(14,-36,25,-18,48,-28); ctx.bezierCurveTo(48,5,10,5,0,35); ctx.stroke();
+      for (let i=0;i<5;i++) { ctx.beginPath(); ctx.moveTo(-38+i*19,14); ctx.lineTo(-28+i*14,28+(i%2)*7); ctx.stroke(); }
+      break;
+    case 'laurel':
+      for (let side of [-1,1]) for (let i=0;i<5;i++) { const y=-35+i*17; ctx.beginPath(); ctx.ellipse(side*(20+i*4),y,7,13,side*.65,0,Math.PI*2); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(0,-48); ctx.lineTo(0,45); ctx.stroke();
+      break;
+    case 'mead-hall':
+      ctx.beginPath(); ctx.moveTo(-45,34); ctx.lineTo(-45,-24); ctx.lineTo(0,-48); ctx.lineTo(45,-24); ctx.lineTo(45,34); ctx.stroke();
+      for (let i=-1;i<=1;i++) { ctx.beginPath(); ctx.moveTo(i*22,-12); ctx.lineTo(i*22+8,0); ctx.lineTo(i*22-6,14); ctx.stroke(); }
+      break;
+    case 'wild-hunt':
+      for (let i=-1;i<=1;i++) { ctx.beginPath(); ctx.moveTo(-48,i*20+5); ctx.lineTo(-25,i*20-7); ctx.lineTo(-4,i*20+5); ctx.lineTo(18,i*20-7); ctx.lineTo(46,i*20+5); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(-10,-38); ctx.lineTo(-23,-52); ctx.moveTo(10,-38); ctx.lineTo(23,-52); ctx.arc(0,-25,18,Math.PI,Math.PI*2); ctx.stroke();
+      break;
+    case 'leyline':
+      ctx.beginPath(); ctx.moveTo(-52,-35); ctx.lineTo(-18,-35); ctx.lineTo(-18,0); ctx.lineTo(18,0); ctx.lineTo(18,35); ctx.lineTo(52,35); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-52,35); ctx.lineTo(-32,15); ctx.lineTo(-4,15); ctx.lineTo(-4,-18); ctx.lineTo(28,-18); ctx.lineTo(52,-42); ctx.stroke();
+      break;
+    case 'crescent-tide':
+      for (let i=0;i<3;i++) { ctx.beginPath(); ctx.arc(-8+i*8,0,24+i*9,-Math.PI*.72,Math.PI*.72); ctx.stroke(); }
+      ctx.beginPath(); ctx.arc(22,-25,8,0,Math.PI*2); ctx.stroke();
+      break;
     default:
       ctx.beginPath(); ctx.arc(0, 0, 32 + pulse, 0, Math.PI * 2); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(-45, 0); ctx.lineTo(45, 0); ctx.moveTo(0, -45); ctx.lineTo(0, 45); ctx.stroke();
   }
-  ctx.restore(); ctx.restore();
+  ctx.restore();
   const directionName = directional
     ? (axis === 'x' ? (direction < 0 ? 'HACIA LA IZQUIERDA' : 'HACIA LA DERECHA') : (direction < 0 ? 'ASCENDENTE' : 'DESCENDENTE'))
     : (warning ? 'PREPARANDO FENÓMENO' : 'FENÓMENO ACTIVO');

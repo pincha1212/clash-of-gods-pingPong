@@ -1,10 +1,10 @@
-# Clash of Gods — Divine Arena V0.2.43
+# Clash of Gods — Divine Arena V0.2.44
 
-Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 7 arenas compartidas por mitología, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
+Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 17 arenas culturales compartidas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
 
-## Arenas compartidas — V0.2.43
+## Arenas compartidas — V0.2.44
 
-El modo Clásico usa siete escenarios compartidos: seis mitologías y un campo primordial colectivo. `arena-events.js` mantiene un perfil de modificador por escenario, en vez de repetir perfiles por personaje. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
+El modo Clásico usa 17 escenarios culturales compartidos, uno por tradición o familia mitológica representada. `arena-events.js` mantiene un perfil de modificador por escenario, en vez de repetir perfiles por personaje. Las seis crónicas conservan sus sistemas originales de eventos, estados y efectos visuales; Jörmungandr mantiene su cierre geométrico dedicado y Mutación su sistema propio. No se combinan los gestores. La configuración editable y las reglas de compatibilidad están documentadas en `ARENA_MODIFIERS.md`.
 
 ## Elenco
 
@@ -38,7 +38,7 @@ En Titanes vs. monstruos, el jugador 1 selecciona un titán y el jugador 2 un mo
 
 El códice empieza por una pantalla de cuatro categorías: dioses, héroes, titanes y monstruos. Cada sección contiene las fichas de su categoría.
 
-El modo Clásico dispone de siete arenas compartidas: japonesa, griega, nórdica, egipcia, india, mexica y un campo primordial colectivo. Cualquier elenco puede jugar en cualquiera de ellas; las habilidades siguen siendo propias de cada personaje. Los escenarios de Crónicas, jefes y Mutación permanecen independientes.
+El modo Clásico dispone de 17 arenas culturales compartidas: japonesa, griega, nórdica, egipcia, india, mexica, primordial, china, mesopotámica, celta/irlandesa, artúrica, persa, romana, anglosajona, germánica, medieval europea y del Antiguo Cercano Oriente. Cualquier elenco puede jugar en cualquiera de ellas; las habilidades siguen siendo propias de cada personaje. Los escenarios de Crónicas, jefes y Mutación permanecen independientes.
 
 ## Power-ups de arena
 
@@ -417,7 +417,7 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - Pruebas estáticas: 38 arenas clasificadas, siete categorías, 38 perfiles, cero IDs duplicados y cero arenas sin categoría. Prueba visual/jugable en navegador pendiente.
 
 
-## V0.2.43 — una arena compartida por mitología
+## V0.2.42 — una arena compartida por mitología
 
 - Se reemplazaron las 38 opciones individuales por siete escenarios compartidos: seis mitologías y un campo primordial colectivo.
 - Los personajes conservan sus habilidades y estadísticas; el escenario ya no se duplica por personaje.
@@ -434,3 +434,13 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - La pantalla de selección muestra la cultura de ambos personajes y su arena sugerida sin forzar la elección manual.
 - Se añaden patrones visuales y perfiles ambientales explícitos para las nuevas arenas.
 - Crónicas, jefes y Mutación conservan sus sistemas independientes.
+
+
+## V0.2.44 — identidad visual y física de los 17 eventos
+
+- Se rediseñaron los 17 perfiles de evento de Clásico con nombre, patrón de fuerza, color, tiempos y firma visual propios.
+- Cada arena tiene un comportamiento ambiental diferente: corrientes kami, rayo olímpico, frente de Niflheim, eclipse solar, órbita del mandala, serpiente emplumada, fisura titánica, nubes de inmortales, crecida fluvial, bosque antiguo, resonancia del Grial, ascenso del Simurg, marcha de legiones, runas del salón, Cacería Salvaje, cruce de ley-lines y marea lunar.
+- Se corrigió un `restore()` extra del canvas que dejaba el rótulo del evento fuera del estado de recorte/estilo previsto.
+- Los avisos, la duración, el enfriamiento, el límite de fuerza y el ajuste de movimiento reducido se mantienen en el gestor actual; no se creó un bucle físico adicional.
+- Crónicas, jefes y Mutación siguen excluidos del gestor compartido.
+- Validación estática y de sintaxis; prueba manual en navegador pendiente.
