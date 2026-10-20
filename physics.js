@@ -11,6 +11,49 @@ const ballMagnitude=b=>Math.hypot(b.vx,b.vy)||1;
 function deflectTitanic(b,wallDirection){const speed=ballMagnitude(b),angle=Math.atan2(b.vy,b.vx)+(b.vx>=0?1:-1)*wallDirection*.16;b.vx=Math.cos(angle)*speed;b.vy=Math.sin(angle)*speed;}
 function capBallSpeed(b){const speed=ballMagnitude(b);if(speed>SETTINGS.maxBallSpeed){b.vx=b.vx/speed*SETTINGS.maxBallSpeed;b.vy=b.vy/speed*SETTINGS.maxBallSpeed;}}
 function getColor(side){return getComputedStyle(document.documentElement).getPropertyValue(side==='p1'?'--p1':'--p2').trim()||'#fff';}
+let ballCollisionSoundCooldown=0;
+
+// Colisión elástica entre pelotas: cada bola conserva su propio estado y efectos.
+function resolveBallCollisions(dt){
+ const balls=state.balls||[],frameScale=dt*60;
+ ballCollisionSoundCooldown=Math.max(0,ballCollisionSoundCooldown-dt);
+ for(let i=0;i<balls.length;i++){
+  const a=balls[i];if(!a)continue;
+  for(let j=i+1;j<balls.length;j++){
+   const b=balls[j];if(!b)continue;
+   const ax0=Number.isFinite(a.frameStartX)?a.frameStartX:a.x,ay0=Number.isFinite(a.frameStartY)?a.frameStartY:a.y;
+   const bx0=Number.isFinite(b.frameStartX)?b.frameStartX:b.x,by0=Number.isFinite(b.frameStartY)?b.frameStartY:b.y;
+   const amx=a.x-ax0,amy=a.y-ay0,bmx=b.x-bx0,bmy=b.y-by0;
+   const rx0=bx0-ax0,ry0=by0-ay0,rvx=bmx-amx,rvy=bmy-amy,minDist=(a.r||9)+(b.r||9);
+   const endDx=b.x-a.x,endDy=b.y-a.y,endDist=Math.hypot(endDx,endDy);let t=null;
+   if(endDist<minDist)t=1;
+   else{
+    const qa=rvx*rvx+rvy*rvy,qb=2*(rx0*rvx+ry0*rvy),qc=rx0*rx0+ry0*ry0-minDist*minDist,disc=qb*qb-4*qa*qc;
+    if(qc<=0)t=0;else if(qa>1e-8&&disc>=0){const hit=(-qb-Math.sqrt(disc))/(2*qa);if(hit>=0&&hit<=1)t=hit;}
+   }
+   if(t===null)continue;
+   // Si se cruzaron entre fotogramas, retrocede al instante de contacto y avanza
+   // el resto del fotograma con las nuevas velocidades.
+   if(t<1){a.x=ax0+amx*t;a.y=ay0+amy*t;b.x=bx0+bmx*t;b.y=by0+bmy*t;}
+   let dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy);
+   if(dist<1e-5){const angle=((i+1)*1.7+(j+1)*2.3);dx=Math.cos(angle);dy=Math.sin(angle);dist=1;}
+   const nx=dx/dist,ny=dy/dist,mA=Math.max(1,(a.r||9)**2),mB=Math.max(1,(b.r||9)**2),mass=mA+mB;
+   const overlap=Math.max(0,minDist-dist)+.15;
+   a.x-=nx*overlap*(mB/mass);a.y-=ny*overlap*(mB/mass);b.x+=nx*overlap*(mA/mass);b.y+=ny*overlap*(mA/mass);
+   const relX=b.vx-a.vx,relY=b.vy-a.vy,along=relX*nx+relY*ny,impact=along<-.2;
+   if(impact){const impulse=-(1+.96)*along/(1/mA+1/mB);a.vx-=impulse*nx/mA;a.vy-=impulse*ny/mA;b.vx+=impulse*nx/mB;b.vy+=impulse*ny/mB;}
+   if(t<1){const remain=frameScale*(1-t);a.x+=a.vx*remain;a.y+=a.vy*remain;b.x+=b.vx*remain;b.y+=b.vy*remain;}
+   capBallSpeed(a);capBallSpeed(b);a.speed=ballMagnitude(a);b.speed=ballMagnitude(b);
+   const bossArena=state.mythicMode==='boss-jormungandr',top=bossArena?24+Math.max(0,state.jormungandr?.inset||0):0,bottom=bossArena?SETTINGS.height-24-Math.max(0,state.jormungandr?.inset||0):SETTINGS.height;
+   for(const ball of [a,b]){if(ball.y-ball.r<top){ball.y=top+ball.r;if(ball.vy<0)ball.vy=Math.abs(ball.vy);}if(ball.y+ball.r>bottom){ball.y=bottom-ball.r;if(ball.vy>0)ball.vy=-Math.abs(ball.vy);}}
+   if(impact){const colorA=a.matchEffects?.color||a.color||'#8ee9ff',colorB=b.matchEffects?.color||b.color||'#ff9fe5';
+    burst((a.x+b.x)/2,(a.y+b.y)/2,colorA,4,1.7);burst((a.x+b.x)/2,(a.y+b.y)/2,colorB,3,1.35);
+    if(ballCollisionSoundCooldown<=0){playTone(285,.035,'triangle',.018);ballCollisionSoundCooldown=.09;}
+   }
+  }
+ }
+ return;
+}
 
 // Segmento contra rectángulo expandido por el radio de la pelota. Evita atravesar barreras estrechas.
 function segmentRectHit(x0,y0,x1,y1,rect,r){
@@ -67,16 +110,17 @@ function collideWithPaddle(b,prevX,prevY,p,side){
 
 export function serve(direction=Math.random()>.5?1:-1,servingBall=null){
  const b=servingBall||(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);
- const persistentEffects={sizeScale:b?.matchEffects?.sizeScale||1,trajectory:b?.matchEffects?.trajectory||'',color:b?.matchEffects?.color||''};
+ const persistentEffects={sizeScale:b?.matchEffects?.sizeScale||1,trajectory:b?.matchEffects?.trajectory||'',color:b?.matchEffects?.color||'',orbitDirection:b?.matchEffects?.orbitDirection||0};
  const baseRadius=b?.baseR||9;
  resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';b.baseR=baseRadius;b.matchEffects=persistentEffects;b.r=baseRadius*persistentEffects.sizeScale;b.powerEffect=null;b.color=persistentEffects.color||'#f6f4ed';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;if(state.mutationMode==='mutation')resetMutationRally();resetArenaEventState();
 }
 
 export function updatePhysics(dt){
  if(!state.running||state.paused||state.finished)return;
- dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const balls=ensureBallCollection().slice();if(state.serveTimer>0){state.ball=balls[0];updatePhysicsSingle(dt,true);return;}
+ dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const balls=ensureBallCollection().slice();for(const b of balls){b.frameStartX=b.x;b.frameStartY=b.y;}if(state.serveTimer>0){state.ball=balls[0];updatePhysicsSingle(dt,true);return;}
  updatePowerups(dt);const primary=balls[0];if(state.mutationMode==='mutation')updateMutationEffects(dt,primary);updateArenaEvents(dt);const oldScores={p1:state.scores.p1,p2:state.scores.p2};
  for(let i=0;i<balls.length;i++){const b=balls[i];if(!state.balls.includes(b))continue;state.ball=b;updatePhysicsSingle(dt,i===0);if(state.finished||state.serveTimer>0||state.scores.p1!==oldScores.p1||state.scores.p2!==oldScores.p2||state.balls.length!==balls.length)break;}
+ if(!state.finished&&state.serveTimer<=0&&state.scores.p1===oldScores.p1&&state.scores.p2===oldScores.p2&&state.balls.length===balls.length)resolveBallCollisions(dt);
  state.ball=state.balls[0]||primary;
 }
 
@@ -172,7 +216,7 @@ function updatePhysicsSingle(dt,isPrimary){
   else serve(winner==='p1'?1:-1,b);
   return; // Evita recoger objetos o procesar eventos sobre la pelota reiniciada en el centro.
  }
- b.fire=0;b.color='#f6f4ed';b.glow=0;
+ b.fire=0;b.color=b.matchEffects?.color||b.color||'#f6f4ed';b.glow=0;
  if(state.mythicMode==='boss-jormungandr'&&state.mutationMode!=='mutation')state.items.length=0;
  for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';if(state.mutationMode==='mutation'){if(item.type==='mutation-vaccine'){const result=reduceMutationCharge(ownerSide);burst(item.x,item.y,'#a7ff7c',12,2.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:result.reduction?`VACUNA · -${result.reduction}% CORRUPCIÓN`:'VACUNA · CORRUPCIÓN ESTABILIZADA',color:'#a7ff7c'}}));}}else applyPowerup(item.type,ownerSide,b);state.items.splice(i,1);}}
 }

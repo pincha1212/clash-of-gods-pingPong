@@ -1,9 +1,9 @@
 
-# Clash of Gods — Divine Arena V0.2.58
+# Clash of Gods — Divine Arena V0.2.59
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 
-## Arquitectura del proyecto (V0.2.58)
+## Arquitectura del proyecto (V0.2.59)
 
 - `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
 - `game.js`: orquestación del juego y coordinación de los modos.
@@ -603,6 +603,16 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Se reforzó la visibilidad condicional del HUD de Supervivencia para que no aparezca en Clásico, Crónicas ni Mutación.
 - Se sincroniza la clase visual con el modo de preparación al iniciar una partida y actualizar el HUD.
 
+
+## V0.2.59 — Colisiones múltiples y caos persistente
+
+- Las pelotas activas ahora colisionan entre sí con separación por masa y respuesta elástica; la detección considera el cruce entre posiciones de fotogramas para reducir el efecto de atravesarse a alta velocidad.
+- Cada pelota conserva sus propios potenciadores, tamaño, color y trayectoria. Las pelotas hijas nacen separadas del radio de ambas pelotas y pueden chocar, rebotar, recoger objetos y anotar.
+- `Maldición diminuta` reduce permanentemente el tamaño de la paleta rival durante el partido, acumulándose con `Miniatura` y pudiendo contrarrestarse con `Coloso`, siempre dentro de límites. Se reinicia al empezar una nueva partida.
+- Nuevo potenciador `Órbita imposible`: la trayectoria de esa pelota se curva de forma continua hasta que otro potenciador de trayectoria la sustituya.
+- `Arena prismática` tiene una capa visual más intensa con gradientes, bandas ondulantes, anillos, facetas y bordes cromáticos; `Prisma` y `Tempestad divina` también ganan detalle visual. La calidad baja y la opción de movimiento reducido limitan la animación.
+- En partidas con varias pelotas, cada una obtiene un halo y una órbita visual diferenciados. El límite de 24 pelotas sigue activo.
+- Validación: revisión estática del flujo de colisiones, reinicio de efectos y llamadas de power-ups. No se ejecutaron pruebas automatizadas ni una partida real en navegador; la física y el rendimiento requieren prueba manual.
 
 ## V0.2.58 — Power-ups acumulativos y efectos por pelota
 

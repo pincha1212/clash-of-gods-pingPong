@@ -19,6 +19,7 @@ export const POWERUPS = [
  {id:'divideball',name:'División caótica',symbol:'⁙',color:'#ff9fe5',description:'Divide esta pelota en tres trayectorias; el caos tiene un límite de pelotas.'},
  {id:'flatball',name:'Órbita lateral',symbol:'↔',color:'#8adfff',description:'Esta pelota conserva una trayectoria casi horizontal hasta que otro poder la cambie.'},
  {id:'verticalball',name:'Órbita vertical',symbol:'↕',color:'#c4a7ff',description:'Esta pelota adopta una trayectoria casi vertical, pero todavía puede cruzar la cancha.'},
+ {id:'orbitball',name:'Órbita imposible',symbol:'⟳',color:'#8df0d2',description:'La trayectoria de esta pelota se curva continuamente hasta que otro poder de trayectoria la reemplace.'},
  {id:'chromaball',name:'Bola cromática',symbol:'✺',color:'#ff9fe5',description:'Cambia el color de esta pelota hasta que otro poder la reemplace.'},
  {id:'chromaticarena',name:'Arena prismática',symbol:'◈',color:'#ff9be8',description:'La arena cambia de color continuamente durante unos segundos.'},
  {id:'chaos',name:'Rebote caótico',symbol:'✳',color:'#ffcf70',description:'Los rebotes alteran más el ángulo de la pelota.'},
@@ -27,7 +28,7 @@ export const POWERUPS = [
  {id:'quake',name:'Terremoto',symbol:'⌁',color:'#e5a16c',description:'La arena se agrieta y sacudidas breves alteran la trayectoria de la pelota.'},
  {id:'prism',name:'Prisma',symbol:'◇',color:'#ff9be8',description:'La arena se refracta y los golpes reciben una desviación prismática leve.'},
  {id:'aura',name:'Aura de contraataque',symbol:'✦',color:'#f4e6a4',description:'Tu próximo golpe gana potencia y recibe un aura.'},
- {id:'shrink',name:'Maldición diminuta',symbol:'↧',color:'#d6a4ff',description:'Reduce temporalmente el tamaño de la paleta rival.'},
+ {id:'shrink',name:'Maldición diminuta',symbol:'↧',color:'#d6a4ff',description:'Reduce de forma acumulativa la paleta rival durante este partido. Coloso puede contrarrestarla; hay un límite mínimo.'},
  {id:'freeze',name:'Prisión glacial',symbol:'❄',color:'#8ee9ff',description:'Inmoviliza brevemente la paleta rival.'},
  {id:'swap',name:'Intercambio astral',symbol:'⇅',color:'#f6a8d7',description:'Intercambia la altura de ambas paletas.'},
  {id:'reversal',name:'Voluntad inversa',symbol:'↶',color:'#ffb86b',description:'Invierte el rumbo actual de la pelota.'},
@@ -99,9 +100,10 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'ballgrow': setBallSize(ball,(ball.matchEffects?.sizeScale||1)+BALL_SIZE_STEP);break;
   case 'ballshrink': setBallSize(ball,(ball.matchEffects?.sizeScale||1)-BALL_SIZE_STEP);break;
   case 'splitball': spawnBall(ball,{angle:-.24});break;
-  case 'divideball': spawnBall(ball,{angle:-.38});spawnBall(ball,{angle:.38});break;
-  case 'flatball': ball.matchEffects={...(ball.matchEffects||{}),trajectory:'flat'};break;
-  case 'verticalball': ball.matchEffects={...(ball.matchEffects||{}),trajectory:'vertical'};break;
+  case 'divideball': spawnBall(ball,{angle:-.72});spawnBall(ball,{angle:.72});break;
+  case 'flatball': ball.matchEffects={...(ball.matchEffects||{}),trajectory:'flat',orbitDirection:0};break;
+  case 'verticalball': ball.matchEffects={...(ball.matchEffects||{}),trajectory:'vertical',orbitDirection:0};break;
+  case 'orbitball': ball.matchEffects={...(ball.matchEffects||{}),trajectory:'orbit',orbitDirection:Math.random()<.5?-1:1};break;
   case 'chromaball': {const palette=BALL_PALETTE.filter(color=>color!==ball.matchEffects?.color);const color=palette[Math.floor(Math.random()*palette.length)]||'#ff9fe5';ball.matchEffects={...(ball.matchEffects||{}),color};ball.color=color;break;}
   case 'chromaticarena': state.worldEffects.rainbowArena=8;break;
   case 'crosswind': state.worldEffects.crosswind=4.5;break;
@@ -109,7 +111,7 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'quake': state.worldEffects.quake=3.5;state.worldEffects.quakePulse=.4;break;
   case 'prism': state.worldEffects.prism=6;break;
   case 'aura': owner.aura=7;break;
-  case 'shrink': opponent.powerShrink=5;break;
+  case 'shrink': opponent.matchSizeScale=clamp((opponent.matchSizeScale||1)-PADDLE_SIZE_STEP,PADDLE_SIZE_MIN,PADDLE_SIZE_MAX);break;
   case 'freeze': opponent.freeze=1.15;break;
   case 'swap': {const y=owner.y;owner.y=clamp(opponent.y,0,SETTINGS.height-owner.h);opponent.y=clamp(y,0,SETTINGS.height-opponent.h);break;}
   case 'reversal': ball.vx*=-1;ball.vy*=-1;break;
@@ -137,17 +139,25 @@ export function updatePowerups(dt){
 }
 export function drawPowerupEffects(ctx){
  const e=state.worldEffects||{},W=SETTINGS.width,H=SETTINGS.height,cx=W/2,cy=H/2;
- if(e.rainbowArena>0){ctx.save();const hue=(performance.now()/18)%360;ctx.fillStyle=`hsla(${hue},85%,58%,.13)`;ctx.fillRect(24,24,W-48,H-48);ctx.strokeStyle=`hsl(${(hue+80)%360},95%,72%)`;ctx.globalAlpha=.48;ctx.lineWidth=3;ctx.strokeRect(24,24,W-48,H-48);ctx.restore();}
+ if(e.rainbowArena>0){
+  const reduced=Boolean(state.settings?.reducedMotion),low=state.settings?.quality==='low',t=reduced?0:performance.now()/1000,hue=reduced?205:(t*78)%360;ctx.save();ctx.beginPath();ctx.rect(24,24,W-48,H-48);ctx.clip();
+  const wash=ctx.createLinearGradient(24+Math.sin(t*.8)*W*.12,24,W-24, H-24);wash.addColorStop(0,`hsla(${hue},95%,58%,.20)`);wash.addColorStop(.28,`hsla(${(hue+75)%360},95%,55%,.13)`);wash.addColorStop(.55,`hsla(${(hue+165)%360},95%,60%,.18)`);wash.addColorStop(.78,`hsla(${(hue+245)%360},95%,58%,.14)`);wash.addColorStop(1,`hsla(${(hue+310)%360},95%,60%,.2)`);ctx.fillStyle=wash;ctx.fillRect(24,24,W-48,H-48);
+  ctx.globalCompositeOperation='screen';ctx.globalAlpha=.23;ctx.lineWidth=1.5;const bands=low?5:11;for(let i=0;i<bands;i++){const y=30+i*(H-60)/(bands-1),wave=reduced?0:Math.sin(t*2.4+i*.8)*24;ctx.strokeStyle=`hsl(${(hue+i*33)%360},100%,72%)`;ctx.beginPath();for(let x=24;x<=W-24;x+=low?32:16){const yy=y+Math.sin(x/(low?58:38)+t*2.8+i*.75)* (low?7:13)+wave;if(x===24)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);}ctx.stroke();}
+  const rings=low?3:7;ctx.globalAlpha=.28;for(let i=0;i<rings;i++){const pulse=reduced?0:Math.sin(t*2.2-i*.65)*9,radius=54+i*42+(reduced?0:(t*22)%(42));ctx.strokeStyle=`hsl(${(hue+i*51)%360},100%,75%)`;ctx.lineWidth=i%2?1:2;ctx.beginPath();ctx.ellipse(cx,cy,radius+pulse,radius*.55+pulse*.5,reduced?0:t*.16+i*.12,0,Math.PI*2);ctx.stroke();}
+  if(!low){ctx.globalAlpha=.2;for(let i=0;i<12;i++){const a=t*.32+i*Math.PI/6,r=80+(i%4)*52,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.55;ctx.strokeStyle=`hsl(${(hue+i*29)%360},100%,75%)`;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a+1.1)*26,y+Math.sin(a+1.1)*26);ctx.lineTo(x+Math.cos(a+2.2)*13,y+Math.sin(a+2.2)*13);ctx.closePath();ctx.stroke();}}
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=.75;ctx.strokeStyle=`hsl(${(hue+80)%360},100%,78%)`;ctx.lineWidth=3;ctx.strokeRect(24,24,W-48,H-48);ctx.globalAlpha=.32;ctx.strokeStyle=`hsl(${(hue+190)%360},100%,72%)`;ctx.lineWidth=7;ctx.strokeRect(28,28,W-56,H-56);ctx.restore();
+ }
  if(e.eclipse>0){ctx.save();ctx.fillStyle='rgba(9,7,24,.48)';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#a99bdf';ctx.globalAlpha=.7;ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,78+Math.sin(performance.now()/220)*5,0,Math.PI*2);ctx.stroke();ctx.restore();}
- if(e.prism>0){ctx.save();ctx.globalAlpha=.12;ctx.fillStyle='#ef82d7';ctx.fillRect(0,0,cx,H);ctx.fillStyle='#65dce8';ctx.fillRect(cx,0,W-cx,H);ctx.globalAlpha=.35;ctx.strokeStyle='#ffe3ff';ctx.lineWidth=2;for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(cx-90+i*45,0);ctx.lineTo(cx-90+i*45,H);ctx.stroke();}ctx.restore();}
+ if(e.prism>0){ctx.save();const t=state.settings?.reducedMotion?0:performance.now()/700;ctx.globalAlpha=.12;ctx.fillStyle=`hsl(${(t*80)%360},85%,62%)`;ctx.fillRect(0,0,cx,H);ctx.fillStyle=`hsl(${(t*80+165)%360},85%,62%)`;ctx.fillRect(cx,0,W-cx,H);ctx.globalAlpha=.32;ctx.lineWidth=2;const facets=state.settings?.quality==='low'?5:9;for(let i=0;i<facets;i++){const x=(i/facets)*W+(state.settings?.reducedMotion?0:Math.sin(t+i)*16);ctx.strokeStyle=`hsl(${(t*80+i*43)%360},100%,78%)`;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+70,H*.35);ctx.lineTo(x-35,H*.68);ctx.lineTo(x+20,H);ctx.stroke();}ctx.globalAlpha=.22;ctx.strokeStyle='#ffffff';for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(cx,cy,110+i*44,38+i*27,t*.2+i*.2,0,Math.PI*2);ctx.stroke();}ctx.restore();}
  if(e.quake>0&&!state.settings?.reducedMotion&&state.settings?.quality!=='low'){ctx.save();ctx.globalAlpha=.2;ctx.strokeStyle='#e5a16c';ctx.lineWidth=2;for(let i=0;i<5;i++){const y=65+i*112,offset=Math.sin(performance.now()/80+i)*8;ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(cx+offset,y-8);ctx.lineTo(W-24,y+offset);ctx.stroke();}ctx.restore();}
  if(e.crosswind>0){ctx.save();ctx.globalAlpha=.24;ctx.strokeStyle='#8adfff';ctx.lineWidth=2;const drift=Math.sin(performance.now()/250)*18;for(let i=0;i<6;i++){const y=55+i*95;ctx.beginPath();ctx.moveTo(65+drift,y);ctx.bezierCurveTo(cx-130,y-20-drift,cx+130,y+20+drift,W-65-drift,y);ctx.stroke();ctx.beginPath();ctx.moveTo(W-75-drift,y-5);ctx.lineTo(W-65-drift,y);ctx.lineTo(W-75-drift,y+5);ctx.stroke();}ctx.restore();}
  if(e.gravity>0){ctx.save();ctx.globalAlpha=.25;ctx.strokeStyle='#c4a7ff';ctx.lineWidth=2;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(cx,cy,45+i*24,24+i*15,performance.now()/900+i*.4,0,Math.PI*2);ctx.stroke();}ctx.restore();}
  if(e.curve>0){ctx.save();ctx.globalAlpha=.18;ctx.strokeStyle='#8df0d2';ctx.lineWidth=2;for(let i=0;i<4;i++){ctx.beginPath();for(let x=35;x<=W-35;x+=12){const y=cy+i*28-42+Math.sin(x/48+performance.now()/250+i)*12;if(x===35)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}ctx.restore();}
- if(e.storm>0){ctx.save();ctx.fillStyle='rgba(25,48,83,.17)';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#8adfff';ctx.lineWidth=2;ctx.globalAlpha=.6;const pulse=(performance.now()/100|0)%5;for(let i=0;i<3;i++){const x=100+((i*317+pulse*71)%(W-200)),y=25+((i*137+pulse*47)%(H-80));ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-8,y+18);ctx.lineTo(x+4,y+25);ctx.lineTo(x-10,y+43);ctx.stroke();}ctx.globalAlpha=.18;ctx.strokeStyle='#d8f6ff';for(let i=0;i<7;i++){const y=40+i*82;ctx.beginPath();ctx.moveTo(25,y);ctx.lineTo(W-25,y+Math.sin(performance.now()/140+i)*12);ctx.stroke();}ctx.restore();}
+ if(e.storm>0){ctx.save();const t=state.settings?.reducedMotion?0:performance.now()/100;ctx.fillStyle='rgba(25,48,83,.17)';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#8adfff';ctx.lineWidth=2;ctx.globalAlpha=.6;const pulse=Math.floor(t)%5,bolts=state.settings?.quality==='low'?2:5;for(let i=0;i<bolts;i++){const x=100+((i*197+pulse*71)%(W-200)),y=25+((i*137+pulse*47)%(H-80));ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-8,y+18);ctx.lineTo(x+4,y+25);ctx.lineTo(x-10,y+43);ctx.lineTo(x+2,y+54);ctx.stroke();if(!state.settings?.reducedMotion&&i===pulse%bolts){ctx.globalAlpha=.24;ctx.fillStyle='#d8f6ff';ctx.fillRect(x-75,y-25,150,90);ctx.globalAlpha=.6;}}ctx.globalAlpha=.18;ctx.strokeStyle='#d8f6ff';for(let i=0;i<7;i++){const y=40+i*82;ctx.beginPath();ctx.moveTo(25,y);ctx.lineTo(W-25,y+Math.sin(t/1.4+i)*12);ctx.stroke();}ctx.restore();}
 }
 
-export function drawBallPower(ctx,b){const effect=b?.powerEffect?.time>0?b.powerEffect.type:'',persistent=b?.matchEffects||{};if(!effect&&!persistent.trajectory&&!persistent.color&&(persistent.sizeScale||1)===1)return;ctx.save();ctx.globalAlpha=effect==='ghostball'?.45:1;ctx.strokeStyle=byId[effect]?.color||persistent.color||(persistent.trajectory==='flat'?'#8adfff':persistent.trajectory==='vertical'?'#c4a7ff':'#fff');ctx.fillStyle=byId[effect]?.color||persistent.color||'#fff';ctx.lineWidth=2;
+export function drawBallPower(ctx,b){const effect=b?.powerEffect?.time>0?b.powerEffect.type:'',persistent=b?.matchEffects||{},multi=(state.balls?.length||0)>1;if(!effect&&!persistent.trajectory&&!persistent.color&&(persistent.sizeScale||1)===1&&!multi)return;ctx.save();ctx.globalAlpha=effect==='ghostball'?.45:1;ctx.strokeStyle=byId[effect]?.color||persistent.color||(persistent.trajectory==='flat'?'#8adfff':persistent.trajectory==='vertical'?'#c4a7ff':persistent.trajectory==='orbit'?'#8df0d2':'#fff');ctx.fillStyle=byId[effect]?.color||persistent.color||'#fff';ctx.lineWidth=2;
+ if(multi){const t=state.settings?.reducedMotion?0:performance.now()/180+(b.generation||0)*.7;ctx.globalAlpha=.48;ctx.strokeStyle=persistent.color||['#8ee9ff','#ff9fe5','#ffd479','#a5f3a5','#c4a7ff'][(Number(String(b.id||'').replace(/\D/g,''))||0)%5];ctx.beginPath();ctx.ellipse(b.x,b.y,b.r+5+Math.sin(t)*1.5,b.r+2+Math.cos(t)*1.5,t*.2,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.24;ctx.beginPath();ctx.arc(b.x,b.y,b.r+9, t, t+Math.PI*1.2);ctx.stroke();}
  if(effect==='fireball'){
   const trail=(b.trail||[]);for(let i=0;i<trail.length;i++){const point=trail[i],alpha=(i+1)/(trail.length+1);ctx.globalAlpha=alpha*.62;ctx.fillStyle=i%2?'#ff875e':'#ffd479';ctx.beginPath();ctx.arc(point.x,point.y,Math.max(1,b.r*(.25+alpha*.45)),0,Math.PI*2);ctx.fill();}
   ctx.globalAlpha=.9;ctx.strokeStyle='#ff875e';ctx.beginPath();ctx.moveTo(b.x-b.r-13,b.y-5);ctx.lineTo(b.x-b.r-3,b.y);ctx.lineTo(b.x-b.r-10,b.y+6);ctx.stroke();ctx.strokeStyle='#ffd479';ctx.beginPath();ctx.arc(b.x,b.y,b.r+5,Math.PI*.1,Math.PI*1.8);ctx.stroke();
@@ -156,11 +166,11 @@ export function drawBallPower(ctx,b){const effect=b?.powerEffect?.time>0?b.power
  else if(effect==='lightningball'){ctx.beginPath();ctx.moveTo(b.x-5,b.y-b.r-7);ctx.lineTo(b.x+1,b.y-2);ctx.lineTo(b.x-4,b.y+1);ctx.lineTo(b.x+5,b.y+b.r+7);ctx.stroke();}
  else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}
  if(persistent.sizeScale&&persistent.sizeScale!==1){ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.stroke();}
- if(persistent.trajectory){ctx.globalAlpha=.9;ctx.beginPath();if(persistent.trajectory==='flat'){ctx.moveTo(b.x-b.r-7,b.y);ctx.lineTo(b.x+b.r+7,b.y);ctx.moveTo(b.x+b.r+3,b.y-4);ctx.lineTo(b.x+b.r+7,b.y);ctx.lineTo(b.x+b.r+3,b.y+4);}else{ctx.moveTo(b.x,b.y-b.r-7);ctx.lineTo(b.x,b.y+b.r+7);ctx.moveTo(b.x-4,b.y+b.r+3);ctx.lineTo(b.x,b.y+b.r+7);ctx.lineTo(b.x+4,b.y+b.r+3);}ctx.stroke();}
+ if(persistent.trajectory){ctx.globalAlpha=.9;ctx.beginPath();if(persistent.trajectory==='flat'){ctx.moveTo(b.x-b.r-7,b.y);ctx.lineTo(b.x+b.r+7,b.y);ctx.moveTo(b.x+b.r+3,b.y-4);ctx.lineTo(b.x+b.r+7,b.y);ctx.lineTo(b.x+b.r+3,b.y+4);}else if(persistent.trajectory==='vertical'){ctx.moveTo(b.x,b.y-b.r-7);ctx.lineTo(b.x,b.y+b.r+7);ctx.moveTo(b.x-4,b.y+b.r+3);ctx.lineTo(b.x,b.y+b.r+7);ctx.lineTo(b.x+4,b.y+b.r+3);}else{for(let i=0;i<3;i++){const a=performance.now()/260+i*Math.PI*2/3;ctx.moveTo(b.x+Math.cos(a)*(b.r+3),b.y+Math.sin(a)*(b.r+3));ctx.lineTo(b.x+Math.cos(a+1.4)*(b.r+10),b.y+Math.sin(a+1.4)*(b.r+10));}}ctx.stroke();}
  ctx.restore();}
 export function getPowerupDefinition(id){return byId[id]||POWERUPS[0];}
 export function getBallSpeedMultiplier(ball=state.ball){return ball?.powerEffect?.time>0?(ball.powerEffect.scale||BALL_POWER_SCALE[ball.powerEffect.type]||1):1;}
 export function getPaddleSpeedMultiplier(p){return p?.haste>0?1.45:p?.palette>0?1.12:1;}
 export function getBallPowerType(ball=state.ball){return ball?.powerEffect?.time>0?ball.powerEffect.type:'';}
-export function enforceBallTrajectory(ball){const rule=ball?.matchEffects?.trajectory;if(!rule)return;const speed=speedOf(ball),dirX=Math.sign(ball.vx)||1,dirY=Math.sign(ball.vy)||1;if(rule==='flat'){ball.vx=dirX*speed*.995;ball.vy=dirY*speed*.1;}else if(rule==='vertical'){ball.vx=dirX*speed*.28;ball.vy=dirY*speed*.96;}ball.speed=speed;}
+export function enforceBallTrajectory(ball){const rule=ball?.matchEffects?.trajectory;if(!rule)return;const speed=speedOf(ball),dirX=Math.sign(ball.vx)||1,dirY=Math.sign(ball.vy)||1;if(rule==='flat'){ball.vx=dirX*speed*.995;ball.vy=dirY*speed*.1;}else if(rule==='vertical'){ball.vx=dirX*speed*.28;ball.vy=dirY*speed*.96;}else if(rule==='orbit'){const angle=Math.atan2(ball.vy,ball.vx)+(ball.matchEffects?.orbitDirection||1)*.0065;ball.vx=Math.cos(angle)*speed;ball.vy=Math.sin(angle)*speed;}ball.speed=speed;}
 export function getPowerupColor(id){return byId[id]?.color||'#fff';}

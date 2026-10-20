@@ -28,7 +28,7 @@ export function spawnBall(parent=state.ball,options={}){
  const speed=Math.hypot(parent.vx,parent.vy)||parent.speed||7.2;
  const direction=Math.atan2(parent.vy,parent.vx)+angle;
  const child=createBall({parent,x:parent.x,y:parent.y,vx:Math.cos(direction)*speed,vy:Math.sin(direction)*speed,speed,lastHit:parent.lastHit,mutation:options.mutation});
- child.x+=Math.cos(direction)*(child.r+1);child.y+=Math.sin(direction)*(child.r+1);
+ child.x+=Math.cos(direction)*(parent.r+child.r+1);child.y+=Math.sin(direction)*(parent.r+child.r+1);
  balls.push(child);return child;
 }
 export function removeBall(ball){
