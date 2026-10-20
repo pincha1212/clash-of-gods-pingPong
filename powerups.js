@@ -52,6 +52,8 @@ export const POWERUPS = [
  {id:'seismicpulse',name:'Pulso sísmico',symbol:'◎',color:'#e5a16c',description:'Durante 5 segundos, cada pulso empuja las otras pelotas cercanas sin transferirles este poder.'},
  {id:'mutantpaddle',name:'Paleta mutante',symbol:'↕',color:'#ff9fe5',description:'Tu paleta oscila de tamaño durante 6 segundos, con límites seguros.'},
  {id:'spectralphase',name:'Fase espectral',symbol:'◇',color:'#c6c8ff',description:'Tu paleta cambia periódicamente de altura durante 6 segundos, con aviso visual antes de cada cambio.'},
+ {id:'segmentedpaddle',name:'Paleta fracturada',symbol:'▤',color:'#9ff7ff',description:'Durante 8 segundos tu paleta se divide en tres segmentos reales: los huecos permiten que la pelota pase, pero cada segmento devuelve golpes más angulados.'},
+ {id:'runeextensions',name:'Extensiones rúnicas',symbol:'⫸',color:'#ffd479',description:'Durante 7 segundos dos extensiones de energía amplían el alcance horizontal de tu paleta y también pueden golpear la pelota.'},
  {id:'runebarricade',name:'Barricada rúnica',symbol:'ᛉ',color:'#8ee9ff',description:'Invoca durante un instante una formación de muros rúnicos en el centro de la arena.'},
  {id:'divinestorm',name:'Tempestad divina',symbol:'ϟ',color:'#8adfff',description:'Transforma la arena en una tormenta eléctrica y desvía la pelota con ráfagas de viento.'}
 ];
@@ -114,7 +116,7 @@ function safePhaseDestination(ball){
  // No fuerza el salto a través de otra pelota o de un muro: se pospondrá el intento.
  return null;
 }
-export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0,rainbowArena:0};state.chaosArena={time:0,pulse:0,cycle:0};state.ballPower=EMPTY_BALL_POWER();for(const b of state.balls||[]){if(b){b.powerEffect=null;b.matchEffects={sizeScale:1,trajectory:'',color:''};b.baseR=BALL_BASE_R;b.r=BALL_BASE_R;b.color='#f6f4ed';}}for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert','aimBonus','divineMotor','chaosCoil','seismicPulse','seismicPulseCooldown','mutantPaddle','mutantPaddleTime','spectralPhase','spectralPhaseCooldown','spectralPhaseWarning','spectralPhaseOffset'])p[key]=0;p.matchSizeScale=1;p.powerColor='';p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
+export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0,rainbowArena:0};state.chaosArena={time:0,pulse:0,cycle:0};state.ballPower=EMPTY_BALL_POWER();for(const b of state.balls||[]){if(b){b.powerEffect=null;b.matchEffects={sizeScale:1,trajectory:'',color:''};b.baseR=BALL_BASE_R;b.r=BALL_BASE_R;b.color='#f6f4ed';}}for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert','aimBonus','divineMotor','chaosCoil','seismicPulse','seismicPulseCooldown','mutantPaddle','mutantPaddleTime','spectralPhase','spectralPhaseCooldown','spectralPhaseWarning','spectralPhaseOffset','segmentedPaddle','runeExtensions'])p[key]=0;p.matchSizeScale=1;p.powerColor='';p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
 function summonRuneBarricades(){
  const cx=SETTINGS.width/2,cy=SETTINGS.height/2;
  const layouts=[
@@ -137,6 +139,8 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'seismicpulse': owner.seismicPulse=5;owner.seismicPulseCooldown=.15;break;
   case 'mutantpaddle': owner.mutantPaddle=6;owner.mutantPaddleTime=0;break;
   case 'spectralphase': owner.spectralPhase=6;owner.spectralPhaseCooldown=.9;owner.spectralPhaseWarning=.32;owner.spectralPhaseOffset=0;break;
+  case 'segmentedpaddle': owner.segmentedPaddle=8;break;
+  case 'runeextensions': owner.runeExtensions=7;break;
   case 'snare': opponent.slow=3.8;break;
   case 'invert': opponent.invert=Math.max(opponent.invert||0,1.15);break;
   case 'rouletteball': setBallPower('lightningball',6.4,ball);ball.powerEffect.roulette=true;ball.powerEffect.roulettePulse=.48;ball.powerEffect.rouletteRolls=0;break;
@@ -258,7 +262,7 @@ export function updatePowerups(dt){
  }
  for(const side of ['p1','p2']){
   const p=state.paddles[side];if(!p)continue;
-  for(const key of ['haste','aura','freeze','palette','powerGrow','powerShrink','divineMotor','chaosCoil','seismicPulse','spectralPhase'])p[key]=Math.max(0,(p[key]||0)-dt);
+  for(const key of ['haste','aura','freeze','palette','powerGrow','powerShrink','divineMotor','chaosCoil','seismicPulse','spectralPhase','segmentedPaddle','runeExtensions'])p[key]=Math.max(0,(p[key]||0)-dt);
   if(p.mutantPaddle>0){p.mutantPaddle=Math.max(0,p.mutantPaddle-dt);p.mutantPaddleTime=(p.mutantPaddleTime||0)+dt;}else p.mutantPaddleTime=0;
   if(p.spectralPhase>0){p.spectralPhaseCooldown=(p.spectralPhaseCooldown||.9)-dt;p.spectralPhaseWarning=Math.max(0,(p.spectralPhaseWarning||0)-dt);if(p.spectralPhaseCooldown<=0){p.spectralPhaseOffset=p.spectralPhaseOffset===1?0:1;p.spectralPhaseCooldown=.9;p.spectralPhaseWarning=.32;burst(p.x+p.w/2,p.y+p.h/2,'#c6c8ff',5,1.7);}}
   else {p.spectralPhaseWarning=0;p.spectralPhaseOffset=0;}

@@ -77,13 +77,22 @@ function collideWithTemporaryWalls(b,prevX,prevY){
 }
 function collideWithPaddle(b,prevX,prevY,p,side){
  const dx=b.x-prevX,dy=b.y-prevY,toward=side==='p1'?b.vx<0:b.vx>0;if(!toward)return false;
- const plane=side==='p1'?p.x+p.w+b.r:p.x-b.r;
- let hitY=b.y,hitX=plane,hit=false,planeCrossed=false,impactPaddleY=p.y;
- if(Math.abs(dx)>1e-9){const t=(plane-prevX)/dx;if(t>=0&&t<=1&&((side==='p1'&&dx<0)||(side==='p2'&&dx>0))){planeCrossed=true;hitY=prevY+dy*t;const previousPaddleY=Number.isFinite(p.previousY)?p.previousY:p.y;impactPaddleY=previousPaddleY+(p.y-previousPaddleY)*t;hit=Math.abs(hitY-(impactPaddleY+p.h/2))<=p.h/2+b.r;}}
- if(!hit&&!planeCrossed){const overlapsX=b.x+b.r>=p.x&&b.x-b.r<=p.x+p.w;const overlapsY=b.y+b.r>=p.y&&b.y-b.r<=p.y+p.h;if(overlapsX&&overlapsY){hit=true;hitY=b.y;hitX=side==='p1'?p.x+p.w+b.r:p.x-b.r;impactPaddleY=p.y;}}
+ const extension=Math.max(0,p.runeExtensions||0)>0?14:0;
+ const plane=side==='p1'?p.x+p.w+extension+b.r:p.x-extension-b.r;
+ let hitY=b.y,hitX=plane,hit=false,planeCrossed=false,impactPaddleY=p.y,segmentIndex=1;
+ const isSolidAt=(y,top,height)=>{
+  if(!(p.segmentedPaddle>0))return y>=top-b.r&&y<=top+height+b.r;
+  const gap=5,segH=Math.max(1,(height-gap*2)/3);
+  for(let i=0;i<3;i++){const sy=top+i*(segH+gap);if(y>=sy-b.r&&y<=sy+segH+b.r){segmentIndex=i;return true;}}
+  return false;
+ };
+ if(Math.abs(dx)>1e-9){const t=(plane-prevX)/dx;if(t>=0&&t<=1&&((side==='p1'&&dx<0)||(side==='p2'&&dx>0))){planeCrossed=true;hitY=prevY+dy*t;const previousPaddleY=Number.isFinite(p.previousY)?p.previousY:p.y;impactPaddleY=previousPaddleY+(p.y-previousPaddleY)*t;hit=isSolidAt(hitY,impactPaddleY,p.h);}}
+ if(!hit&&!planeCrossed){const overlapsX=b.x+b.r>=p.x-extension&&b.x-b.r<=p.x+p.w+extension;const overlapsY=b.y+b.r>=p.y&&b.y-b.r<=p.y+p.h;if(overlapsX&&overlapsY&&isSolidAt(b.y,p.y,p.h)){hit=true;hitY=b.y;hitX=side==='p1'?p.x+p.w+extension+b.r:p.x-extension-b.r;impactPaddleY=p.y;}}
  if(!hit)return false;
  b.x=hitX;b.y=hitY;
- const norm=clamp((hitY-(impactPaddleY+p.h/2))/(p.h/2),-1,1),dir=side==='p1'?1:-1;
+ const localHeight=p.segmentedPaddle>0?Math.max(1,(p.h-10)/3):p.h;
+ const localCenter=p.segmentedPaddle>0?p.y+segmentIndex*(localHeight+5)+localHeight/2:p.y+p.h/2;
+ const norm=clamp((hitY-localCenter)/(localHeight/2),-1,1),dir=side==='p1'?1:-1;
  // Conserva la escala de los modificadores de pelota y aumenta la intensidad
  // de forma gradual según la duración del intercambio, sin saltos bruscos.
  const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier(b);
@@ -94,7 +103,7 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  // permite apuntar con intención sin hacer que el control sea impredecible.
  const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
  let angle=norm*1.08+paddleMotion*.20+(p.aimBonus>0?Math.sign(norm||1)*p.aimBonus:0);p.aimBonus=0;
- if(getBallPowerType(b)==='chaos')angle+=(Math.random()-.5)*.7;if(p.chaosCoil>0)angle+=(Math.random()-.5)*.88;
+ if(getBallPowerType(b)==='chaos')angle+=(Math.random()-.5)*.7;if(p.chaosCoil>0)angle+=(Math.random()-.5)*.88;if(p.segmentedPaddle>0)angle+=(segmentIndex-1)*.16;
  if(getBallPowerType(b)==='ricochet')angle+=(Math.random()-.5)*1.0;
  if(state.worldEffects?.prism>0)angle+=Math.sin((performance.now?.()||0)/180)*.12;
  if(p.palette>0)angle+=Math.sin((performance.now?.()||0)/240)*.09;

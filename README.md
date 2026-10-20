@@ -1,9 +1,9 @@
 
-# Clash of Gods — Divine Arena V0.2.64
+# Clash of Gods — Divine Arena V0.2.65
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 
-## Arquitectura del proyecto (V0.2.64)
+## Arquitectura del proyecto (V0.2.65)
 
 - `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
 - `game.js`: orquestación del juego y coordinación de los modos.
@@ -670,3 +670,15 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Fase espectral: cambios periódicos de altura con aviso visual y estados temporales.
 
 Estos poderes se integraron en el catálogo existente y se limpian al reiniciar los power-ups. Requieren validación manual en partida real.
+
+
+## V0.2.65 — Geometría dinámica de paletas
+
+- **Paleta fracturada:** la paleta se dibuja como tres segmentos y los huecos son huecos reales de colisión; cada segmento modifica ligeramente el ángulo de devolución.
+- **Extensiones rúnicas:** dos extensiones visibles amplían durante 7 segundos el alcance horizontal de la paleta y forman parte de la comprobación de colisión.
+- Ambos poderes tienen duración temporal, icono de estado y se limpian junto al resto de estados temporales al reiniciar los power-ups.
+- Se actualizó el número de versión de la interfaz, `package.json` y la caché del Service Worker a V0.2.65.
+
+### Validación V0.2.65
+
+Revisión estática de las rutas de activación, actualización temporal, renderizado y colisión. No se ejecutaron pruebas automatizadas ni se probó una partida en navegador o teléfono. Verificar manualmente ambos lados, CPU, controles táctiles, huecos de la paleta fracturada y reinicio de partida.
