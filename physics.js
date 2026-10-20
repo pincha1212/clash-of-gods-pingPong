@@ -2,7 +2,7 @@ import {state,ensureBallCollection,resetBallCollection,removeBall} from './state
 import {SETTINGS} from './config.js';
 import {burst} from './effects.js';
 import {playTone} from './audio.js';
-import {POWERUPS,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType,enforceBallTrajectory} from './powerups.js';
+import {POWERUPS,choosePowerup,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType,enforceBallTrajectory} from './powerups.js';
 import {registerMutationGoal,reduceMutationCharge,updateMutationEffects,applyMutationArenaForce,applyMutationPaddleHit,getMutationMovementMultiplier,getMutationShieldScale,consumeMutationShield,resetMutationRally} from './mutation.js';
 import {updateArenaEvents,getArenaForces,resetArenaEventState,clearArenaEventState} from './arena-events.js';
 
@@ -186,7 +186,7 @@ function updatePhysicsSingle(dt,isPrimary){
    }
   }else if(state.powerupSpawnTimer<=0&&state.items.length<5){
    const available=POWERUPS.filter(x=>x.id!=='aegis'||state.paddles.p1.shield<=0||state.paddles.p2.shield<=0);
-   const pick=available[Math.floor(Math.random()*available.length)];
+   const pick=choosePowerup(available);
    const zones=[{x:300,y:95},{x:500,y:130},{x:700,y:95},{x:330,y:500},{x:670,y:500},{x:500,y:470},{x:410,y:300},{x:590,y:300}];
    const free=zones.filter(z=>!state.items.some(it=>Math.hypot(it.x-z.x,it.y-z.y)<35));const spot=free.length?free[Math.floor(Math.random()*free.length)]:{x:300+Math.random()*400,y:85+Math.random()*430};
    state.items.push({x:spot.x,y:spot.y,r:13,life:12,type:pick.id});state.powerupSpawnTimer=2.1+Math.random()*1.0;
@@ -227,7 +227,7 @@ export function updatePaddles(dt){
  if(!state.running||state.paused||state.finished)return;const {p1,p2}=state.paddles;
  const move=(p,up,down,side)=>{
   const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
-  if(state.touchDrag[side]!==null){const target=state.touchDrag[side]-(p.h/2);const inverted=p.invert>0;p.y=clamp((inverted?SETTINGS.height-state.touchDrag[side]-(p.h/2):target),topLimit,bottomLimit);p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
+  if(state.touchDrag[side]!==null){const inverted=p.invert>0;if(inverted){const dragDelta=Number(state.touchDragDelta?.[side])||0;p.y=clamp(p.y-dragDelta,topLimit,bottomLimit);}else{const target=state.touchDrag[side]-(p.h/2);p.y=clamp(target,topLimit,bottomLimit);}if(state.touchDragDelta)state.touchDragDelta[side]=0;p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
   let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
   const mutationMultiplier=state.mutationMode==='mutation'?getMutationMovementMultiplier(side):1;p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*mutationMultiplier*dt*60,topLimit,bottomLimit);
   p.motion=dt>0?(p.y-oldY)/(dt*60):0;
@@ -237,7 +237,7 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const target=state.ball.y-p2.h/2;let diff=target-p2.y;if(p2.invert>0)diff*=-1;const max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
+  const target=state.ball.y-p2.h/2;let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*(inverted?.5:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }

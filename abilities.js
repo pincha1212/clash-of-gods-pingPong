@@ -100,7 +100,17 @@ function shrinkPaddle(p,duration,scale=.7){
 }
 
 function dashToBall(p,ball){
-  p.y=clamp(ball.y-p.h/2,0,SETTINGS.height-p.h);
+  // Ráfaga de reposicionamiento: inmediata, pero limitada para evitar una salvada
+  // perfecta desde el extremo opuesto y para mantener margen en ambos bordes.
+  const safe=12,target=clamp(ball.y-p.h/2,safe,SETTINGS.height-p.h-safe);
+  const maxShift=SETTINGS.height*.27,delta=clamp((target-p.y)*.72,-maxShift,maxShift);
+  p.y=clamp(p.y+delta,safe,SETTINGS.height-p.h-safe);
+  // El salto es mágico, no un movimiento físico que pueda alterar el ángulo del golpe.
+  p.motion=0;
+}
+function invertControls(p,duration){
+  // No sumar indefinidamente las inversiones de varios pulsos/activaciones.
+  p.invert=Math.max(Number(p.invert)||0,Math.min(1.25,duration));
 }
 
 const OFFENSIVE_DIRECT=new Set([
@@ -166,7 +176,7 @@ export function activateAbility(side){
     case 'kagutsuchi': scaleBallSpeed(ball,1.32);markBall(ball,god,1.1);break;
     case 'susanoo': setShield(p,2.0);burst(p.x+p.w/2,p.y+p.h/2,god.color,5,1.8);break;
     case 'amaterasu': growPaddle(p,2*effectiveness,1.65);break;
-    case 'inari': r.invert=Math.max(r.invert||0,1.5*effectiveness);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
+    case 'inari': invertControls(r,1.35*effectiveness);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
     case 'hades': shrinkPaddle(r,2*effectiveness,.62);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
     case 'athena': armCounter(p,2*effectiveness);break;
     case 'zeus': r.slow=Math.max(r.slow||0,1.15*effectiveness);scaleBallSpeed(ball,1.2);markBall(ball,god,1.05);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,2);break;
@@ -187,7 +197,7 @@ export function activateAbility(side){
       break;
     }
     case 'thor': scaleBallSpeed(ball,1.23);markBall(ball,god,.8);burst(ball.x,ball.y,god.color,6,2.2);break;
-    case 'medusa': r.invert=Math.max(r.invert||0,1.15*effectiveness);r.slow=Math.max(r.slow||0,.65*effectiveness);markBall(ball,god,.75);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
+    case 'medusa': invertControls(r,1.1*effectiveness);r.slow=Math.max(r.slow||0,.65*effectiveness);markBall(ball,god,.75);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,1.8);break;
     case 'gaia': growPaddle(p,2*effectiveness,1.65);break;
     case 'thoth': scaleBallSpeed(ball,.78);markBall(ball,god,.8);break;
     case 'kali': shrinkPaddle(r,1.7*effectiveness,.62);scaleBallSpeed(ball,1.12);markBall(ball,god,.8);break;
@@ -206,7 +216,7 @@ export function activateAbility(side){
     case 'indra': armCounter(p,2*effectiveness);markBall(ball,god,.65);break;
     case 'persephone': growPaddle(p,1.8,1.45);setShield(p,1.8);break;
     case 'poseidon': curveBallTowardCenter(ball,3.2);r.slow=Math.max(r.slow||0,.65*effectiveness);markBall(ball,god,.9);burst(ball.x,ball.y,god.color,5,2);break;
-    case 'loki': r.invert=Math.max(r.invert||0,1.7*effectiveness);markBall(ball,god,.8);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,2);break;
+    case 'loki': invertControls(r,1.5*effectiveness);markBall(ball,god,.8);burst(r.x+r.w/2,r.y+r.h/2,god.color,5,2);break;
     case 'odin': scaleBallSpeed(ball,.8,4.8);markBall(ball,god,.7);break;
     case 'quetzalcoatl': curveBallTowardCenter(ball,2.9);markBall(ball,god,.7);break;
   }
@@ -234,7 +244,7 @@ export function activateAbility(side){
       case 'counter': armCounter(p,1.5);break;
       case 'speedcounter': armCounter(p,1.5);scaleBallSpeed(ball,1.08);break;
       case 'dashcounter': dashToBall(p,ball);armCounter(p,1.5);break;
-      case 'invert': r.invert=Math.max(r.invert||0,1.35);markBall(ball,god,.7);break;
+      case 'invert': invertControls(r,1.25);markBall(ball,god,.7);break;
       case 'curveslowr': curveBallTowardCenter(ball,2.8);r.slow=Math.max(r.slow||0,1.1);markBall(ball,god,.8);break;
       default: armCounter(p,1.2);break;
     }

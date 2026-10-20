@@ -1,9 +1,9 @@
 
-# Clash of Gods — Divine Arena V0.2.61
+# Clash of Gods — Divine Arena V0.2.63
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 
-## Arquitectura del proyecto (V0.2.61)
+## Arquitectura del proyecto (V0.2.63)
 
 - `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
 - `game.js`: orquestación del juego y coordinación de los modos.
@@ -639,3 +639,23 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Se agregan Rayo encadenado, que impulsa pelotas cercanas con pulsos eléctricos, y Salto dimensional, que desplaza periódicamente una pelota a una posición segura de la cancha.
 - Los nuevos efectos son individuales: el impulso del Rayo encadenado no transfiere el poder, y el Salto dimensional no altera la velocidad base ni los modificadores persistentes.
 - No se ejecutaron pruebas automatizadas ni una partida en navegador; la revisión de sintaxis es estática y la validación de juego queda pendiente.
+
+
+## V0.2.62 — Entropía, fractales y teletransporte seguro
+
+- Se incorporan Bola de entropía, Bola fractal y Colapso de realidad, con efectos individuales o de arena y límites de multiplicación.
+- Salto dimensional evita teletransportar la pelota junto a las paletas o la línea de gol, y anticipa el salto con un indicador visual.
+- Las ráfagas de reposicionamiento y la inversión de controles quedan limitadas para evitar salvadas automáticas o desorientaciones excesivamente largas, sin quitarles utilidad.
+- El Colapso de realidad combina efectos de arena en pulsos, con capas visuales que respetan la calidad gráfica y la opción de movimiento reducido.
+- No se ejecutó una partida dentro del navegador; se recomienda validar manualmente el juego con múltiples pelotas y efectos simultáneos.
+
+
+## V0.2.63 — Caos impredecible y teletransporte justo
+
+- Corrige la inversión de controles en arrastre táctil: invierte el desplazamiento del dedo en vez de reflejar su coordenada absoluta, evitando el salto de la paleta a la otra punta de la cancha.
+- Confusión dura 1,15 s; las habilidades de inversión quedan limitadas a 1,25 s y el icono muestra un aro de tiempo restante.
+- Salto dimensional elige destinos en una franja central, lejos de ambas paletas, de otras pelotas y de barricadas; si no existe una posición segura, demora el salto en lugar de forzarlo.
+- Las habilidades de dash reposicionan solo una parte del recorrido, tienen un límite de distancia y ya no convierten el salto mágico en movimiento físico al golpear la pelota.
+- Se agrega Bola espejo, que refleja de forma impredecible uno o ambos ejes, con una señal visual antes del cambio y velocidad conservada.
+- Colapso de realidad alterna más rápidamente y puede combinar tres efectos de arena simultáneos; la Bola de entropía también puede mutar a Bola espejo.
+- No se ejecutó el juego dentro del navegador; queda pendiente la validación manual del control táctil, las inversiones y los saltos dimensionales.
