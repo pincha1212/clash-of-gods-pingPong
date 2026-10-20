@@ -15,6 +15,8 @@ export const POWERUPS = [
  {id:'lightningball',name:'Bola relámpago',symbol:'ϟ',color:'#fff08a',description:'Esta pelota acelera durante unos segundos.'},
  {id:'magnetball',name:'Núcleo gravitatorio',symbol:'⦿',color:'#8df0d2',description:'Esta pelota genera un campo gravitatorio que curva hacia ella a las otras pelotas cercanas durante unos segundos.'},
  {id:'unstableball',name:'Caos inestable',symbol:'※',color:'#ffcf70',description:'Esta pelota cambia bruscamente de dirección a intervalos impredecibles durante unos segundos.'},
+ {id:'chainlightning',name:'Rayo encadenado',symbol:'ϟϟ',color:'#9ff7ff',description:'Esta pelota descarga pulsos eléctricos que empujan a las demás pelotas cercanas sin transferirles el poder.'},
+ {id:'phaseball',name:'Salto dimensional',symbol:'⌘',color:'#e2b6ff',description:'Esta pelota salta brevemente a otra posición de la arena, manteniendo su velocidad y sus efectos propios.'},
  {id:'ballgrow',name:'Masa creciente',symbol:'⊕',color:'#ffb36b',description:'Esta pelota aumenta de tamaño de forma persistente; los efectos contrarios pueden reducirla.'},
  {id:'ballshrink',name:'Masa menguante',symbol:'⊖',color:'#9dd6ff',description:'Esta pelota disminuye de tamaño de forma persistente.'},
  {id:'splitball',name:'Desdoblamiento',symbol:'⑂',color:'#a5f3a5',description:'Divide esta pelota en dos pelotas reales que pueden marcar y recoger poderes.'},
@@ -98,7 +100,7 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'haste': owner.haste=5;break;
   case 'snare': opponent.slow=3.8;break;
   case 'invert': opponent.invert=3.2;break;
-  case 'fireball': case 'ghostball': case 'heavyball': case 'lightningball': case 'chaos': case 'magnetball': case 'unstableball': setBallPower(id,id==='magnetball'?6.5:id==='unstableball'?5.5:5,ball);break;
+  case 'fireball': case 'ghostball': case 'heavyball': case 'lightningball': case 'chaos': case 'magnetball': case 'unstableball': case 'chainlightning': case 'phaseball': setBallPower(id,id==='magnetball'?6.5:id==='unstableball'?5.5:id==='chainlightning'?5.8:id==='phaseball'?5.2:5,ball);break;
   case 'ballgrow': setBallSize(ball,(ball.matchEffects?.sizeScale||1)+BALL_SIZE_STEP);break;
   case 'ballshrink': setBallSize(ball,(ball.matchEffects?.sizeScale||1)-BALL_SIZE_STEP);break;
   case 'splitball': spawnBall(ball,{angle:-.24});break;
@@ -133,7 +135,34 @@ export function updatePowerups(dt){
  if(!state.worldEffects)resetPowerups();
  for(const key of Object.keys(state.worldEffects))if(key!=='quakePulse')state.worldEffects[key]=Math.max(0,(state.worldEffects[key]||0)-dt);
  if((state.worldEffects.quake||0)<=0)state.worldEffects.quakePulse=0;
- for(const ball of state.balls||[]){if(!ball?.powerEffect?.type)continue;ball.powerEffect.time=Math.max(0,(ball.powerEffect.time||0)-dt);if(ball.powerEffect.type==='unstableball'&&ball.powerEffect.time>0){ball.powerEffect.pulse=(ball.powerEffect.pulse??.4)-dt;if(ball.powerEffect.pulse<=0){const speed=speedOf(ball),angle=Math.atan2(ball.vy,ball.vx)+(Math.random()-.5)*1.15;ball.vx=Math.cos(angle)*speed;ball.vy=Math.sin(angle)*speed;ball.speed=speed;ball.powerEffect.pulse=.38+Math.random()*.55;burst(ball.x,ball.y,'#ffcf70',3,1.4);}}if(ball.powerEffect.time===0)clearBallPower(ball);}
+ for(const ball of state.balls||[]){
+  if(!ball?.powerEffect?.type)continue;
+  const power=ball.powerEffect;
+  power.time=Math.max(0,(power.time||0)-dt);
+  if(power.type==='unstableball'&&power.time>0){power.pulse=(power.pulse??.4)-dt;if(power.pulse<=0){const speed=speedOf(ball),angle=Math.atan2(ball.vy,ball.vx)+(Math.random()-.5)*1.15;ball.vx=Math.cos(angle)*speed;ball.vy=Math.sin(angle)*speed;ball.speed=speed;power.pulse=.38+Math.random()*.55;burst(ball.x,ball.y,'#ffcf70',3,1.4);}}
+  if(power.type==='chainlightning'&&power.time>0){
+   power.chainCooldown=(power.chainCooldown??.2)-dt;
+   if(power.chainCooldown<=0){
+    let target=null,nearest=175;
+    for(const other of state.balls||[]){if(other===ball)continue;const distance=Math.hypot(other.x-ball.x,other.y-ball.y);if(distance<nearest){nearest=distance;target=other;}}
+    if(target){const dx=target.x-ball.x,dy=target.y-ball.y,dist=Math.max(1,Math.hypot(dx,dy)),impulse=2.2*(1-nearest/175);target.vx+=dx/dist*impulse;target.vy+=dy/dist*impulse;const speed=speedOf(target),limit=SETTINGS.maxBallSpeed||14;if(speed>limit){target.vx=target.vx/speed*limit;target.vy=target.vy/speed*limit;}target.speed=speedOf(target);burst((ball.x+target.x)/2,(ball.y+target.y)/2,'#9ff7ff',5,1.7);power.chainCooldown=.58;}
+    else power.chainCooldown=.18;
+   }
+  }
+  if(power.type==='phaseball'&&power.time>0){
+   power.phaseCooldown=(power.phaseCooldown??.85)-dt;
+   if(power.phaseCooldown<=0){
+    const oldX=ball.x,oldY=ball.y,angle=Math.random()*Math.PI*2,distance=48+Math.random()*42;
+    ball.x=clamp(ball.x+Math.cos(angle)*distance,55,SETTINGS.width-55);
+    ball.y=clamp(ball.y+Math.sin(angle)*distance,ball.r+10,SETTINGS.height-ball.r-10);
+    // No se interpreta el salto como un recorrido físico entre las dos posiciones.
+    ball.frameStartX=ball.x;ball.frameStartY=ball.y;
+    burst(oldX,oldY,'#e2b6ff',4,1.4);burst(ball.x,ball.y,'#e2b6ff',7,1.9);
+    power.phaseCooldown=.9+Math.random()*.45;
+   }
+  }
+  if(power.time===0)clearBallPower(ball);
+ }
  for(const side of ['p1','p2']){
   const p=state.paddles[side];if(!p)continue;
   for(const key of ['haste','aura','freeze','palette','powerGrow','powerShrink'])p[key]=Math.max(0,(p[key]||0)-dt);
@@ -168,7 +197,18 @@ export function drawBallPower(ctx,b){const effect=b?.powerEffect?.time>0?b.power
  else if(effect==='lightningball'){ctx.beginPath();ctx.moveTo(b.x-5,b.y-b.r-7);ctx.lineTo(b.x+1,b.y-2);ctx.lineTo(b.x-4,b.y+1);ctx.lineTo(b.x+5,b.y+b.r+7);ctx.stroke();}
  else if(effect==='magnetball'){const t=state.settings?.reducedMotion?0:performance.now()/240;ctx.globalAlpha=.55;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(b.x,b.y,b.r+7+i*6,b.r+3+i*4,t+i*.7,0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=.9;ctx.beginPath();ctx.arc(b.x,b.y,3,0,Math.PI*2);ctx.fill();}
  else if(effect==='unstableball'){const t=state.settings?.reducedMotion?0:performance.now()/90;ctx.globalAlpha=.8;for(let i=0;i<4;i++){const a=t+i*Math.PI/2;ctx.beginPath();ctx.moveTo(b.x+Math.cos(a)*(b.r+2),b.y+Math.sin(a)*(b.r+2));ctx.lineTo(b.x+Math.cos(a+.55)*(b.r+10),b.y+Math.sin(a+.55)*(b.r+10));ctx.stroke();}}
- else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}
+ else if(effect==='chainlightning'){
+  const t=state.settings?.reducedMotion?0:performance.now()/95;
+  ctx.globalAlpha=.85;
+  for(let i=0;i<4;i++){const a=t+i*Math.PI/2,reach=b.r+9+(i%2)*5;ctx.beginPath();ctx.moveTo(b.x+Math.cos(a)*(b.r+2),b.y+Math.sin(a)*(b.r+2));ctx.lineTo(b.x+Math.cos(a+.35)*(reach*.62),b.y+Math.sin(a+.35)*(reach*.62));ctx.lineTo(b.x+Math.cos(a-.12)*(reach*.8),b.y+Math.sin(a-.12)*(reach*.8));ctx.lineTo(b.x+Math.cos(a+.2)*reach,b.y+Math.sin(a+.2)*reach);ctx.stroke();}
+  ctx.globalAlpha=.3;ctx.beginPath();ctx.arc(b.x,b.y,b.r+12+(state.settings?.reducedMotion?0:Math.sin(t)*3),0,Math.PI*2);ctx.stroke();
+  let nearest=null,nearestDistance=175;for(const other of state.balls||[]){if(other===b)continue;const distance=Math.hypot(other.x-b.x,other.y-b.y);if(distance<nearestDistance){nearest=other;nearestDistance=distance;}}
+  if(nearest){ctx.globalAlpha=.3+(state.settings?.reducedMotion?0:Math.abs(Math.sin(t))*.45);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b.x,b.y);const midX=(b.x+nearest.x)/2,midY=(b.y+nearest.y)/2;ctx.lineTo(midX+(state.settings?.reducedMotion?0:Math.sin(t*1.7)*8),midY+(state.settings?.reducedMotion?0:Math.cos(t*1.4)*8));ctx.lineTo(nearest.x,nearest.y);ctx.stroke();}
+ }else if(effect==='phaseball'){
+  const t=state.settings?.reducedMotion?0:performance.now()/180;
+  ctx.globalAlpha=.42;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(b.x-Math.cos(t+i)*5,b.y-Math.sin(t+i)*5,b.r+4+i*3,b.r+2+i*2,t+i*.4,0,Math.PI*2);ctx.stroke();}
+  ctx.globalAlpha=.9;ctx.beginPath();ctx.moveTo(b.x-4,b.y-b.r-8);ctx.lineTo(b.x+4,b.y-2);ctx.lineTo(b.x-3,b.y+2);ctx.lineTo(b.x+4,b.y+b.r+8);ctx.stroke();
+ }else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}
  if(persistent.sizeScale&&persistent.sizeScale!==1){ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.stroke();}
  if(persistent.trajectory){ctx.globalAlpha=.9;ctx.beginPath();if(persistent.trajectory==='flat'){ctx.moveTo(b.x-b.r-7,b.y);ctx.lineTo(b.x+b.r+7,b.y);ctx.moveTo(b.x+b.r+3,b.y-4);ctx.lineTo(b.x+b.r+7,b.y);ctx.lineTo(b.x+b.r+3,b.y+4);}else if(persistent.trajectory==='vertical'){ctx.moveTo(b.x,b.y-b.r-7);ctx.lineTo(b.x,b.y+b.r+7);ctx.moveTo(b.x-4,b.y+b.r+3);ctx.lineTo(b.x,b.y+b.r+7);ctx.lineTo(b.x+4,b.y+b.r+3);}else{for(let i=0;i<3;i++){const a=performance.now()/260+i*Math.PI*2/3;ctx.moveTo(b.x+Math.cos(a)*(b.r+3),b.y+Math.sin(a)*(b.r+3));ctx.lineTo(b.x+Math.cos(a+1.4)*(b.r+10),b.y+Math.sin(a+1.4)*(b.r+10));}}ctx.stroke();}
  ctx.restore();}

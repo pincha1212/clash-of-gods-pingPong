@@ -1,9 +1,9 @@
 
-# Clash of Gods — Divine Arena V0.2.60
+# Clash of Gods — Divine Arena V0.2.61
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 
-## Arquitectura del proyecto (V0.2.60)
+## Arquitectura del proyecto (V0.2.61)
 
 - `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
 - `game.js`: orquestación del juego y coordinación de los modos.
@@ -630,3 +630,12 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Se conserva el límite de puntuación: si un jugador alcanza el objetivo, el partido termina inmediatamente.
 - Nuevos poderes individuales: Núcleo gravitatorio (atrae las otras pelotas cercanas) y Caos inestable (cambia de rumbo en pulsos impredecibles).
 - El Núcleo gravitatorio no transfiere su poder a las pelotas afectadas; cada una mantiene su propio estado.
+
+
+## V0.2.61 — Habilidades compartidas y power-ups dimensionales
+
+- Las habilidades que modifican velocidad, trayectoria o marca visual de la pelota se aplican a todas las pelotas activas.
+- Las pelotas que nacen por multiplicación heredan la firma visual y el tiempo restante del efecto especial de su progenitora, además de sus modificadores individuales.
+- Se agregan Rayo encadenado, que impulsa pelotas cercanas con pulsos eléctricos, y Salto dimensional, que desplaza periódicamente una pelota a una posición segura de la cancha.
+- Los nuevos efectos son individuales: el impulso del Rayo encadenado no transfiere el poder, y el Salto dimensional no altera la velocidad base ni los modificadores persistentes.
+- No se ejecutaron pruebas automatizadas ni una partida en navegador; la revisión de sintaxis es estática y la validación de juego queda pendiente.

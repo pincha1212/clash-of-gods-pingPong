@@ -27,31 +27,49 @@ function setBallSpeed(ball,targetSpeed){
   return speed;
 }
 
+function forEachLiveBall(preferred, callback){
+  const balls=Array.isArray(state.balls)&&state.balls.length?state.balls.slice():[];
+  if(preferred&&!balls.includes(preferred))balls.push(preferred);
+  if(!balls.length&&state.ball)balls.push(state.ball);
+  for(const target of balls)if(target)callback(target);
+}
+
+// Las habilidades que alteran la pelota son efectos de combate compartidos:
+// afectan a todas las bolas presentes, no solo a la primera del arreglo.
 function scaleBallSpeed(ball,multiplier,minSpeed=MIN_BALL_SPEED){
-  const current=measuredBallSpeed(ball);
-  const next=clamp(current*multiplier,minSpeed,MAX_BALL_SPEED());
-  return setBallSpeed(ball,next);
+  let firstSpeed=0;
+  forEachLiveBall(ball,target=>{
+    const current=measuredBallSpeed(target);
+    const next=clamp(current*multiplier,minSpeed,MAX_BALL_SPEED());
+    const result=setBallSpeed(target,next);
+    if(!firstSpeed)firstSpeed=result;
+  });
+  return firstSpeed;
 }
 
 // Las habilidades de trayectoria apuntan hacia el centro de la cancha, pero
-// conservan la rapidez del balón. No suman velocidad vertical accidentalmente.
+// conservan la rapidez de cada pelota y su vector de movimiento independiente.
 function curveBallTowardCenter(ball,strength=2.5){
-  const speed=clamp(measuredBallSpeed(ball),MIN_BALL_SPEED,MAX_BALL_SPEED());
-  const midpoint=SETTINGS.height/2;
-  const verticalSign=Math.abs(ball.y-midpoint)<8
-    ? Math.sign(Number(ball.vy)|| (ball.lastHit==='p1'?1:-1))
-    : (ball.y<midpoint?1:-1);
-  const verticalMagnitude=Math.min(speed*.68,Math.max(2.8,Math.abs(Number(ball.vy)||0)*.55+strength));
-  const horizontalMagnitude=Math.sqrt(Math.max(1,speed*speed-verticalMagnitude*verticalMagnitude));
-  const horizontalSign=Math.sign(Number(ball.vx)||0)||(ball.lastHit==='p2'?-1:1);
-  ball.vx=horizontalSign*horizontalMagnitude;
-  ball.vy=verticalSign*verticalMagnitude;
-  ball.speed=Math.hypot(ball.vx,ball.vy);
+  forEachLiveBall(ball,target=>{
+    const speed=clamp(measuredBallSpeed(target),MIN_BALL_SPEED,MAX_BALL_SPEED());
+    const midpoint=SETTINGS.height/2;
+    const verticalSign=Math.abs(target.y-midpoint)<8
+      ? Math.sign(Number(target.vy)|| (target.lastHit==='p1'?1:-1))
+      : (target.y<midpoint?1:-1);
+    const verticalMagnitude=Math.min(speed*.68,Math.max(2.8,Math.abs(Number(target.vy)||0)*.55+strength));
+    const horizontalMagnitude=Math.sqrt(Math.max(1,speed*speed-verticalMagnitude*verticalMagnitude));
+    const horizontalSign=Math.sign(Number(target.vx)||0)||(target.lastHit==='p2'?-1:1);
+    target.vx=horizontalSign*horizontalMagnitude;
+    target.vy=verticalSign*verticalMagnitude;
+    target.speed=Math.hypot(target.vx,target.vy);
+  });
 }
 
 function markBall(ball,god,duration=.8){
-  ball.specialEffect=god.id;
-  ball.effectTime=duration;
+  forEachLiveBall(ball,target=>{
+    target.specialEffect=god.id;
+    target.effectTime=duration;
+  });
 }
 
 function setShield(p,duration){
