@@ -501,3 +501,14 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - `npm run test:abilities`: aprobado; 248/248 activaciones semánticas y 124/124 ventanas útiles de IA.
 - `npm run test:survival`: aprobado; progresión, vidas, jefe final, reintento y derrota probados por separado.
 - No se completó una prueba visual de navegador real en este entorno. Validar manualmente en Android antes de considerar la experiencia de usuario final verificada.
+
+
+## V0.2.49 — Supervivencia pulida
+
+- Perder un combate normal consume una vida y obliga a reintentar el mismo encuentro; solo una victoria permite avanzar.
+- El jefe final se conserva entre reintentos.
+- Los mensajes de resultados usan el rival del combate recién terminado, no el próximo rival seleccionado.
+- El HUD muestra progreso de campaña, vidas, rival y objetivo de puntos con etiquetas accesibles.
+- Récord local ampliado: campañas, victorias, derrotas, mejor progreso e historial reciente.
+- La selección de personaje muestra el mejor progreso y las victorias finales guardadas.
+- El modo mantiene las habilidades y los objetos activos, sin sistemas roguelike.
