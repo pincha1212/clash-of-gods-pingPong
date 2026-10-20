@@ -486,3 +486,18 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 - Los avisos, la duración, el enfriamiento, el límite de fuerza y el ajuste de movimiento reducido se mantienen en el gestor actual; no se creó un bucle físico adicional.
 - Crónicas, jefes y Mutación siguen excluidos del gestor compartido.
 - Validación estática y de sintaxis; prueba manual en navegador pendiente.
+
+
+## V0.2.48 — Modo Supervivencia
+
+Se añade un modo de campaña independiente del combate clásico, Crónicas y Mutación. Elegís un protagonista del elenco completo, enfrentás 15 enemigos seleccionados aleatoriamente y luego un jefe final aleatorio. Tenés tres vidas para toda la campaña; perder un combate completo consume una vida, pero perder puntos dentro del combate no. Los rivales normales juegan a 7 puntos; el jefe final usa dificultad Divina y 9 puntos. Si perdés contra el jefe, podés volver a intentarlo mientras conserves vidas. Al agotar las tres, la campaña termina.
+
+El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones ni mejoras permanentes. La habilidad del personaje y los objetos de arena siguen activos. El progreso y los récords básicos se guardan localmente cuando el navegador lo permite. La lógica se encuentra en `survival.js`; `survival.css` define el HUD y el diseño del modo. Ambos recursos se incluyen en la caché offline de la PWA.
+
+### Verificación V0.2.48
+
+- `npm run check:syntax`: aprobado.
+- `npm run test:pwa`: aprobado; manifest, archivos de la PWA y 36 rutas del shell comprobados, con navegación offline simulada.
+- `npm run test:abilities`: aprobado; 248/248 activaciones semánticas y 124/124 ventanas útiles de IA.
+- `npm run test:survival`: aprobado; progresión, vidas, jefe final, reintento y derrota probados por separado.
+- No se completó una prueba visual de navegador real en este entorno. Validar manualmente en Android antes de considerar la experiencia de usuario final verificada.
