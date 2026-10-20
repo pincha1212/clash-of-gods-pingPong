@@ -1,4 +1,27 @@
 
+# Clash of Gods — Divine Arena V0.2.55
+
+Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
+
+## Arquitectura del proyecto (V0.2.55)
+
+- `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
+- `game.js`: orquestación del juego y coordinación de los modos.
+- `config.js` y `state.js`: catálogo/configuración y estado compartido.
+- `physics.js`, `input.js`, `abilities.js`, `powerups.js`, `mutation.js`, `arena-events.js` y `survival.js`: sistemas de juego.
+- `characters.js`, `codex-profiles.js` y `codex-relations.js`: elenco, fichas y relaciones del códice.
+- `effects.js`, `audio.js` y `hud.js`: presentación durante el combate.
+- `navigation.js` y `settings.js`: pantallas y configuración de usuario.
+- `pwa.js`, `sw.js`, `manifest.webmanifest` y `pwa.css`: instalación, actualización, conectividad y caché offline.
+- `styles.css`, `menu.css`, `characters.css`, `arena.css`, `responsive.css` y `survival.css`: estilos cargados por la interfaz.
+- Archivos históricos en la raíz: `script.js`, `style.css`, `mobile.js`, `eclipse.js`, `skills.js`, `ui.js`, `mutation-legacy.js` y `assets.js`. Se conservan para consulta, pero no deben considerarse módulos activos solo por estar en la carpeta raíz. Antes de reutilizarlos, revisar sus dependencias.
+
+### Regla para futuras modificaciones
+
+Antes de borrar o mover un módulo, comprobar sus importaciones, las referencias desde `index.html`, la lista `APP_SHELL` de `sw.js` y las instrucciones del README. Mantener la lista de precarga limitada a recursos realmente necesarios para el arranque offline. Las pruebas automatizadas no se ejecutaron para esta versión; esta organización se basa en inspección estática de referencias.
+
+---
+
 ## V0.2.47 — PWA instalable y juego sin conexión
 
 Clash of Gods ahora incorpora una capa de aplicación web progresiva (PWA) sin dependencias de servidor ni servicios externos:
@@ -28,9 +51,9 @@ La instalación nativa y los requisitos concretos de interfaz dependen del naveg
 - `npm run test:pwa`: **APROBADO** en pruebas estáticas y simulación del ciclo del service worker.
 - El smoke test de navegador real se intentó, pero Chromium en el entorno de ejecución bloqueó la navegación con `ERR_BLOCKED_BY_ADMINISTRATOR`; por eso no se declara validada una instalación real ni una sesión visual completa en modo avión. La prueba de red HTTP y las simulaciones offline se informan por separado.
 
-# Clash of Gods — Divine Arena V0.2.46
+## Contexto histórico — base V0.2.46
 
-Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 17 arenas culturales compartidas, CPU y multijugador local. No requiere compilación ni frameworks; todos los archivos del proyecto están en la raíz.
+Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. Incluye 124 personajes, 17 arenas culturales compartidas, CPU y multijugador local. No requiere compilación ni frameworks; los módulos activos están en la raíz y los archivos históricos se conservan en la carpeta raíz.
 
 ## V0.2.46 — auditoría funcional de las 124 habilidades
 
@@ -546,3 +569,21 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - El cambio de pantalla valida el destino antes de ocultar la pantalla actual y sincroniza `aria-hidden` con la pantalla activa.
 - Se corrige la versión desactualizada del pie de página y se actualiza la caché PWA a V0.2.53.
 - Revisión manual del flujo y del diff; no se ejecutaron pruebas automatizadas ni se hizo una prueba manual en navegador/dispositivo.
+
+
+## V0.2.54 — Organización de arquitectura (histórico)
+
+- En esa versión se movieron temporalmente ocho archivos históricos a `legacy/`; en V0.2.55 se devolvieron a la raíz para simplificar el acceso al proyecto.
+- Se retiraron `mobile.js`, `eclipse.js`, `skills.js` y `assets.js` de la precarga del service worker porque no son parte del grafo activo de módulos.
+- Se agregó un mapa de arquitectura y una regla de mantenimiento para que el shell offline refleje los recursos usados por la app.
+- Se actualizó la versión visible, el paquete y la clave de caché a V0.2.54.
+- No se modificaron las mecánicas de juego. No se ejecutaron pruebas automáticas ni pruebas manuales de navegador.
+
+
+## V0.2.55 — Archivos en la raíz
+
+- Se devolvieron a la raíz los ocho archivos históricos que se habían agrupado en `legacy/`.
+- Se eliminó la carpeta `legacy/`; no se borró el contenido de esos archivos.
+- Se mantienen fuera del precache los archivos que no participan en el arranque activo, aunque estén en la raíz.
+- Se actualizó la versión visible, el paquete y la clave de caché a V0.2.55.
+- No se reorganizaron los módulos activos ni se modificaron las mecánicas del juego.
