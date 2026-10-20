@@ -1,9 +1,9 @@
 
-# Clash of Gods — Divine Arena V0.2.57
+# Clash of Gods — Divine Arena V0.2.58
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 
-## Arquitectura del proyecto (V0.2.57)
+## Arquitectura del proyecto (V0.2.58)
 
 - `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
 - `game.js`: orquestación del juego y coordinación de los modos.
@@ -602,3 +602,14 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 ## V0.2.56 — Marcador exclusivo de Supervivencia
 - Se reforzó la visibilidad condicional del HUD de Supervivencia para que no aparezca en Clásico, Crónicas ni Mutación.
 - Se sincroniza la clase visual con el modo de preparación al iniciar una partida y actualizar el HUD.
+
+
+## V0.2.58 — Power-ups acumulativos y efectos por pelota
+
+- Coloso y Miniatura modifican el tamaño de la paleta de forma acumulativa durante el partido, con límites definidos; el cambio se reinicia al iniciar otro partido.
+- Se agregaron potenciadores de tamaño de pelota, multiplicación, trayectoria horizontal/vertical, color individual y cambio cromático temporal de la arena.
+- Los efectos temporales de velocidad y estela ahora se guardan por pelota, no en un único estado global.
+- Las pelotas creadas por multiplicación heredan los efectos actuales de la pelota de origen, pero los nuevos potenciadores individuales solo modifican la pelota que los recoge. Los modificadores persistentes continúan en la pelota que anota y se reinicia para una partida nueva.
+- Se limita la cantidad simultánea a 24 pelotas para evitar que la multiplicación degrade el rendimiento. Todas las pelotas activas siguen usando las reglas de colisión y puntuación existentes.
+- Se actualizó la versión de la interfaz y la caché de la PWA.
+- Revisión estática de los archivos modificados; no se ejecutaron pruebas de juego en navegador.

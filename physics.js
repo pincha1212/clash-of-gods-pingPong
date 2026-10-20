@@ -2,7 +2,7 @@ import {state,ensureBallCollection,resetBallCollection} from './state.js';
 import {SETTINGS} from './config.js';
 import {burst} from './effects.js';
 import {playTone} from './audio.js';
-import {POWERUPS,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType} from './powerups.js';
+import {POWERUPS,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType,enforceBallTrajectory} from './powerups.js';
 import {registerMutationGoal,reduceMutationCharge,updateMutationEffects,applyMutationArenaForce,applyMutationPaddleHit,getMutationMovementMultiplier,getMutationShieldScale,consumeMutationShield,resetMutationRally} from './mutation.js';
 import {updateArenaEvents,getArenaForces,resetArenaEventState,clearArenaEventState} from './arena-events.js';
 
@@ -43,7 +43,7 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  const norm=clamp((hitY-(impactPaddleY+p.h/2))/(p.h/2),-1,1),dir=side==='p1'?1:-1;
  // Conserva la escala de los modificadores de pelota y aumenta la intensidad
  // de forma gradual según la duración del intercambio, sin saltos bruscos.
- const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier();
+ const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier(b);
  const rallyFloor=baseSpeed*(1+Math.min(state.rally,16)*.018);
  let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(rallyFloor,ballMagnitude(b)*1.012));
  if(p.counter>0){const charge=clamp(Number(p.counter)||1.5,1,2);const counterMultiplier=1.24+Math.max(0,charge-1.5)*.08-Math.max(0,1.5-charge)*.06;speed=Math.min(SETTINGS.maxBallSpeed,speed*counterMultiplier);p.counter=0;b.specialEffect=p.godId||'';b.effectTime=.55;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'CONTRAATAQUE',color:p.color}}));}
@@ -51,22 +51,25 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  // permite apuntar con intención sin hacer que el control sea impredecible.
  const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
  let angle=norm*1.08+paddleMotion*.20+(p.aimBonus>0?Math.sign(norm||1)*p.aimBonus:0);p.aimBonus=0;
- if(getBallPowerType()==='chaos')angle+=(Math.random()-.5)*.7;
- if(getBallPowerType()==='ricochet')angle+=(Math.random()-.5)*1.0;
+ if(getBallPowerType(b)==='chaos')angle+=(Math.random()-.5)*.7;
+ if(getBallPowerType(b)==='ricochet')angle+=(Math.random()-.5)*1.0;
  if(state.worldEffects?.prism>0)angle+=Math.sin((performance.now?.()||0)/180)*.12;
  if(p.palette>0)angle+=Math.sin((performance.now?.()||0)/240)*.09;
- if(getBallPowerType()==='fireball')speed=Math.min(SETTINGS.maxBallSpeed,speed*1.045);
+ if(getBallPowerType(b)==='fireball')speed=Math.min(SETTINGS.maxBallSpeed,speed*1.045);
  angle=clamp(angle,-1.18,1.18);
  const perfect=Math.abs(norm)>=.22&&Math.abs(norm)<=.38;
  if(perfect){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.07);burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'GOLPE PRECISO',color:p.color}}));}
- b.vx=dir*speed*Math.cos(angle);b.vy=speed*Math.sin(angle);b.speed=speed;b.lastHit=side;b.fire=0;b.color='#f6f4ed';state.rally++;
+ b.vx=dir*speed*Math.cos(angle);b.vy=speed*Math.sin(angle);b.speed=speed;b.lastHit=side;b.fire=0;b.color=b.matchEffects?.color||'#f6f4ed';state.rally++;
  if(p.aura>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.22);const magnitude=ballMagnitude(b);b.vx=b.vx/magnitude*speed;b.vy=b.vy/magnitude*speed;p.aura=0;p.counter=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'AURA DE CONTRAATAQUE',color:p.color}}));}
  if(state.mutationMode==='mutation')applyMutationPaddleHit(side,b);
  burst(b.x,b.y,p.color,perfect?4:2,perfect?1.8:1.1);playTone(perfect?side==='p1'?560:680:side==='p1'?410:520,perfect?.075:.055,'triangle',perfect?.045:.035);return true;
 }
 
-export function serve(direction=Math.random()>.5?1:-1){
- const b=(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.color='#f6f4ed';b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;if(state.mutationMode==='mutation')resetMutationRally();resetArenaEventState();
+export function serve(direction=Math.random()>.5?1:-1,servingBall=null){
+ const b=servingBall||(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);
+ const persistentEffects={sizeScale:b?.matchEffects?.sizeScale||1,trajectory:b?.matchEffects?.trajectory||'',color:b?.matchEffects?.color||''};
+ const baseRadius=b?.baseR||9;
+ resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';b.baseR=baseRadius;b.matchEffects=persistentEffects;b.r=baseRadius*persistentEffects.sizeScale;b.powerEffect=null;b.color=persistentEffects.color||'#f6f4ed';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;if(state.mutationMode==='mutation')resetMutationRally();resetArenaEventState();
 }
 
 export function updatePhysics(dt){
@@ -81,7 +84,7 @@ function updatePhysicsSingle(dt,isPrimary){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const b=state.ball;
  if(isPrimary){for(let i=state.items.length-1;i>=0;i--){state.items[i].life-=dt;if(state.items[i].life<=0)state.items.splice(i,1);}}
- if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);const mutationScale=state.mutationMode==='mutation'?getMutationShieldScale(side):1;p.h=p.baseH*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1)*mutationScale;p.y=clamp(p.y,0,SETTINGS.height-p.h);if(p.shield<=0)p.shieldMode='';}
+ if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);const mutationScale=state.mutationMode==='mutation'?getMutationShieldScale(side):1;p.h=clamp(p.baseH*(p.matchSizeScale||1)*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1)*mutationScale,32,220);p.y=clamp(p.y,0,SETTINGS.height-p.h);if(p.shield<=0)p.shieldMode='';}
  if(state.serveTimer>0){state.serveTimer=Math.max(0,state.serveTimer-dt);return;}
  if(isPrimary){
  if(state.mythicMode==='olympus'){state.mythicSurgeCooldown=Math.max(0,(state.mythicSurgeCooldown||0)-dt);state.mythicSurgeTime=Math.max(0,(state.mythicSurgeTime||0)-dt);if(state.mythicSurgeCooldown<=0&&state.mythicSurgeTime<=0){state.mythicSurgeTime=1.35;state.mythicSurgeCooldown=8.25;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL OLIMPO',color:'#ffe17a'}}));}}
@@ -102,7 +105,7 @@ function updatePhysicsSingle(dt,isPrimary){
  capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y});if(b.trail.length>12)b.trail.shift();
  if(b.effectTime>0)b.effectTime=Math.max(0,b.effectTime-dt);else b.specialEffect='';
  b.x+=b.vx*dt*60;b.y+=b.vy*dt*60;
- const bossArena=state.mythicMode==='boss-jormungandr',arenaTop=bossArena?24:0,arenaBottom=bossArena?SETTINGS.height-24:SETTINGS.height,bossInset=bossArena?Math.max(0,state.jormungandr?.inset||0):0,topLimit=arenaTop+bossInset,bottomLimit=arenaBottom-bossInset;if(b.y-b.r<topLimit){b.y=topLimit+b.r;b.vy=Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>bottomLimit){b.y=bottomLimit-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType()==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
+ const bossArena=state.mythicMode==='boss-jormungandr',arenaTop=bossArena?24:0,arenaBottom=bossArena?SETTINGS.height-24:SETTINGS.height,bossInset=bossArena?Math.max(0,state.jormungandr?.inset||0):0,topLimit=arenaTop+bossInset,bottomLimit=arenaBottom-bossInset;if(b.y-b.r<topLimit){b.y=topLimit+b.r;b.vy=Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>bottomLimit){b.y=bottomLimit-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
  // Las fuerzas ambientales se suman en una sola autoridad y se limitan para que
  // acumular varios Power-ups no vuelva la pelota casi vertical de forma incontrolable.
  const now=performance.now?.()||0;let fieldForce=0;
@@ -117,6 +120,7 @@ function updatePhysicsSingle(dt,isPrimary){
  b.vx+=clamp(arenaForce.x,-1.25,1.25)*dt;
  if(state.mutationMode==='mutation')applyMutationArenaForce(b,dt);
  if(isPrimary&&state.worldEffects?.quake>0){state.worldEffects.quakePulse=Math.max(0,(state.worldEffects.quakePulse||0)-dt);if(state.worldEffects.quakePulse<=0){b.vy+=((Math.random()-.5)*1.7);state.worldEffects.quakePulse=.55;}}
+ enforceBallTrajectory(b);
  // El modificador de velocidad se aplica al recoger el objeto y se conserva en los golpes.
  // No forzar la pelota a una velocidad fija cada fotograma: eso anulaba la aceleración del rally.
  capBallSpeed(b);
@@ -157,7 +161,7 @@ function updatePhysicsSingle(dt,isPrimary){
    playTone(180,.25,'sawtooth',.04);
    window.dispatchEvent(new CustomEvent('mutation-goal-confirmed',{detail:{winner,loser:conceding,gain:result.gain||0,charge:result.charge||0,streak:result.streak||0,defeated:Boolean(result.defeated)}}));
    if(result.defeated){clearArenaEventState();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner,loser:conceding,reason:'corruption',charge:result.charge}}));}
-   else serve(winner==='p1'?1:-1);
+   else serve(winner==='p1'?1:-1,b);
    return;
   }
   const doublePoint=scorer?.bonusPoint>0;state.scores[winner]+=doublePoint?2:1;
@@ -165,12 +169,12 @@ function updatePhysicsSingle(dt,isPrimary){
   if(doublePoint)window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DOBLE · +2',color:scorer.color}}));
   burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),45,5);playTone(180,.25,'sawtooth',.04);window.dispatchEvent(new CustomEvent('point-scored',{detail:{winner}}));
   if(state.scores[winner]>=state.winScore){clearArenaEventState();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner}}));}
-  else serve(winner==='p1'?1:-1);
+  else serve(winner==='p1'?1:-1,b);
   return; // Evita recoger objetos o procesar eventos sobre la pelota reiniciada en el centro.
  }
  b.fire=0;b.color='#f6f4ed';b.glow=0;
  if(state.mythicMode==='boss-jormungandr'&&state.mutationMode!=='mutation')state.items.length=0;
- for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';if(state.mutationMode==='mutation'){if(item.type==='mutation-vaccine'){const result=reduceMutationCharge(ownerSide);burst(item.x,item.y,'#a7ff7c',12,2.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:result.reduction?`VACUNA · -${result.reduction}% CORRUPCIÓN`:'VACUNA · CORRUPCIÓN ESTABILIZADA',color:'#a7ff7c'}}));}}else applyPowerup(item.type,ownerSide);state.items.splice(i,1);}}
+ for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';if(state.mutationMode==='mutation'){if(item.type==='mutation-vaccine'){const result=reduceMutationCharge(ownerSide);burst(item.x,item.y,'#a7ff7c',12,2.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:result.reduction?`VACUNA · -${result.reduction}% CORRUPCIÓN`:'VACUNA · CORRUPCIÓN ESTABILIZADA',color:'#a7ff7c'}}));}}else applyPowerup(item.type,ownerSide,b);state.items.splice(i,1);}}
 }
 
 export function updatePaddles(dt){

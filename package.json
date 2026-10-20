@@ -1,0 +1,12 @@
+{
+  "name": "clash-of-gods",
+  "version": "0.2.58",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:abilities": "node tests/audit-abilities.mjs",
+    "test:pwa": "node tests/pwa-smoke.mjs && node tests/pwa-sw.mjs",
+    "check:syntax": "node tests/check-syntax.mjs",
+    "test:survival": "node tests/survival.mjs"
+  }
+}
