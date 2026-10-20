@@ -512,3 +512,10 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Récord local ampliado: campañas, victorias, derrotas, mejor progreso e historial reciente.
 - La selección de personaje muestra el mejor progreso y las victorias finales guardadas.
 - El modo mantiene las habilidades y los objetos activos, sin sistemas roguelike.
+
+## V0.2.50 — Consistencia de reglas y guardado
+
+- Supervivencia fija de forma consistente el objetivo de 7 puntos para rivales normales y 9 para el jefe, sin heredar accidentalmente la puntuación del duelo clásico.
+- La preparación y el resumen explican el objetivo de puntos antes de iniciar.
+- El panel de campaña guardada se oculta al descartar el progreso; los botones de continuar y descartar se deshabilitan si no existe un guardado válido.
+- Caché PWA actualizada a V0.2.50.
