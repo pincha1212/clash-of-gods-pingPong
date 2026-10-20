@@ -11,8 +11,35 @@ export function setupSettings(){
  volume.addEventListener('input',()=>{state.settings.volume=Number(volume.value);document.getElementById('volume-value').textContent=`${Math.round(state.settings.volume*100)}%`;});
  mute.addEventListener('change',()=>{state.settings.sound=mute.checked;state.soundEnabled=mute.checked;document.getElementById('sound-toggle').textContent=`SONIDO: ${state.soundEnabled?'ON':'OFF'}`;});
  touch.addEventListener('change',()=>{state.settings.touchControls=touch.checked;document.body.classList.toggle('touch-controls-disabled',!touch.checked);window.dispatchEvent(new Event('settings-changed'));});
- document.getElementById('settings-button').addEventListener('click',()=>{document.getElementById('settings-modal').classList.remove('hidden');document.getElementById('settings-modal').setAttribute('aria-hidden','false');});
- const close=()=>{document.getElementById('settings-modal').classList.add('hidden');document.getElementById('settings-modal').setAttribute('aria-hidden','true');};
- document.getElementById('settings-close').addEventListener('click',close);document.getElementById('settings-modal').addEventListener('click',e=>{if(e.target.id==='settings-modal')close();});window.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+ const settingsButton=document.getElementById('settings-button');
+ const settingsModal=document.getElementById('settings-modal');
+ const settingsClose=document.getElementById('settings-close');
+ let lastSettingsFocus=null;
+ const open=()=>{
+  lastSettingsFocus=document.activeElement;
+  settingsModal.classList.remove('hidden');
+  settingsModal.setAttribute('aria-hidden','false');
+  settingsClose.focus();
+ };
+ const close=()=>{
+  if(settingsModal.classList.contains('hidden'))return;
+  settingsModal.classList.add('hidden');
+  settingsModal.setAttribute('aria-hidden','true');
+  if(lastSettingsFocus?.isConnected)lastSettingsFocus.focus();
+  else settingsButton.focus();
+  lastSettingsFocus=null;
+ };
+ settingsButton.addEventListener('click',open);
+ settingsClose.addEventListener('click',close);
+ settingsModal.addEventListener('click',e=>{if(e.target===settingsModal)close();});
+ settingsModal.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();return;}
+  if(e.key!=='Tab')return;
+  const focusables=[...settingsModal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);
+  if(!focusables.length)return;
+  const first=focusables[0],last=focusables[focusables.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+ });
  document.getElementById('fullscreen-button').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(_){document.getElementById('fullscreen-note').textContent='El navegador no permite pantalla completa en este momento.';}});
 }

@@ -1,9 +1,9 @@
 
-# Clash of Gods — Divine Arena V0.2.55
+# Clash of Gods — Divine Arena V0.2.57
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 
-## Arquitectura del proyecto (V0.2.55)
+## Arquitectura del proyecto (V0.2.57)
 
 - `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
 - `game.js`: orquestación del juego y coordinación de los modos.
@@ -18,7 +18,7 @@ Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La apli
 
 ### Regla para futuras modificaciones
 
-Antes de borrar o mover un módulo, comprobar sus importaciones, las referencias desde `index.html`, la lista `APP_SHELL` de `sw.js` y las instrucciones del README. Mantener la lista de precarga limitada a recursos realmente necesarios para el arranque offline. Las pruebas automatizadas no se ejecutaron para esta versión; esta organización se basa en inspección estática de referencias.
+Antes de borrar o mover un módulo, comprobar sus importaciones, las referencias desde `index.html`, la lista `APP_SHELL` de `sw.js` y las instrucciones del README. Mantener la lista de precarga limitada a recursos realmente necesarios para el arranque offline. No ejecutar pruebas automatizadas por defecto: antes de cada entrega, documentar las inspecciones estáticas realizadas y dejar explícito qué requiere verificación manual.
 
 ---
 
@@ -587,6 +587,17 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Se mantienen fuera del precache los archivos que no participan en el arranque activo, aunque estén en la raíz.
 - Se actualizó la versión visible, el paquete y la clave de caché a V0.2.55.
 - No se reorganizaron los módulos activos ni se modificaron las mecánicas del juego.
+
+## V0.2.57 — Consolidación inicial de interfaces
+
+- Al salir de Supervivencia, el selector de tipo de partida vuelve a habilitarse en Clásico, Crónicas y Mutación.
+- Los controles de teclado del combate ya no interceptan las flechas, Espacio o Enter cuando el usuario está interactuando con controles de la interfaz; tampoco interfieren con el diálogo de Ajustes.
+- Ajustes ahora devuelve el foco al control que lo abrió y contiene la navegación por teclado dentro del diálogo mientras está abierto.
+- Las pantallas declaran su estado inicial `aria-hidden`, coherente con la pantalla visible y las pantallas ocultas.
+- Se actualizó la versión del proyecto y el nombre de caché del service worker para que la PWA no reutilice la instantánea anterior.
+- Revisión estática del código y de referencias de interfaz. No se ejecutaron pruebas automatizadas ni se probó una partida en navegador.
+
+---
 
 ## V0.2.56 — Marcador exclusivo de Supervivencia
 - Se reforzó la visibilidad condicional del HUD de Supervivencia para que no aparezca en Clásico, Crónicas ni Mutación.

@@ -3,12 +3,27 @@ import {activateAbility} from './abilities.js';
 
 export function setupInput(){
   window.addEventListener('keydown',e=>{
+    const settingsModal=document.getElementById('settings-modal');
+    const settingsOpen=!!settingsModal&&!settingsModal.classList.contains('hidden');
+
+    // Escape can pause the match, but must not also pause behind an open dialog.
+    if(e.code==='Escape'){
+      if(state.screen==='game'&&!settingsOpen)window.dispatchEvent(new CustomEvent('toggle-pause'));
+      return;
+    }
+
+    if(state.screen!=='game'||settingsOpen||state.paused||state.finished)return;
+    const target=e.target;
+    const targetScreen=target instanceof Element?target.closest('.screen'):null;
+    const targetIsVisible=!targetScreen||targetScreen.classList.contains('active');
+    const isUiTarget=targetIsVisible&&target instanceof Element&&!!target.closest('input,select,textarea,button,a,[contenteditable="true"],[role="dialog"]');
+    if(isUiTarget)return;
+
     if(['ArrowUp','ArrowDown','Space','Enter'].includes(e.code))e.preventDefault();
     state.keys[e.code]=true;
     if(e.repeat)return;
     if(e.code==='Space')activateAbility('p1');
     if(e.code==='Enter'&&state.mode==='local')activateAbility('p2');
-    if(e.code==='Escape'&&state.screen==='game')window.dispatchEvent(new CustomEvent('toggle-pause'));
   });
   window.addEventListener('keyup',e=>{state.keys[e.code]=false;});
   window.addEventListener('blur',clearInput);
