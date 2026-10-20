@@ -661,13 +661,12 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - No se ejecutó el juego dentro del navegador; queda pendiente la validación manual del control táctil, las inversiones y los saltos dimensionales.
 
 
-## V0.2.64 — Caos de paletas
+## V0.2.64 — Cinco poderes nuevos de paleta
 
-- **Motor divino:** aumenta temporalmente la movilidad de la paleta y añade una estela.
-- **Bobina caótica:** los golpes alteran moderadamente el ángulo de la pelota.
-- **Pulso sísmico:** al golpear, empuja otras pelotas cercanas con impulso limitado.
-- **Paleta mutante:** el tamaño oscila de forma controlada durante el efecto.
-- **Fase espectral:** teletransporta periódicamente la paleta a una altura segura de su propio lado, con aviso visual.
-- Los efectos tienen temporizadores propios, indicadores visuales y limpieza al reiniciar los power-ups.
+- Motor divino: movilidad temporal mejorada.
+- Bobina caótica: desviación adicional del ángulo en los golpes del portador.
+- Pulso sísmico: pulsos que empujan otras pelotas cercanas con límite de velocidad.
+- Paleta mutante: oscilación temporal del tamaño con límites de altura.
+- Fase espectral: cambios periódicos de altura con aviso visual y estados temporales.
 
-Validación realizada: revisión estática y `node --check` de los archivos JavaScript modificados. No se ejecutó una partida en navegador.
+Estos poderes se integraron en el catálogo existente y se limpian al reiniciar los power-ups. Requieren validación manual en partida real.
