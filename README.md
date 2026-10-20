@@ -536,3 +536,13 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Se conserva la lógica interna y la estructura de guardado existentes para evitar una migración innecesaria de datos. Crónicas sigue siendo el modo reservado para la campaña narrativa.
 - Se incrementa la versión visible y la caché de la PWA para que la nueva interfaz pueda actualizarse.
 - No se ejecutaron tests automatizados, según el flujo de trabajo acordado. Se hizo una revisión textual de los cambios; no se realizó una prueba manual en navegador/dispositivo.
+
+
+## V0.2.53 — Navegación y salida de partida
+
+- Se centraliza la salida al menú para detener el bucle de juego, limpiar entradas/controles táctiles y ocultar overlays temporales de forma consistente.
+- El botón SALIR, el logotipo superior y los botones de navegación que vuelven al menú comparten la misma limpieza.
+- La salida no elimina el guardado de Supervivencia; el panel de reanudación se actualiza al volver al menú.
+- El cambio de pantalla valida el destino antes de ocultar la pantalla actual y sincroniza `aria-hidden` con la pantalla activa.
+- Se corrige la versión desactualizada del pie de página y se actualiza la caché PWA a V0.2.53.
+- Revisión manual del flujo y del diff; no se ejecutaron pruebas automatizadas ni se hizo una prueba manual en navegador/dispositivo.
