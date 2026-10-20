@@ -7,7 +7,12 @@ export const SURVIVAL_RECORD_KEY = 'clashOfGods.survival.records.v2';
 export const SURVIVAL_ACTIVE_KEY = 'clashOfGods.survival.active.v1';
 const RECENT_LIMIT = 3;
 const DEFAULT_WIN_SCORE = 7;
-const BOSS_WIN_SCORE = 9;
+const MIN_WIN_SCORE = 3;
+const MAX_WIN_SCORE = 15;
+function normalizeWinScore(value) {
+  const score = Number(value);
+  return Number.isFinite(score) ? Math.max(MIN_WIN_SCORE, Math.min(MAX_WIN_SCORE, Math.round(score))) : DEFAULT_WIN_SCORE;
+}
 
 export const survivalCampaign = {
   active: false,
@@ -23,7 +28,8 @@ export const survivalCampaign = {
   clearedEncounters: 0,
   bossAttempts: 0,
   startedAt: 0,
-  lastOpponentId: null
+  lastOpponentId: null,
+  winScore: DEFAULT_WIN_SCORE
 };
 
 function randomIndex(length, random = Math.random) {
@@ -43,18 +49,19 @@ function rememberEnemy(id) {
   survivalCampaign.recentEnemies = survivalCampaign.recentEnemies.slice(-RECENT_LIMIT);
 }
 
-function configureSurvivalRules() {
+function configureSurvivalRules(winScore = survivalCampaign.winScore) {
   state.preparationMode = 'survival';
   state.mutationMode = 'off';
   state.mythicMode = 'classic';
   state.mode = 'cpu';
   state.difficulty = 'easy';
-  state.winScore = DEFAULT_WIN_SCORE;
+  survivalCampaign.winScore = normalizeWinScore(winScore);
+  state.winScore = survivalCampaign.winScore;
   state.skillsEnabled = true;
   state.itemsEnabled = true;
 }
 
-export function beginSurvival(playerId, { random = Math.random, now = Date.now } = {}) {
+export function beginSurvival(playerId, { random = Math.random, now = Date.now, winScore = state.winScore } = {}) {
   if (!GODS[playerId]) throw new Error(`Personaje de supervivencia desconocido: ${playerId}`);
   Object.assign(survivalCampaign, {
     active: true,
@@ -70,9 +77,10 @@ export function beginSurvival(playerId, { random = Math.random, now = Date.now }
     clearedEncounters: 0,
     bossAttempts: 0,
     startedAt: now(),
-    lastOpponentId: null
+    lastOpponentId: null,
+    winScore: normalizeWinScore(winScore)
   });
-  configureSurvivalRules();
+  configureSurvivalRules(survivalCampaign.winScore);
   state.selected.p1 = playerId;
   prepareSurvivalOpponent({ random });
   persistActiveCampaign();
@@ -90,7 +98,7 @@ export function prepareSurvivalOpponent({ random = Math.random } = {}) {
     }
     state.selected.p2 = survivalCampaign.bossId;
     state.difficulty = 'hard';
-    state.winScore = BOSS_WIN_SCORE;
+    state.winScore = survivalCampaign.winScore;
   } else {
     // A retry must preserve the same opponent. Only a newly unlocked encounter rolls a rival.
     const enemy = survivalCampaign.lastOpponentId || chooseEnemy({ excludeRecent: true, random });
@@ -98,7 +106,7 @@ export function prepareSurvivalOpponent({ random = Math.random } = {}) {
     survivalCampaign.lastOpponentId = enemy;
     if (!survivalCampaign.recentEnemies.includes(enemy)) rememberEnemy(enemy);
     state.difficulty = survivalCampaign.encounter >= 12 ? 'hard' : survivalCampaign.encounter >= 8 ? 'normal' : 'easy';
-    state.winScore = DEFAULT_WIN_SCORE;
+    state.winScore = survivalCampaign.winScore;
   }
   state.skillsEnabled = true;
   state.itemsEnabled = true;
@@ -131,6 +139,7 @@ export function getSavedSurvivalCampaign() {
         !Number.isInteger(campaign.lives) || campaign.lives < 1 || campaign.lives > SURVIVAL_STARTING_LIVES ||
         !Number.isInteger(campaign.encounter) || campaign.encounter < 1 || campaign.encounter > SURVIVAL_ENCOUNTERS ||
         typeof campaign.boss !== 'boolean') return null;
+    if (campaign.winScore !== undefined && (!Number.isInteger(campaign.winScore) || campaign.winScore < MIN_WIN_SCORE || campaign.winScore > MAX_WIN_SCORE)) return null;
     if (campaign.boss && (!campaign.bossId || !GODS[campaign.bossId] || campaign.bossId !== snapshot.currentOpponentId)) return null;
     return snapshot;
   } catch (_) { return null; }
@@ -140,13 +149,13 @@ export function resumeSavedSurvivalCampaign() {
   const snapshot = getSavedSurvivalCampaign();
   if (!snapshot) return null;
   const saved = snapshot.campaign;
-  Object.assign(survivalCampaign, saved, { recentEnemies: [...(saved.recentEnemies || [])] });
-  configureSurvivalRules();
+  Object.assign(survivalCampaign, saved, { recentEnemies: [...(saved.recentEnemies || [])], winScore: normalizeWinScore(saved.winScore) });
+  configureSurvivalRules(survivalCampaign.winScore);
   state.selected.p1 = survivalCampaign.protagonistId;
   state.selected.p2 = snapshot.currentOpponentId;
   if (snapshot.arenaId) state.arenaId = snapshot.arenaId;
   state.difficulty = survivalCampaign.boss ? 'hard' : survivalCampaign.encounter >= 12 ? 'hard' : survivalCampaign.encounter >= 8 ? 'normal' : 'easy';
-  state.winScore = survivalCampaign.boss ? BOSS_WIN_SCORE : DEFAULT_WIN_SCORE;
+  state.winScore = survivalCampaign.winScore;
   persistActiveCampaign();
   return survivalCampaign;
 }

@@ -519,3 +519,11 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - La preparación y el resumen explican el objetivo de puntos antes de iniciar.
 - El panel de campaña guardada se oculta al descartar el progreso; los botones de continuar y descartar se deshabilitan si no existe un guardado válido.
 - Caché PWA actualizada a V0.2.50.
+
+## V0.2.51 — Puntuación configurable y fija en Supervivencia
+
+- El selector de puntos para ganar ahora está disponible al preparar Supervivencia (rango de 3 a 15 puntos).
+- El objetivo elegido se aplica a los 15 rivales y al jefe final, sin aumentos por dificultad.
+- La puntuación configurada queda guardada en la campaña activa y se restaura al reanudar la aplicación.
+- El resumen previo, el marcador y el HUD usan el mismo objetivo efectivo.
+- La caché de la PWA se actualizó a V0.2.51.
