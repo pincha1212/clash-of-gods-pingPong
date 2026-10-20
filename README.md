@@ -587,3 +587,7 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Se mantienen fuera del precache los archivos que no participan en el arranque activo, aunque estén en la raíz.
 - Se actualizó la versión visible, el paquete y la clave de caché a V0.2.55.
 - No se reorganizaron los módulos activos ni se modificaron las mecánicas del juego.
+
+## V0.2.56 — Marcador exclusivo de Supervivencia
+- Se reforzó la visibilidad condicional del HUD de Supervivencia para que no aparezca en Clásico, Crónicas ni Mutación.
+- Se sincroniza la clase visual con el modo de preparación al iniciar una partida y actualizar el HUD.
