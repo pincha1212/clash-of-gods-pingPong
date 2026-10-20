@@ -47,6 +47,11 @@ export const POWERUPS = [
  {id:'doublepoint',name:'Juicio doble',symbol:'Ⅱ',color:'#ff8f91',description:'Si ganas el próximo punto, suma dos puntos.'},
  {id:'chromaaura',name:'Aura cromática',symbol:'✺',color:'#ff9fe5',description:'Tu paleta gana movilidad mientras su aura está activa.'},
  {id:'paddlechrome',name:'Paleta prismática',symbol:'▥',color:'#ff9fe5',description:'Cambia el color de tu paleta durante este partido; otro cambio cromático lo reemplaza.'},
+ {id:'paddlejet',name:'Motor divino',symbol:'➟',color:'#8dfff1',description:'Tu paleta recibe un impulso de movimiento durante unos segundos, con aceleración y estela.'},
+ {id:'paddlecoil',name:'Bobina caótica',symbol:'ϟ',color:'#ffe36e',description:'Tus golpes cargan una descarga que retuerce la trayectoria de la pelota, sin cambiar su velocidad de forma injusta.'},
+ {id:'paddleshock',name:'Pulso sísmico',symbol:'◎',color:'#ff9a72',description:'Al golpear una pelota, emite una onda que empuja las otras pelotas cercanas. Cada paleta genera sus propios pulsos.'},
+ {id:'paddlechaos',name:'Paleta mutante',symbol:'⟁',color:'#d5a0ff',description:'Durante unos segundos tu paleta cambia de tamaño y color en oleadas, dentro de límites seguros.'},
+ {id:'paddlephase',name:'Fase espectral',symbol:'◌',color:'#b9b7ff',description:'Tu paleta se vuelve espectral y puede desplazarse brevemente a otra altura segura de su lado, con aviso visual.'},
  {id:'runebarricade',name:'Barricada rúnica',symbol:'ᛉ',color:'#8ee9ff',description:'Invoca durante un instante una formación de muros rúnicos en el centro de la arena.'},
  {id:'divinestorm',name:'Tempestad divina',symbol:'ϟ',color:'#8adfff',description:'Transforma la arena en una tormenta eléctrica y desvía la pelota con ráfagas de viento.'}
 ];
@@ -109,7 +114,7 @@ function safePhaseDestination(ball){
  // No fuerza el salto a través de otra pelota o de un muro: se pospondrá el intento.
  return null;
 }
-export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0,rainbowArena:0};state.chaosArena={time:0,pulse:0,cycle:0};state.ballPower=EMPTY_BALL_POWER();for(const b of state.balls||[]){if(b){b.powerEffect=null;b.matchEffects={sizeScale:1,trajectory:'',color:''};b.baseR=BALL_BASE_R;b.r=BALL_BASE_R;b.color='#f6f4ed';}}for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert','aimBonus'])p[key]=0;p.matchSizeScale=1;p.powerColor='';p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
+export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0,rainbowArena:0};state.chaosArena={time:0,pulse:0,cycle:0};state.ballPower=EMPTY_BALL_POWER();for(const b of state.balls||[]){if(b){b.powerEffect=null;b.matchEffects={sizeScale:1,trajectory:'',color:''};b.baseR=BALL_BASE_R;b.r=BALL_BASE_R;b.color='#f6f4ed';}}for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert','aimBonus','paddleJet','paddleCoil','paddleShock','paddleChaos','paddlePhase','paddlePhaseWarning','paddleJetPulse','paddleCoilPulse','paddleShockCooldown','paddlePhaseCooldown'])p[key]=0;p.matchSizeScale=1;p.powerColor='';p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
 function summonRuneBarricades(){
  const cx=SETTINGS.width/2,cy=SETTINGS.height/2;
  const layouts=[
@@ -160,6 +165,11 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'doublepoint': owner.bonusPoint=1;break;
   case 'chromaaura': owner.palette=6;break;
   case 'paddlechrome': owner.powerColor=BALL_PALETTE[Math.floor(Math.random()*BALL_PALETTE.length)];break;
+  case 'paddlejet': owner.paddleJet=5.5;owner.paddleJetPulse=0;break;
+  case 'paddlecoil': owner.paddleCoil=7;owner.paddleCoilPulse=0;break;
+  case 'paddleshock': owner.paddleShock=7;owner.paddleShockCooldown=0;break;
+  case 'paddlechaos': owner.paddleChaos=6.5;owner.paddleChaosPhase=Math.random()*Math.PI*2;break;
+  case 'paddlephase': owner.paddlePhase=5.5;owner.paddlePhaseCooldown=.7;owner.paddlePhaseWarning=.45;break;
   case 'runebarricade': summonRuneBarricades();break;
   case 'divinestorm': state.worldEffects.storm=5;state.worldEffects.crosswind=Math.max(state.worldEffects.crosswind||0,5);setBallPower('lightningball',5,ball);break;
  }
@@ -248,7 +258,7 @@ export function updatePowerups(dt){
  }
  for(const side of ['p1','p2']){
   const p=state.paddles[side];if(!p)continue;
-  for(const key of ['haste','aura','freeze','palette','powerGrow','powerShrink'])p[key]=Math.max(0,(p[key]||0)-dt);
+  for(const key of ['haste','aura','freeze','palette','powerGrow','powerShrink','paddleJet','paddleCoil','paddleShock','paddleChaos','paddlePhase','paddlePhaseWarning'])p[key]=Math.max(0,(p[key]||0)-dt);
  }
 }
 export function drawPowerupEffects(ctx){
