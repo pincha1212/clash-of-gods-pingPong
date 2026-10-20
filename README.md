@@ -1,9 +1,9 @@
 
-# Clash of Gods — Divine Arena V0.2.59
+# Clash of Gods — Divine Arena V0.2.60
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 
-## Arquitectura del proyecto (V0.2.59)
+## Arquitectura del proyecto (V0.2.60)
 
 - `index.html`: estructura de pantallas y carga las dos entradas de la aplicación.
 - `game.js`: orquestación del juego y coordinación de los modos.
@@ -623,3 +623,10 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - Se limita la cantidad simultánea a 24 pelotas para evitar que la multiplicación degrade el rendimiento. Todas las pelotas activas siguen usando las reglas de colisión y puntuación existentes.
 - Se actualizó la versión de la interfaz y la caché de la PWA.
 - Revisión estática de los archivos modificados; no se ejecutaron pruebas de juego en navegador.
+
+
+## V0.2.60 — Rondas multi-bola y power-ups de caos
+- Una pelota que sale de la cancha suma su punto y se elimina; las demás siguen en juego. La siguiente salida solo reinicia la jugada cuando ya no quedan pelotas activas.
+- Se conserva el límite de puntuación: si un jugador alcanza el objetivo, el partido termina inmediatamente.
+- Nuevos poderes individuales: Núcleo gravitatorio (atrae las otras pelotas cercanas) y Caos inestable (cambia de rumbo en pulsos impredecibles).
+- El Núcleo gravitatorio no transfiere su poder a las pelotas afectadas; cada una mantiene su propio estado.

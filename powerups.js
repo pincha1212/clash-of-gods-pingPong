@@ -13,6 +13,8 @@ export const POWERUPS = [
  {id:'ghostball',name:'Bola espectral',symbol:'◌',color:'#c6c8ff',description:'La pelota se vuelve translúcida y difícil de seguir.'},
  {id:'heavyball',name:'Bola pesada',symbol:'●',color:'#b4a6a0',description:'La pelota pierde velocidad temporalmente.'},
  {id:'lightningball',name:'Bola relámpago',symbol:'ϟ',color:'#fff08a',description:'Esta pelota acelera durante unos segundos.'},
+ {id:'magnetball',name:'Núcleo gravitatorio',symbol:'⦿',color:'#8df0d2',description:'Esta pelota genera un campo gravitatorio que curva hacia ella a las otras pelotas cercanas durante unos segundos.'},
+ {id:'unstableball',name:'Caos inestable',symbol:'※',color:'#ffcf70',description:'Esta pelota cambia bruscamente de dirección a intervalos impredecibles durante unos segundos.'},
  {id:'ballgrow',name:'Masa creciente',symbol:'⊕',color:'#ffb36b',description:'Esta pelota aumenta de tamaño de forma persistente; los efectos contrarios pueden reducirla.'},
  {id:'ballshrink',name:'Masa menguante',symbol:'⊖',color:'#9dd6ff',description:'Esta pelota disminuye de tamaño de forma persistente.'},
  {id:'splitball',name:'Desdoblamiento',symbol:'⑂',color:'#a5f3a5',description:'Divide esta pelota en dos pelotas reales que pueden marcar y recoger poderes.'},
@@ -96,7 +98,7 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'haste': owner.haste=5;break;
   case 'snare': opponent.slow=3.8;break;
   case 'invert': opponent.invert=3.2;break;
-  case 'fireball': case 'ghostball': case 'heavyball': case 'lightningball': case 'chaos': setBallPower(id,5,ball);break;
+  case 'fireball': case 'ghostball': case 'heavyball': case 'lightningball': case 'chaos': case 'magnetball': case 'unstableball': setBallPower(id,id==='magnetball'?6.5:id==='unstableball'?5.5:5,ball);break;
   case 'ballgrow': setBallSize(ball,(ball.matchEffects?.sizeScale||1)+BALL_SIZE_STEP);break;
   case 'ballshrink': setBallSize(ball,(ball.matchEffects?.sizeScale||1)-BALL_SIZE_STEP);break;
   case 'splitball': spawnBall(ball,{angle:-.24});break;
@@ -131,7 +133,7 @@ export function updatePowerups(dt){
  if(!state.worldEffects)resetPowerups();
  for(const key of Object.keys(state.worldEffects))if(key!=='quakePulse')state.worldEffects[key]=Math.max(0,(state.worldEffects[key]||0)-dt);
  if((state.worldEffects.quake||0)<=0)state.worldEffects.quakePulse=0;
- for(const ball of state.balls||[]){if(!ball?.powerEffect?.type)continue;ball.powerEffect.time=Math.max(0,(ball.powerEffect.time||0)-dt);if(ball.powerEffect.time===0)clearBallPower(ball);}
+ for(const ball of state.balls||[]){if(!ball?.powerEffect?.type)continue;ball.powerEffect.time=Math.max(0,(ball.powerEffect.time||0)-dt);if(ball.powerEffect.type==='unstableball'&&ball.powerEffect.time>0){ball.powerEffect.pulse=(ball.powerEffect.pulse??.4)-dt;if(ball.powerEffect.pulse<=0){const speed=speedOf(ball),angle=Math.atan2(ball.vy,ball.vx)+(Math.random()-.5)*1.15;ball.vx=Math.cos(angle)*speed;ball.vy=Math.sin(angle)*speed;ball.speed=speed;ball.powerEffect.pulse=.38+Math.random()*.55;burst(ball.x,ball.y,'#ffcf70',3,1.4);}}if(ball.powerEffect.time===0)clearBallPower(ball);}
  for(const side of ['p1','p2']){
   const p=state.paddles[side];if(!p)continue;
   for(const key of ['haste','aura','freeze','palette','powerGrow','powerShrink'])p[key]=Math.max(0,(p[key]||0)-dt);
@@ -164,6 +166,8 @@ export function drawBallPower(ctx,b){const effect=b?.powerEffect?.time>0?b.power
  }else if(effect==='ghostball'){const trail=(b.trail||[]);for(let i=0;i<trail.length;i++){const point=trail[i],alpha=(i+1)/(trail.length+1);ctx.globalAlpha=alpha*.32;ctx.beginPath();ctx.arc(point.x,point.y,b.r*(.35+alpha*.3),0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(b.x,b.y,b.r+6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(b.x-3,b.y-2,b.r*.5,0,Math.PI*2);ctx.stroke();}
  else if(effect==='heavyball'){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.stroke();ctx.fillRect(b.x-2,b.y-2,4,4);}
  else if(effect==='lightningball'){ctx.beginPath();ctx.moveTo(b.x-5,b.y-b.r-7);ctx.lineTo(b.x+1,b.y-2);ctx.lineTo(b.x-4,b.y+1);ctx.lineTo(b.x+5,b.y+b.r+7);ctx.stroke();}
+ else if(effect==='magnetball'){const t=state.settings?.reducedMotion?0:performance.now()/240;ctx.globalAlpha=.55;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(b.x,b.y,b.r+7+i*6,b.r+3+i*4,t+i*.7,0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=.9;ctx.beginPath();ctx.arc(b.x,b.y,3,0,Math.PI*2);ctx.fill();}
+ else if(effect==='unstableball'){const t=state.settings?.reducedMotion?0:performance.now()/90;ctx.globalAlpha=.8;for(let i=0;i<4;i++){const a=t+i*Math.PI/2;ctx.beginPath();ctx.moveTo(b.x+Math.cos(a)*(b.r+2),b.y+Math.sin(a)*(b.r+2));ctx.lineTo(b.x+Math.cos(a+.55)*(b.r+10),b.y+Math.sin(a+.55)*(b.r+10));ctx.stroke();}}
  else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}
  if(persistent.sizeScale&&persistent.sizeScale!==1){ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.stroke();}
  if(persistent.trajectory){ctx.globalAlpha=.9;ctx.beginPath();if(persistent.trajectory==='flat'){ctx.moveTo(b.x-b.r-7,b.y);ctx.lineTo(b.x+b.r+7,b.y);ctx.moveTo(b.x+b.r+3,b.y-4);ctx.lineTo(b.x+b.r+7,b.y);ctx.lineTo(b.x+b.r+3,b.y+4);}else if(persistent.trajectory==='vertical'){ctx.moveTo(b.x,b.y-b.r-7);ctx.lineTo(b.x,b.y+b.r+7);ctx.moveTo(b.x-4,b.y+b.r+3);ctx.lineTo(b.x,b.y+b.r+7);ctx.lineTo(b.x+4,b.y+b.r+3);}else{for(let i=0;i<3;i++){const a=performance.now()/260+i*Math.PI*2/3;ctx.moveTo(b.x+Math.cos(a)*(b.r+3),b.y+Math.sin(a)*(b.r+3));ctx.lineTo(b.x+Math.cos(a+1.4)*(b.r+10),b.y+Math.sin(a+1.4)*(b.r+10));}}ctx.stroke();}

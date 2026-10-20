@@ -33,8 +33,8 @@ export function spawnBall(parent=state.ball,options={}){
 }
 export function removeBall(ball){
  const balls=ensureBallCollection(),index=balls.indexOf(ball);
- if(index<0||balls.length<=1)return false;
- balls.splice(index,1);if(state.ball===ball)state.ball=balls[0];return true;
+ if(index<0)return false;
+ balls.splice(index,1);if(state.ball===ball)state.ball=balls[0]||null;return true;
 }
 export function resetBallCollection(primary=state.ball){state.ball=primary||createBall();state.balls=[state.ball];return state.ball;}
 

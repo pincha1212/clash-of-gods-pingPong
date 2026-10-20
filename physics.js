@@ -1,4 +1,4 @@
-import {state,ensureBallCollection,resetBallCollection} from './state.js';
+import {state,ensureBallCollection,resetBallCollection,removeBall} from './state.js';
 import {SETTINGS} from './config.js';
 import {burst} from './effects.js';
 import {playTone} from './audio.js';
@@ -118,10 +118,10 @@ export function serve(direction=Math.random()>.5?1:-1,servingBall=null){
 export function updatePhysics(dt){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const balls=ensureBallCollection().slice();for(const b of balls){b.frameStartX=b.x;b.frameStartY=b.y;}if(state.serveTimer>0){state.ball=balls[0];updatePhysicsSingle(dt,true);return;}
- updatePowerups(dt);const primary=balls[0];if(state.mutationMode==='mutation')updateMutationEffects(dt,primary);updateArenaEvents(dt);const oldScores={p1:state.scores.p1,p2:state.scores.p2};
- for(let i=0;i<balls.length;i++){const b=balls[i];if(!state.balls.includes(b))continue;state.ball=b;updatePhysicsSingle(dt,i===0);if(state.finished||state.serveTimer>0||state.scores.p1!==oldScores.p1||state.scores.p2!==oldScores.p2||state.balls.length!==balls.length)break;}
- if(!state.finished&&state.serveTimer<=0&&state.scores.p1===oldScores.p1&&state.scores.p2===oldScores.p2&&state.balls.length===balls.length)resolveBallCollisions(dt);
- state.ball=state.balls[0]||primary;
+ updatePowerups(dt);const primary=balls[0];if(state.mutationMode==='mutation')updateMutationEffects(dt,primary);updateArenaEvents(dt);
+ for(let i=0;i<balls.length;i++){const b=balls[i];if(!state.balls.includes(b))continue;state.ball=b;updatePhysicsSingle(dt,b===primary);if(state.finished||state.serveTimer>0)break;}
+ if(!state.finished&&state.serveTimer<=0&&state.balls.length>1)resolveBallCollisions(dt);
+ state.ball=state.balls[0]||null;
 }
 
 function updatePhysicsSingle(dt,isPrimary){
@@ -162,6 +162,8 @@ function updatePhysicsSingle(dt,isPrimary){
  fieldForce+=arenaForce.y;
  b.vy+=clamp(fieldForce,-4.8,4.8)*dt;
  b.vx+=clamp(arenaForce.x,-1.25,1.25)*dt;
+ // Cada Núcleo gravitatorio afecta a las otras pelotas cercanas, sin copiarles su poder.
+ for(const source of state.balls||[]){if(source===b||source?.powerEffect?.type!=='magnetball'||(source.powerEffect.time||0)<=0)continue;const dx=source.x-b.x,dy=source.y-b.y,dist=Math.hypot(dx,dy);if(dist<18||dist>235)continue;const falloff=1-dist/235,force=17*falloff*falloff;b.vx+=dx/dist*force*dt;b.vy+=dy/dist*force*dt;}
  if(state.mutationMode==='mutation')applyMutationArenaForce(b,dt);
  if(isPrimary&&state.worldEffects?.quake>0){state.worldEffects.quakePulse=Math.max(0,(state.worldEffects.quakePulse||0)-dt);if(state.worldEffects.quakePulse<=0){b.vy+=((Math.random()-.5)*1.7);state.worldEffects.quakePulse=.55;}}
  enforceBallTrajectory(b);
@@ -203,18 +205,18 @@ function updatePhysicsSingle(dt,isPrimary){
    for(const side of ['p1','p2'])if(state.paddles[side])state.paddles[side].bonusPoint=0;
    burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),32,4.3);
    playTone(180,.25,'sawtooth',.04);
-   window.dispatchEvent(new CustomEvent('mutation-goal-confirmed',{detail:{winner,loser:conceding,gain:result.gain||0,charge:result.charge||0,streak:result.streak||0,defeated:Boolean(result.defeated)}}));
+   window.dispatchEvent(new CustomEvent('mutation-goal-confirmed',{detail:{winner,loser:conceding,gain:result.gain||0,charge:result.charge||0,streak:result.streak||0,defeated:Boolean(result.defeated),ballId:b.id}}));
    if(result.defeated){clearArenaEventState();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner,loser:conceding,reason:'corruption',charge:result.charge}}));}
-   else serve(winner==='p1'?1:-1,b);
+   else{removeBall(b);if(state.balls.length===0)serve(winner==='p1'?1:-1,b);}
    return;
   }
   const doublePoint=scorer?.bonusPoint>0;state.scores[winner]+=doublePoint?2:1;
   for(const side of ['p1','p2'])if(state.paddles[side])state.paddles[side].bonusPoint=0;
   if(doublePoint)window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DOBLE · +2',color:scorer.color}}));
-  burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),45,5);playTone(180,.25,'sawtooth',.04);window.dispatchEvent(new CustomEvent('point-scored',{detail:{winner}}));
+  burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),45,5);playTone(180,.25,'sawtooth',.04);window.dispatchEvent(new CustomEvent('point-scored',{detail:{winner,ballId:b.id,remainingBalls:Math.max(0,state.balls.length-1)}}));
   if(state.scores[winner]>=state.winScore){clearArenaEventState();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner}}));}
-  else serve(winner==='p1'?1:-1,b);
-  return; // Evita recoger objetos o procesar eventos sobre la pelota reiniciada en el centro.
+  else{removeBall(b);if(state.balls.length===0)serve(winner==='p1'?1:-1,b);}
+  return; // La jugada continúa mientras quede al menos una pelota real en cancha.
  }
  b.fire=0;b.color=b.matchEffects?.color||b.color||'#f6f4ed';b.glow=0;
  if(state.mythicMode==='boss-jormungandr'&&state.mutationMode!=='mutation')state.items.length=0;
