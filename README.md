@@ -1,5 +1,18 @@
+# Clash of Gods — Divine Arena V0.2.66
 
-# Clash of Gods — Divine Arena V0.2.65
+## V0.2.66 — Sinergias de poder y plano evolutivo de arenas
+
+- Se incorporan tres sinergias discretas entre poderes existentes: **Paleta fracturada + Extensiones rúnicas** genera un pequeño impulso visual y ajusta ligeramente el rebote; **Paleta mutante + Bobina caótica** aumenta moderadamente la variación angular; **Motor divino + Paleta fracturada** aporta un incremento de velocidad muy pequeño.
+- Los incrementos de velocidad siguen limitados por `SETTINGS.maxBallSpeed`; las sinergias no añaden nuevos estados persistentes ni cambian el catálogo de poderes.
+- Se añade `ARENA_EVOLUTION_BLUEPRINTS` y `getArenaEvolutionBlueprint()` como base de diseño para las 17 familias de arena: capas visuales, evolución temática y futuras sinergias.
+- **Importante:** los planos de evolución son metadatos y no activan todavía obstáculos, capas ni eventos nuevos. El gestor de eventos actual y sus perfiles por arena permanecen como fuente del comportamiento activo.
+- Se actualizan la versión de la interfaz, `package.json` y la caché del Service Worker a V0.2.66.
+
+### Revisión V0.2.66
+
+Se revisaron estáticamente los puntos de integración y los límites de velocidad; no se ejecutaron pruebas automatizadas ni una partida en navegador/teléfono. Validar manualmente las tres combinaciones, ambos lados, CPU, controles táctiles y reinicio de partida.
+
+---
 
 Juego arcade de ping-pong mitológico en HTML, CSS y JavaScript nativos. La aplicación no necesita compilación ni frameworks. Todos los archivos se mantienen en la carpeta raíz para que sea sencillo encontrar y editar el proyecto. Algunos archivos son históricos y no forman parte del arranque activo.
 

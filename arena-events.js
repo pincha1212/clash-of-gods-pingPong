@@ -28,6 +28,34 @@ export const ARENA_MODIFIER_PROFILES = {
     arena_levantine: makeProfile('MAREA DE LA LUNA CRECIENTE','marea lunar','crescent-tide','crescent-tide','y','#91d4d2',.50,.035,1.7,.95,11.0,1.45)
   }
 };
+
+// Hoja de ruta de evolución visual/sistémica de las arenas. Es metadato de diseño:
+// no activa capas ni modifica el comportamiento actual de las arenas por sí solo.
+export const ARENA_EVOLUTION_BLUEPRINTS = {
+  arena_japanese: {family:'kami', evolution:'Torii vivos', layers:['siluetas parallax','sellos reactivos','puertas de fase'], synergy:'viento + portales'},
+  arena_greek: {family:'olympus', evolution:'Olimpo fractal', layers:['columnas quebrables visuales','nubes de tormenta','runas de destino'], synergy:'rayos + zonas de carga'},
+  arena_norse: {family:'niflheim', evolution:'Yggdrasil dinámico', layers:['raíces en profundidad','nieve direccional','grietas de hielo'], synergy:'frío + rebotes'},
+  arena_egyptian: {family:'solar', evolution:'Barca solar', layers:['disco eclipsable','arena de polvo','jeroglíficos encendidos'], synergy:'luz + sombra'},
+  arena_indian: {family:'mandala', evolution:'Mandala orbital', layers:['anillos concéntricos','geometría rotatoria','pétalos energéticos'], synergy:'órbitas + ritmo'},
+  arena_mexica: {family:'feathered-serpent', evolution:'Templo emplumado', layers:['escalinatas profundas','plumas espectrales','calendario solar'], synergy:'viento + pulsos'},
+  arena_primordial: {family:'titan', evolution:'Falla de los titanes', layers:['estratos geológicos','fragmentos suspendidos','núcleo inestable'], synergy:'fracturas + gravedad'},
+  arena_chinese: {family:'immortal-cloud', evolution:'Palacio entre nubes', layers:['dragón de fondo','linternas reactivas','capas de niebla'], synergy:'nubes + corrientes'},
+  arena_mesopotamian: {family:'twin-river', evolution:'Zigurat de las mareas', layers:['canales antiguos','tablillas cuneiformes','crecida escalonada'], synergy:'ríos + compuertas'},
+  arena_celtic: {family:'ancient-grove', evolution:'Bosque consciente', layers:['raíces luminosas','niebla de brezo','nudos rúnicos'], synergy:'raíces + viento'},
+  arena_arthurian: {family:'grail', evolution:'Cámara del Grial', layers:['vidrieras arcanas','niebla caballeresca','espada espectral'], synergy:'juramentos + energía'},
+  arena_persian: {family:'simurgh', evolution:'Cielo del Simurg', layers:['plumas incandescentes','corrientes térmicas','mosaico estelar'], synergy:'calor + corrientes'},
+  arena_roman: {family:'legion', evolution:'Foro de los dioses', layers:['estandartes animados','mármol agrietado','laureles de victoria'], synergy:'formaciones + impulso'},
+  arena_anglo_saxon: {family:'mead-hall', evolution:'Salón de las runas', layers:['vigas talladas','brasas flotantes','inscripciones reactivas'], synergy:'runas + resonancia'},
+  arena_germanic: {family:'wild-hunt', evolution:'Cacería espectral', layers:['bosque en silueta','cazadores lejanos','bruma lunar'], synergy:'ráfagas + apariciones'},
+  arena_medieval_europe: {family:'leyline', evolution:'Catedral de leylines', layers:['arcos góticos','trazados arcanos','cristales de energía'], synergy:'líneas + portales'},
+  arena_levantine: {family:'crescent-tide', evolution:'Jardín de la luna creciente', layers:['mosaicos geométricos','arcos de luz','marea celeste'], synergy:'marea + fases lunares'}
+};
+
+export function getArenaEvolutionBlueprint(arenaId = state.arenaId) {
+  const id = ARENAS.some(arena => arena.id === arenaId) ? arenaId : (LEGACY_ARENA_MIGRATION[arenaId] || 'arena_japanese');
+  return ARENA_EVOLUTION_BLUEPRINTS[id] || ARENA_EVOLUTION_BLUEPRINTS.arena_japanese;
+}
+
 const INITIAL_COOLDOWN = 7.5;
 const MAX_TOTAL_FORCE = 1.25;
 

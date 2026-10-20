@@ -104,6 +104,10 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
  let angle=norm*1.08+paddleMotion*.20+(p.aimBonus>0?Math.sign(norm||1)*p.aimBonus:0);p.aimBonus=0;
  if(getBallPowerType(b)==='chaos')angle+=(Math.random()-.5)*.7;if(p.chaosCoil>0)angle+=(Math.random()-.5)*.88;if(p.segmentedPaddle>0)angle+=(segmentIndex-1)*.16;
+ // Sinergias v0.2.66: combinaciones breves, legibles y con velocidad acotada.
+ if(p.segmentedPaddle>0&&p.runeExtensions>0){angle+=(segmentIndex-1)*.055;speed=Math.min(SETTINGS.maxBallSpeed,speed*1.025);burst(b.x,b.y,p.color,3,1.35);}
+ if(p.mutantPaddle>0&&p.chaosCoil>0)angle+=(Math.random()-.5)*.22;
+ if(p.divineMotor>0&&p.segmentedPaddle>0)speed=Math.min(SETTINGS.maxBallSpeed,speed*1.018);
  if(getBallPowerType(b)==='ricochet')angle+=(Math.random()-.5)*1.0;
  if(state.worldEffects?.prism>0)angle+=Math.sin((performance.now?.()||0)/180)*.12;
  if(p.palette>0)angle+=Math.sin((performance.now?.()||0)/240)*.09;
