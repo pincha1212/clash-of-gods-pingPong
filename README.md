@@ -490,7 +490,7 @@ Se añade `ARENA_COMPATIBILITY_MATRIX.md`, inventario estático de las seis cró
 
 ## V0.2.48 — Modo Supervivencia
 
-Se añade un modo de campaña independiente del combate clásico, Crónicas y Mutación. Elegís un protagonista del elenco completo, enfrentás 15 enemigos seleccionados aleatoriamente y luego un jefe final aleatorio. Tenés tres vidas para toda la campaña; perder un combate completo consume una vida, pero perder puntos dentro del combate no. Los rivales normales juegan a 7 puntos; el jefe final usa dificultad Divina y 9 puntos. Si perdés contra el jefe, podés volver a intentarlo mientras conserves vidas. Al agotar las tres, la campaña termina.
+Se añade un modo de supervivencia independiente del combate clásico, Crónicas y Mutación. Elegís un protagonista del elenco completo, enfrentás 15 enemigos seleccionados aleatoriamente y luego un jefe final aleatorio. Tenés tres vidas para toda la campaña; perder un combate completo consume una vida, pero perder puntos dentro del combate no. Los rivales normales juegan a 7 puntos; el jefe final usa dificultad Divina y 9 puntos. Si perdés contra el jefe, podés volver a intentarlo mientras conserves vidas. Al agotar las tres, la campaña termina.
 
 El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones ni mejoras permanentes. La habilidad del personaje y los objetos de arena siguen activos. El progreso y los récords básicos se guardan localmente cuando el navegador lo permite. La lógica se encuentra en `survival.js`; `survival.css` define el HUD y el diseño del modo. Ambos recursos se incluyen en la caché offline de la PWA.
 
@@ -527,3 +527,12 @@ El modo no incorpora mecánicas roguelike: no hay rutas, reliquias, bendiciones 
 - La puntuación configurada queda guardada en la campaña activa y se restaura al reanudar la aplicación.
 - El resumen previo, el marcador y el HUD usan el mismo objetivo efectivo.
 - La caché de la PWA se actualizó a V0.2.51.
+
+
+## V0.2.52 — Supervivencia sin lenguaje de campaña
+
+- Se corrigen los textos visibles para presentar Supervivencia como un desafío arcade de resistencia, no como una campaña narrativa.
+- Se actualizan la tarjeta del modo, la configuración, el HUD, los resultados, el guardado/reanudación y el resumen de récords para usar términos como partida, rival, desafío y supervivencia.
+- Se conserva la lógica interna y la estructura de guardado existentes para evitar una migración innecesaria de datos. Crónicas sigue siendo el modo reservado para la campaña narrativa.
+- Se incrementa la versión visible y la caché de la PWA para que la nueva interfaz pueda actualizarse.
+- No se ejecutaron tests automatizados, según el flujo de trabajo acordado. Se hizo una revisión textual de los cambios; no se realizó una prueba manual en navegador/dispositivo.
