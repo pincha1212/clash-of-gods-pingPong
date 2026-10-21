@@ -131,7 +131,7 @@ function collideWithPaddle(b,prevX,prevY,p,side){
 
 export function serve(direction=Math.random()>.5?1:-1,servingBall=null){
  const b=servingBall||(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);
- const persistentEffects={sizeScale:b?.matchEffects?.sizeScale||1,trajectory:b?.matchEffects?.trajectory||'',color:b?.matchEffects?.color||'',orbitDirection:b?.matchEffects?.orbitDirection||0};
+ const persistentEffects={sizeScale:b?.matchEffects?.sizeScale||1,trajectory:b?.matchEffects?.trajectory||'',color:b?.matchEffects?.color||'',orbitDirection:b?.matchEffects?.orbitDirection||0,polygonSides:b?.matchEffects?.polygonSides||0};
  const baseRadius=b?.baseR||9;
  resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';b.baseR=baseRadius;b.matchEffects=persistentEffects;b.r=baseRadius*persistentEffects.sizeScale;b.powerEffect=null;b.color=persistentEffects.color||'#f6f4ed';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;if(state.mutationMode==='mutation')resetMutationRally();resetArenaEventState();
 }

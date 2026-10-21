@@ -1,3 +1,14 @@
+# Clash of Gods V0.2.74 — Mutación poligonal de la pelota
+
+- Nuevo power-up **Mutación poligonal**: transforma una pelota en triángulo, cuadrilátero, pentágono, hexágono u octágono.
+- La forma se representa en el cuerpo de la pelota con lados y bisel visibles; el giro acompaña la dirección del movimiento.
+- La forma persiste entre intercambios, pero se limpia al reiniciar los power-ups de una partida nueva. Las pelotas derivadas heredan la transformación mediante los efectos persistentes ya copiados por el sistema de creación.
+- La colisión conserva el radio circular estable existente como margen envolvente; la forma poligonal es visual y no cambia el cálculo de colisiones. Esto evita introducir inestabilidad en el motor físico.
+- Se actualiza la caché PWA a `0.2.74`.
+- Revisión estática de sintaxis e integración; no se ejecutaron pruebas automatizadas ni una partida en navegador.
+
+---
+
 # Clash of Gods V0.2.73 — controles, límites de cancha y cola de avisos
 
 - El arrastre táctil usa desplazamiento relativo durante y después de Confusión; al terminar la inversión no salta a la posición absoluta del dedo.
