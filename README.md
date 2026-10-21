@@ -1,14 +1,13 @@
-# Clash of Gods V0.2.69 — arenas con identidad visual y mecánica
+# Clash of Gods V0.2.69 — identidad visual avanzada de las arenas
 
 ## Novedades
-- Las 17 arenas ahora dibujan composiciones ambientales propias: arquitectura, siluetas y símbolos culturales distintos en vez de depender de un único patrón geométrico por escena.
-- Cada arena cuenta con un sello central sutil para reforzar su lectura visual sin competir con la pelota.
-- Los 35 fenómenos del director usan trazos visuales específicos por familia (portales, relámpagos, raíces, mareas, plumas, runas, cristales y otros), además de las señales de aviso.
-- Las 17 sinergias reciben un modificador mecánico específico; ya no usan el mismo impulso genérico después de las primeras arenas.
-- El arte se dibuja en la caché de escenario; no crea colisiones nuevas ni cambia las reglas de otros modos. Se conserva la opción de movimiento reducido y la calidad gráfica.
+- Nuevo módulo `arena-art.js` con arte ambiental específico para las 17 arenas: arquitectura, símbolos, motivos culturales y sellos de suelo diferenciados.
+- Los motivos son decorativos, se dibujan en la caché de Canvas y no agregan colisiones, obstáculos ni cambios a la física.
+- Se respetan los perfiles de calidad (`low`, `balanced`, `high`) y el arte se vuelve a dibujar al cambiar de arena mediante el flujo existente.
+- Se conserva el director de fenómenos V0.2.68, sus sinergias, los modos protegidos y los sistemas de partida existentes.
 
 ## Verificación
-Se inspeccionó el código y se revisó la sintaxis de los módulos editados y la integridad de los paquetes. No se jugaron partidas ni se ejecutó la batería automatizada; la verificación de sensaciones y equilibrio queda para la prueba manual.
+Se inspeccionaron las integraciones y se hicieron comprobaciones estáticas de sintaxis, importaciones locales, lista de precaché y estructura ZIP. No se ejecutaron pruebas automatizadas ni una partida en navegador; la verificación de jugabilidad queda para las pruebas manuales.
 
 ---
 
