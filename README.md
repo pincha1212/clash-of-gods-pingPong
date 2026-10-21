@@ -1,3 +1,17 @@
+# Clash of Gods V0.2.69 — arenas con identidad visual y mecánica
+
+## Novedades
+- Las 17 arenas ahora dibujan composiciones ambientales propias: arquitectura, siluetas y símbolos culturales distintos en vez de depender de un único patrón geométrico por escena.
+- Cada arena cuenta con un sello central sutil para reforzar su lectura visual sin competir con la pelota.
+- Los 35 fenómenos del director usan trazos visuales específicos por familia (portales, relámpagos, raíces, mareas, plumas, runas, cristales y otros), además de las señales de aviso.
+- Las 17 sinergias reciben un modificador mecánico específico; ya no usan el mismo impulso genérico después de las primeras arenas.
+- El arte se dibuja en la caché de escenario; no crea colisiones nuevas ni cambia las reglas de otros modos. Se conserva la opción de movimiento reducido y la calidad gráfica.
+
+## Verificación
+Se inspeccionó el código y se revisó la sintaxis de los módulos editados y la integridad de los paquetes. No se jugaron partidas ni se ejecutó la batería automatizada; la verificación de sensaciones y equilibrio queda para la prueba manual.
+
+---
+
 # Clash of Gods V0.2.68 — expansión del director de arenas
 
 ## Novedades

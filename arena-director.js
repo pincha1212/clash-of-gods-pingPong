@@ -1,8 +1,8 @@
 import { state } from './state.js';
 import { ARENAS, LEGACY_ARENA_MIGRATION, SETTINGS } from './config.js';
 
-// Director de evolución: un único reloj de simulación, eventos declarativos y
-// una autoridad de estado. Prototipo jugable para Japón, Grecia y Nórdica.
+// Director de evolución: reloj único, eventos declarativos, compatibilidad y
+// sinergias propias para las 17 identidades de arena.
 const PROFILES = {
   arena_japanese: { name: 'SANTUARIO DE LOS KAMI', color: '#8af0df', baseInterval: [5.5, 8.2], events: ['wind_shear', 'spirit_gate', 'seal_pulse'], exclusive: ['spirit_gate', 'seal_pulse'] },
   arena_greek: { name: 'CUMBRE DEL OLIMPO', color: '#ffe17a', baseInterval: [5.0, 7.8], events: ['wind_shear', 'thunder_charge', 'olympian_bolt'], exclusive: ['thunder_charge', 'olympian_bolt'] },
@@ -245,17 +245,129 @@ export function getArenaDirectorForces(ball = null) {
       case 'tide': x += d * spec.force * (.25 + .65 * Math.sin(t * 1.7) ** 2); y += Math.cos(t * 1.6) * .13; break;
       case 'compass': { const dx = SETTINGS.width / 2 - (b?.x || SETTINGS.width / 2); const dy = SETTINGS.height / 2 - (b?.y || SETTINGS.height / 2); x += Math.sign(dx) * spec.force * .28; y += Math.sign(dy) * spec.force * .28; break; }
     }
-    if (event.synergy) {
-      if (event.synergy === 'kami_veil') { x *= 1.12; y += Math.sin(t * 4.5) * .10; }
-      if (event.synergy === 'olympus_circuit' && Math.sin(t * 7) > .68) { x += d * .13; y += Math.cos(t * 5) * .12; }
-      if (event.synergy === 'niflheim_echo') { y += Math.sin(t * 3.4) * .14; x *= .92; }
-      if (!['kami_veil','olympus_circuit','niflheim_echo'].includes(event.synergy)) { const pulse = Math.sin(t * 3.1); x += d * pulse * .045; y += Math.cos(t * 2.7) * .045; }
+    // La bonificación de sinergia se aplica una sola vez por pareja, y cambia
+    // según la lógica mitológica (no es un pulso genérico compartido).
+    const combo = SYNERGIES[director.arenaId];
+    if (event.synergy && combo && event.id === combo.pair[0]) {
+      const nx = ((b?.x || SETTINGS.width / 2) - SETTINGS.width / 2) / (SETTINGS.width / 2);
+      const ny = ((b?.y || SETTINGS.height / 2) - SETTINGS.height / 2) / (SETTINGS.height / 2);
+      const beat = Math.sin(t * 4.2), fastBeat = Math.sin(t * 7.4);
+      switch (event.synergy) {
+        case 'kami_veil': x += d * .10; y += Math.sin(t * 4.5) * .15; break;
+        case 'olympus_circuit': if (fastBeat > .48) { x += d * .19; y -= Math.sign(ny || 1) * .08; } break;
+        case 'niflheim_echo': x *= .86; y += Math.sin(t * 3.4) * .18; break;
+        case 'solar_chariot': x += d * (.08 + Math.abs(beat) * .08); y -= Math.max(0, Math.sin(t * 2.1)) * .12; break;
+        case 'cosmic_dance': x += -ny * .16; y += nx * .20; break;
+        case 'quetzal_tempest': x += Math.sin(t * 5.5 + ny * 3) * .16; y += Math.cos(t * 3.8 + nx * 2) * .13; break;
+        case 'titan_collapse': x -= Math.sign(nx || 1) * .13; y -= Math.sign(ny || 1) * .12; break;
+        case 'dragon_wake': x += d * (.07 + Math.abs(Math.sin(t * 1.7 + ny)) * .13); y += Math.sin(t * 2.4 + nx * 2) * .17; break;
+        case 'river_gate': x += Math.sin(t * 1.6 + ny * 4) * .14; y += d * (.07 + Math.abs(Math.sin(t * 2.2)) * .12); break;
+        case 'green_covenant': x += Math.sin(t * 2.8) * .10 - Math.sign(nx || 1) * .06; y += d * Math.max(0, Math.sin(t * 3.4)) * .12; break;
+        case 'grail_ascendant': y -= .10 + Math.max(0, Math.sin(t * 2.7)) * .12; x += Math.sin(t * 2.1) * .07; break;
+        case 'simurgh_flight': y -= .14 + Math.max(0, Math.sin(t * 2.3)) * .10; x += d * .10; break;
+        case 'legion_eagle': if (Math.sin(t * 3.2) > .18) x += d * .21; y += Math.sin(t * 3.2) * .06; break;
+        case 'oath_echo': x += Math.sin(t * 4.4) * .13; y += Math.cos(t * 4.4) * .13; break;
+        case 'wild_tempest': x += d * Math.sin(t * 2.8) * .17; y += Math.sin(t * 3.7) * .15; break;
+        case 'cathedral_network': x += Math.sign(-ny || 1) * .10 + Math.sin(t * 1.8) * .08; y += Math.sign(-nx || 1) * .10 + Math.cos(t * 2.1) * .08; break;
+        case 'lunar_navigation': x += Math.sign(-nx || 1) * .10; y += Math.sin(t * 1.6) * .15 - Math.sign(ny || 1) * .05; break;
+      }
     }
   }
   // La desventaja del marcador solo ajusta diversidad/probabilidad; nunca apunta fuerzas al jugador.
   const mag = Math.hypot(x, y), max = .82;
   if (mag > max) { x = x / mag * max; y = y / mag * max; }
   return { x, y };
+}
+
+function drawArenaPhenomenon(ctx, event, t, pulse, quality) {
+  const spec = EVENTS[event.id], behavior = spec.behavior, color = event.synergy ? (SYNERGIES[state.arenaDirector.arenaId]?.color || spec.color) : spec.color;
+  const d = event.direction || 1;
+  ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.6 + pulse * .8; ctx.globalAlpha = .35 + pulse * .3;
+  const edgeL = 46, edgeR = SETTINGS.width - 46, top = 72, bottom = SETTINGS.height - 72;
+  const wave = (x, y, width, amp, phase, step = 14) => { ctx.beginPath(); for (let px = x; px <= x + width; px += step) { const py = y + Math.sin(px * .018 + phase) * amp; if (px === x) ctx.moveTo(px, py); else ctx.lineTo(px, py); } ctx.stroke(); };
+  switch (behavior) {
+    case 'wind':
+      for (let i=0;i<(quality==='low'?3:5);i++) { const y=105+i*88+Math.sin(t*2+i)*5; ctx.beginPath();ctx.moveTo(edgeL,y);ctx.lineTo(edgeL+d*36,y-13);ctx.lineTo(edgeL+d*72,y+2);ctx.lineTo(edgeL+d*105,y-7);ctx.stroke();ctx.beginPath();ctx.moveTo(edgeR,y+25);ctx.lineTo(edgeR-d*34,y+12);ctx.lineTo(edgeR-d*72,y+28);ctx.stroke(); }
+      break;
+    case 'gravity':
+      for(let r=35;r<185;r+=28){ctx.beginPath();ctx.ellipse(500,300,r+ pulse*5,r*.58+pulse*3,0,0,TAU);ctx.stroke();} for(let x of [180,820]){ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,top+36);ctx.moveTo(x-6,top+28);ctx.lineTo(x,top+36);ctx.lineTo(x+6,top+28);ctx.stroke();} break;
+    case 'gate':
+      for(const x of [150,850]){ctx.beginPath();ctx.ellipse(x,300,23+pulse*5,103+pulse*9,t*.12*d,0,TAU);ctx.stroke();ctx.beginPath();ctx.ellipse(x,300,12+pulse*2,83,t*.12*d,0,TAU);ctx.stroke();ctx.beginPath();ctx.moveTo(x-29,404);ctx.lineTo(x+29,404);ctx.stroke();} break;
+    case 'bolt': case 'sword':
+      for(const x of behavior==='bolt'?[250,500,750]:[130,870]){ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x-18,top+48);ctx.lineTo(x+7,top+67);ctx.lineTo(x-15,top+106);ctx.lineTo(x+5,top+142);ctx.stroke();if(behavior==='sword'){ctx.beginPath();ctx.moveTo(x+15,top+12);ctx.lineTo(x+15,top+112);ctx.moveTo(x-2,top+94);ctx.lineTo(x+32,top+94);ctx.stroke();}} break;
+    case 'charge': case 'march':
+      for(let x=95;x<960;x+=behavior==='march'?95:170){ctx.beginPath();ctx.moveTo(x,top+Math.sin(t*3+x)*7);ctx.lineTo(x+d*(behavior==='march'?28:45),bottom);ctx.stroke();if(behavior==='march'){ctx.strokeRect(x-7,top+20,14,17);}} break;
+    case 'frost':
+      for(let i=0;i<(quality==='low'?7:15);i++){const x=(i*71+t*13+1000)%920+40,y=(i*43+t*5)%500+55;ctx.beginPath();for(let a=0;a<6;a++){const ang=a*TAU/6;ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(ang)*(5+pulse*2),y+Math.sin(ang)*(5+pulse*2));}ctx.stroke();}wave(50,200,900,9,t*1.2);wave(50,410,900,8,-t);break;
+    case 'flare':
+      ctx.beginPath();ctx.arc(500,90,22+pulse*6,0,TAU);ctx.stroke();for(let i=0;i<20;i++){const a=i*TAU/20;ctx.beginPath();ctx.moveTo(500+Math.cos(a)*30,90+Math.sin(a)*30);ctx.lineTo(500+Math.cos(a)*(43+pulse*4),90+Math.sin(a)*(43+pulse*4));ctx.stroke();}for(let x of [390,610]){ctx.beginPath();ctx.moveTo(x,170);ctx.quadraticCurveTo(x-26,140,x,116);ctx.quadraticCurveTo(x+27,148,x,170);ctx.stroke();}break;
+    case 'eclipse':
+      ctx.beginPath();ctx.arc(500,110,37,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(517,100,35,0,TAU);ctx.stroke();ctx.beginPath();ctx.ellipse(500,110,62,49,0,0,TAU);ctx.stroke();break;
+    case 'orbit':
+      ctx.save();ctx.translate(500,300);ctx.rotate(t*.28);for(let i=0;i<5;i++){ctx.beginPath();ctx.ellipse(0,0,48+i*25,18+i*13,i*.11,0,TAU);ctx.stroke();}for(let i=0;i<8;i++){const a=t*.6+i*TAU/8;ctx.beginPath();ctx.arc(Math.cos(a)*145,Math.sin(a)*90,4+pulse*2,0,TAU);ctx.stroke();}ctx.restore();break;
+    case 'pulse':
+      for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(500,300,28+i*25+pulse*5,0,TAU);ctx.stroke();}ctx.beginPath();ctx.moveTo(470,300);ctx.lineTo(530,300);ctx.moveTo(500,270);ctx.lineTo(500,330);ctx.stroke();break;
+    case 'feathers':
+      for(let i=0;i<(quality==='low'?8:17);i++){const x=(i*59-t*16+1000)%920+40,y=(i*71+t*14)%500+50;ctx.beginPath();ctx.ellipse(x,y,4,14,Math.sin(t+i)*.8,0,TAU);ctx.moveTo(x-3,y+11);ctx.lineTo(x+4,y-11);ctx.stroke();}break;
+    case 'rift': case 'leyline':
+      if(behavior==='leyline'){for(let off=-2;off<=2;off++){ctx.beginPath();ctx.moveTo(30,160+off*42);ctx.lineTo(970,440+off*42);ctx.stroke();}ctx.beginPath();ctx.moveTo(40,490);ctx.lineTo(460,110);ctx.lineTo(540,490);ctx.lineTo(960,110);ctx.stroke();}
+      else for(let j=0;j<3;j++){ctx.beginPath();ctx.moveTo(470+j*28,top);for(let i=0;i<7;i++)ctx.lineTo(450+j*31+Math.sin(t*3+i+j)*11,top+i*68);ctx.stroke();}break;
+    case 'chaos':
+      ctx.save();ctx.translate(500,300);ctx.rotate(t*.7);ctx.beginPath();for(let i=0;i<17;i++){const a=i*TAU/17,r=45+(i%3)*30+Math.sin(t*5+i)*8;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.closePath();ctx.stroke();for(let i=0;i<8;i++)starGlyph(ctx,Math.cos(i*TAU/8)*155,Math.sin(i*TAU/8)*95,7);ctx.restore();break;
+    case 'dragon':
+      ctx.beginPath();for(let x=40;x<=960;x+=12){const y=150+Math.sin(x*.014+t*1.5)*35+Math.sin(x*.027-t)*12;if(x===40)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.beginPath();ctx.moveTo(936,132);ctx.lineTo(960,150);ctx.lineTo(936,168);ctx.closePath();ctx.stroke();break;
+    case 'mist':
+      for(let row=0;row<6;row++){ctx.globalAlpha*=.86;wave(35,100+row*76,930,5+row%2*4,t*1.15+row);}break;
+    case 'river': case 'tide':
+      for(let row=0;row<6;row++)wave(30,80+row*85,940,8+row%2*5,t*(behavior==='tide'?.8:1.3)+row*1.4);
+      if(behavior==='tide'){ctx.beginPath();ctx.arc(500,120,25,Math.PI*.2,Math.PI*1.8);ctx.stroke();}break;
+    case 'roots':
+      for(const x0 of [35,965])for(let i=0;i<7;i++){const x=x0+(x0<500?i*15:-i*15);ctx.beginPath();ctx.moveTo(x,600);ctx.bezierCurveTo(x+(x0<500?15:-15),520,x+(x0<500?-22:22),470,x+(x0<500?6:-6),390-i*9);ctx.stroke();}break;
+    case 'whisper':
+      for(let i=0;i<9;i++){const x=110+i*98,y=130+Math.sin(t*2+i)*30;ctx.beginPath();ctx.arc(x,y,3+(i%3)*2,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(x,y,9+(i%3)*4,0,TAU);ctx.stroke();}break;
+    case 'updraft':
+      for(let i=0;i<10;i++){const x=90+i*91;ctx.beginPath();ctx.moveTo(x,bottom);ctx.bezierCurveTo(x-25,430+Math.sin(t+i)*12,x+25,250,x+d*8,top);ctx.stroke();}break;
+    case 'embers':
+      for(let i=0;i<(quality==='low'?8:18);i++){const x=(i*67+t*28+900)%920+40,y=bottom-((i*39+t*48)%470);ctx.beginPath();ctx.arc(x,y,1.5+(i%3),0,TAU);ctx.fill();ctx.beginPath();ctx.moveTo(x,y+10);ctx.lineTo(x-2,y+16);ctx.stroke();}break;
+    case 'runes':
+      for(let i=0;i<7;i++){const x=90+i*137,y=150+(i%2)*300;ctx.strokeRect(x-12,y-17,24,34);ctx.beginPath();ctx.moveTo(x,y-12);ctx.lineTo(x,y+11);ctx.moveTo(x-8,y-3);ctx.lineTo(x+8,y+4);ctx.stroke();}break;
+    case 'echo':
+      for(const x of [130,870])for(let r=15;r<110;r+=22){ctx.beginPath();ctx.ellipse(x,300,r+pulse*5,r*.7,0,0,TAU);ctx.stroke();}break;
+    case 'hunt':
+      for(const x of [120,880]){ctx.beginPath();ctx.moveTo(x-26,155);ctx.lineTo(x-13,121);ctx.lineTo(x,140);ctx.lineTo(x+17,121);ctx.lineTo(x+30,155);ctx.lineTo(x+20,182);ctx.lineTo(x-16,182);ctx.closePath();ctx.stroke();ctx.beginPath();ctx.arc(x-9,154,2,0,TAU);ctx.arc(x+11,154,2,0,TAU);ctx.stroke();}break;
+    case 'crystal':
+      for(const x of [100,180,820,900,500]){const y=x===500?450:420+(x%3)*25;for(let i=0;i<3;i++){const h=22+i*13,w=8+i*3;ctx.beginPath();ctx.moveTo(x-w,y);ctx.lineTo(x,y-h);ctx.lineTo(x+w,y);ctx.lineTo(x,y+8);ctx.closePath();ctx.stroke();}}break;
+    case 'compass':
+      ctx.save();ctx.translate(500,300);ctx.rotate(t*.25);for(let i=0;i<8;i++){const a=i*TAU/8;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*125,Math.sin(a)*125);ctx.stroke();}ctx.beginPath();ctx.arc(0,0,42,0,TAU);ctx.stroke();ctx.restore();break;
+    default:
+      wave(35,160,930,8,t);wave(35,440,930,8,-t);
+  }
+  ctx.restore();
+}
+function starGlyph(ctx, x, y, r) { ctx.beginPath(); for (let i=0;i<8;i++){const a=i*Math.PI/4,rr=i%2?r*.4:r;const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.stroke(); }
+
+function drawArenaSynergy(ctx, arenaId, t, color, pulse, quality) {
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2+pulse;ctx.globalAlpha=.6;
+  switch(SYNERGIES[arenaId]?.id){
+    case 'kami_veil': for(const x of [150,850]){ctx.beginPath();ctx.ellipse(x,300,35+pulse*4,115,Math.sin(t)*.08,0,TAU);ctx.stroke();}break;
+    case 'olympus_circuit': ctx.beginPath();ctx.moveTo(70,130);ctx.lineTo(400,240);ctx.lineTo(485,290);ctx.lineTo(515,310);ctx.lineTo(620,365);ctx.lineTo(930,470);ctx.stroke();ctx.beginPath();ctx.moveTo(70,470);ctx.lineTo(410,350);ctx.lineTo(500,300);ctx.lineTo(930,130);ctx.stroke();break;
+    case 'niflheim_echo': for(let i=0;i<5;i++){ctx.beginPath();ctx.ellipse(500,300,65+i*24,100+i*18,0,0,TAU);ctx.stroke();}break;
+    case 'solar_chariot': ctx.beginPath();ctx.arc(500,105,40+pulse*5,0,TAU);ctx.stroke();for(let i=0;i<16;i++){const a=i*TAU/16;ctx.beginPath();ctx.moveTo(500+Math.cos(a)*48,105+Math.sin(a)*48);ctx.lineTo(500+Math.cos(a)*70,105+Math.sin(a)*70);ctx.stroke();}break;
+    case 'cosmic_dance': ctx.save();ctx.translate(500,300);ctx.rotate(t*.5);for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(0,0,65+i*35,26+i*18,i*.2,0,TAU);ctx.stroke();}ctx.restore();break;
+    case 'quetzal_tempest': for(let y of [100,500]){ctx.beginPath();ctx.moveTo(30,y);ctx.bezierCurveTo(270,y-45,330,y+50,500,y);ctx.bezierCurveTo(670,y-50,760,y+40,970,y-10);ctx.stroke();}break;
+    case 'titan_collapse': ctx.beginPath();for(let i=0;i<12;i++){const a=i*TAU/12,r=i%2?130:190;const x=500+Math.cos(a)*r,y=300+Math.sin(a)*r;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.closePath();ctx.stroke();break;
+    case 'dragon_wake': ctx.beginPath();ctx.moveTo(25,180);ctx.bezierCurveTo(200,85,320,245,500,160);ctx.bezierCurveTo(680,75,800,235,975,140);ctx.stroke();break;
+    case 'river_gate': for(let row=0;row<5;row++){ctx.beginPath();for(let x=30;x<=970;x+=12){const y=210+row*42+Math.sin(x*.02+t+row)*9;if(x===30)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}break;
+    case 'green_covenant': for(const x0 of [30,970]){ctx.beginPath();ctx.moveTo(x0,575);ctx.bezierCurveTo(x0+(x0<500?150:-150),470,500,420,500,300);ctx.bezierCurveTo(500,230,500+(x0<500?-120:120),170,500,90);ctx.stroke();}break;
+    case 'grail_ascendant': for(let r=45;r<=170;r+=25){ctx.beginPath();ctx.ellipse(500,300-r*.18,r,r*.48,0,0,TAU);ctx.stroke();}ctx.beginPath();ctx.moveTo(500,80);ctx.lineTo(500,220);ctx.stroke();break;
+    case 'simurgh_flight': ctx.beginPath();ctx.moveTo(500,240);ctx.bezierCurveTo(390,125,260,130,180,75);ctx.bezierCurveTo(290,215,380,205,500,240);ctx.bezierCurveTo(610,125,740,130,820,75);ctx.bezierCurveTo(710,215,620,205,500,240);ctx.stroke();break;
+    case 'legion_eagle': for(let i=0;i<7;i++){const x=90+i*137;ctx.beginPath();ctx.moveTo(x,95);ctx.lineTo(x+25,120);ctx.lineTo(x,145);ctx.lineTo(x-25,120);ctx.closePath();ctx.stroke();}ctx.beginPath();ctx.moveTo(35,300);ctx.lineTo(965,300);ctx.stroke();break;
+    case 'oath_echo': for(let r=20;r<150;r+=25){ctx.strokeRect(500-r,300-r,2*r,2*r);}break;
+    case 'wild_tempest': for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(30,110+i*90);ctx.bezierCurveTo(220,65+i*90,280,155+i*90,500,100+i*90);ctx.bezierCurveTo(720,50+i*90,780,155+i*90,970,95+i*90);ctx.stroke();}break;
+    case 'cathedral_network': ctx.beginPath();ctx.moveTo(40,80);ctx.lineTo(500,300);ctx.lineTo(960,80);ctx.moveTo(40,520);ctx.lineTo(500,300);ctx.lineTo(960,520);ctx.stroke();ctx.beginPath();ctx.arc(500,300,65+pulse*4,0,TAU);ctx.stroke();break;
+    case 'lunar_navigation': ctx.beginPath();ctx.arc(500,120,35,Math.PI*.2,Math.PI*1.8);ctx.stroke();for(const [x,y] of [[120,180],[300,105],[700,95],[870,190]]){ctx.beginPath();ctx.moveTo(500,120);ctx.lineTo(x,y);ctx.stroke();starGlyph(ctx,x,y,7);}break;
+  }
+  ctx.restore();
 }
 
 export function drawArenaDirector(ctx) {
@@ -266,33 +378,25 @@ export function drawArenaDirector(ctx) {
   const active = director.active, warning = director.warning;
   if (!active.length && !warning) return;
   ctx.save(); ctx.beginPath(); ctx.rect(24, 24, SETTINGS.width - 48, SETTINGS.height - 48); ctx.clip();
-  // Capas visuales ligeras; no crean colisiones ni obstáculos invisibles.
   for (const event of active) {
-    const spec = EVENTS[event.id], pulse = reduced ? .5 : .5 + .5 * Math.sin(t * 5.5);
-    ctx.globalAlpha = .08 + pulse * .06; ctx.fillStyle = spec.color; ctx.fillRect(24, 24, SETTINGS.width - 48, SETTINGS.height - 48);
-    ctx.globalAlpha = .42 + pulse * .18; ctx.strokeStyle = event.synergy ? (SYNERGIES[director.arenaId]?.color || spec.color) : spec.color; ctx.lineWidth = 2;
-    const behavior = spec.behavior;
-    if (behavior === 'gate' || behavior === 'dragon' || behavior === 'sword') {
-      for (const x of behavior === 'gate' ? [160, 840] : [220, 500, 780]) { ctx.beginPath(); ctx.ellipse(x, 300 + Math.sin(t * 2 + x) * 16, 22 + pulse * 8, behavior === 'sword' ? 90 : 112, t * .15, 0, Math.PI * 2); ctx.stroke(); }
-    } else if (['pulse','charge','gravity','orbit','flare','eclipse','runes','crystal','compass'].includes(behavior)) {
-      for (let r = 38; r < 160; r += 30) { ctx.beginPath(); ctx.arc(500, 300, r + pulse * 7, behavior === 'orbit' ? t * .4 : 0, Math.PI * 2 + (behavior === 'orbit' ? t * .4 : 0)); ctx.stroke(); }
-    } else if (behavior === 'bolt' || behavior === 'rift' || behavior === 'leyline') {
-      if (quality !== 'low') { ctx.beginPath(); ctx.moveTo(500, 30); ctx.lineTo(478 + Math.sin(t * 3) * 15, 98); ctx.lineTo(515, 150); ctx.lineTo(489, 214); ctx.lineTo(507, 270); ctx.stroke(); if (behavior === 'leyline') { ctx.beginPath(); ctx.moveTo(60, 90); ctx.lineTo(940, 510); ctx.moveTo(60, 510); ctx.lineTo(940, 90); ctx.stroke(); } }
-    } else {
-      for (let row = 0; row < (quality === 'low' ? 2 : 4); row++) { const y = 110 + row * 120; ctx.beginPath(); ctx.moveTo(30, y + Math.sin(t * 3 + row) * 9); ctx.lineTo(970, y + Math.sin(t * 3 + row + 1) * 12); ctx.stroke(); }
-      if (behavior === 'feathers' || behavior === 'embers' || behavior === 'mist' || behavior === 'frost' || behavior === 'tide') {
-        for (let i = 0; i < (quality === 'low' ? 8 : 18); i++) { const x = (i * 71 + t * (behavior === 'embers' ? 24 : -18) + 1000) % 940 + 30; const y = (i * 43 + t * (behavior === 'frost' ? 28 : 13)) % 560 + 20; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (behavior === 'feathers' ? 9 : 2), y + 13); ctx.stroke(); }
-      }
-    }
+    const spec = EVENTS[event.id], pulse = reduced ? .5 : .5 + .5 * Math.sin(t * 5.5 + event.age);
+    ctx.globalAlpha = .045 + pulse * .035; ctx.fillStyle = spec.color; ctx.fillRect(24, 24, SETTINGS.width - 48, SETTINGS.height - 48);
+    drawArenaPhenomenon(ctx, event, t, pulse, quality);
   }
+  if (active.some(e => e.synergy)) drawArenaSynergy(ctx, director.arenaId, t, SYNERGIES[director.arenaId]?.color || profile.color, reduced ? .3 : .5 + .5 * Math.sin(t * 6), quality);
   if (warning) {
-    const spec = EVENTS[warning.id]; ctx.globalAlpha = reduced ? .35 : .26 + Math.sin(t * 12) * .08; ctx.strokeStyle = spec.color; ctx.lineWidth = 2.5; ctx.setLineDash([8, 7]);
+    const spec = EVENTS[warning.id], phase = reduced ? .3 : .24 + Math.sin(t * 12) * .1;
+    ctx.globalAlpha = phase; ctx.strokeStyle = spec.color; ctx.lineWidth = 2.5; ctx.setLineDash([8, 7]);
     ctx.strokeRect(32, 32, SETTINGS.width - 64, SETTINGS.height - 64); ctx.setLineDash([]);
+    // Emblema anticipatorio distinto: el jugador puede reconocer qué fenómeno llega.
+    ctx.globalAlpha = .62; ctx.strokeStyle = spec.color; ctx.lineWidth = 2;
+    drawArenaPhenomenon(ctx, warning, t, .45, quality);
   }
   ctx.restore();
-  const label = warning ? `SE ACERCA: ${EVENTS[warning.id].label}` : active.some(e => e.synergy) ? (SYNERGIES[director.arenaId]?.label || EVENTS[active[0].id].label) : active.map(e => EVENTS[e.id].label).join(' + ');
-  const color = warning ? EVENTS[warning.id].color : active.some(e => e.synergy) ? (SYNERGIES[director.arenaId]?.color || profile.color) : EVENTS[active[0].id].color;
-  ctx.save(); ctx.globalAlpha = .86; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.font = 'bold 11px sans-serif'; ctx.fillText(label, SETTINGS.width / 2, 47); ctx.restore();
+  const comboActive = active.some(e => e.synergy);
+  const label = warning ? `SE ACERCA: ${EVENTS[warning.id].label}` : comboActive ? (SYNERGIES[director.arenaId]?.label || EVENTS[active[0].id].label) : active.map(e => EVENTS[e.id].label).join(' + ');
+  const color = warning ? EVENTS[warning.id].color : comboActive ? (SYNERGIES[director.arenaId]?.color || profile.color) : EVENTS[active[0].id].color;
+  ctx.save(); ctx.globalAlpha = .9; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.font = 'bold 11px sans-serif'; ctx.fillText(label, SETTINGS.width / 2, 47); ctx.restore();
 }
 
 export function getArenaDirectorStatus() {
