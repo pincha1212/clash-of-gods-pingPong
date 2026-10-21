@@ -1,3 +1,15 @@
+# V0.2.67 — Director global de evolución de arenas
+
+- Nuevo módulo `arena-director.js`: elige fenómenos por azar ponderado, identidad de arena, estado del rally, velocidad/posición de la pelota, último golpe y marcador.
+- Prototipo integrado en tres arenas: Santuario de los kami, Cumbre del Olimpo y Raíces de Yggdrasil.
+- Fenómenos compartidos y exclusivos con aviso previo, duración, enfriamiento, anti-repetición y límite de fuerzas.
+- Sinergias prototipo: Velo de los Kami, Circuito del Olimpo y Eco de Niflheim.
+- Los efectos se coordinan desde el reloj de simulación y el renderizado Canvas existente; no crean obstáculos invisibles ni temporizadores por partícula.
+- El director sustituye al gestor genérico solo en esas tres arenas y solo en Clásico. Crónicas, jefes, Mutación y el gestor de las demás arenas conservan sus rutas previas.
+- La verificación de partidas queda para pruebas manuales del usuario; no se ejecutaron tests automatizados ni una partida en navegador.
+
+---
+
 # Clash of Gods — Divine Arena V0.2.66
 
 ## V0.2.66 — Sinergias de poder y plano evolutivo de arenas
