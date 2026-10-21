@@ -169,7 +169,7 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'aura': owner.aura=7;break;
   case 'shrink': opponent.matchSizeScale=clamp((opponent.matchSizeScale||1)-PADDLE_SIZE_STEP,PADDLE_SIZE_MIN,PADDLE_SIZE_MAX);break;
   case 'freeze': opponent.freeze=1.15;break;
-  case 'swap': {const safe=12,y=owner.y;owner.y=clamp(opponent.y,safe,SETTINGS.height-owner.h-safe);opponent.y=clamp(y,safe,SETTINGS.height-opponent.h-safe);break;}
+  case 'swap': {const safe=24,y=owner.y;owner.y=clamp(opponent.y,safe,SETTINGS.height-owner.h-safe);opponent.y=clamp(y,safe,SETTINGS.height-opponent.h-safe);break;}
   case 'reversal': ball.vx*=-1;ball.vy*=-1;break;
   case 'gravity': state.worldEffects.gravity=4.5;break;
   case 'curveball': state.worldEffects.curve=4.5;break;
@@ -182,7 +182,7 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'runebarricade': summonRuneBarricades();break;
   case 'divinestorm': state.worldEffects.storm=5;state.worldEffects.crosswind=Math.max(state.worldEffects.crosswind||0,5);setBallPower('lightningball',5,ball);break;
  }
- burst(ball.x,ball.y,def.color,5,2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:def.name,color:def.color}}));
+ burst(ball.x,ball.y,def.color,5,2);window.dispatchEvent(new CustomEvent('god-message',{detail:{title:def.name,text:def.name,color:def.color,category:'powerup'}}));
 }
 export function updatePowerups(dt){
  if(!state.worldEffects)resetPowerups();

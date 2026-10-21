@@ -92,8 +92,8 @@ function normalizedArenaId() {
 function enabled() {
   return state.running && !state.paused && !state.finished && state.mutationMode !== 'mutation' && (state.mythicMode || 'classic') === 'classic' && Boolean(PROFILES[normalizedArenaId()]);
 }
-function notify(text, color) {
-  if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('god-message', { detail: { text, color } }));
+function notify(title, color) {
+  if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('god-message', { detail: { title, text:title, color, category:'arena' } }));
 }
 function contextSnapshot() {
   const ball = (state.balls || []).find(Boolean) || state.ball || {};
@@ -161,7 +161,7 @@ function beginWarning(director, profile, context) {
   const direction = context.side === 'left' ? 1 : context.side === 'right' ? -1 : (Math.random() < .5 ? -1 : 1);
   director.warning = { id, time: spec.warning, direction, context: { side: context.side, lastHit: context.lastHit, speed: context.speed } };
   director.phase = 'despertar';
-  notify(`${spec.label} EN ${spec.warning.toFixed(1)} s`, spec.color);
+  notify(spec.label, spec.color);
 }
 function activateWarning(director, profile) {
   const warning = director.warning; if (!warning) return;
@@ -173,9 +173,9 @@ function activateWarning(director, profile) {
   if (combo && director.active.length === 2 && combo.pair.every(id => director.active.some(item => item.id === id))) {
     director.active.forEach(item => { item.synergy = combo.id; });
     director.phase = 'climax'; director.synergyCooldown = 5.5;
-    notify(`${combo.label} · ${combo.description}`, combo.color);
+    notify(combo.label, combo.color);
   } else {
-    director.phase = 'despertar'; notify(`${spec.label} · ¡ACTIVO!`, spec.color);
+    director.phase = 'despertar'; notify(spec.label, spec.color);
   }
   // Si hay un fenómeno activo, una segunda ventana breve permite descubrir sinergias.
   director.nextIn = director.active.length === 1 ? rand(1.0, 2.0) : rand(...profile.baseInterval);

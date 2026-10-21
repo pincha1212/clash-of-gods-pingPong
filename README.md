@@ -1,3 +1,13 @@
+# Clash of Gods V0.2.73 — controles, límites de cancha y cola de avisos
+
+- El arrastre táctil usa desplazamiento relativo durante y después de Confusión; al terminar la inversión no salta a la posición absoluta del dedo.
+- Los límites físicos verticales de pelota y paletas coinciden con el rectángulo visible de la cancha (24–576), también en colisiones entre pelotas; el modo jefe conserva su cerco adicional.
+- Los fenómenos ambientales se renderizan en una superficie Canvas separada. Si una capa falla, se recrea esa superficie y se protege el contexto principal usado para pelota y paletas.
+- Los avisos muestran únicamente el título y pasan por una cola: los power-ups recogidos tienen prioridad, luego las habilidades y después los eventos de arena. Los avisos repetidos se agrupan.
+- Verificación estática únicamente; no se ejecutaron pruebas automatizadas ni partidas en navegador.
+
+---
+
 # Clash of Gods V0.2.72 — protección del renderizado de arenas
 
 - Las capas visuales ambientales se aíslan para que un error de un fenómeno no interrumpa el dibujo de pelota y paletas.

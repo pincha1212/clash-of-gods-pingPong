@@ -88,9 +88,9 @@ export function isArenaModifierEnabled() {
   return Boolean(selectedArena());
 }
 
-function notify(text, color) {
+function notify(title, color) {
   if (typeof window === 'undefined' || typeof CustomEvent === 'undefined') return;
-  window.dispatchEvent(new CustomEvent('god-message', { detail: { text, color } }));
+  window.dispatchEvent(new CustomEvent('god-message', { detail: { title, text:title, color, category:'arena' } }));
 }
 
 export function clearArenaEventState() {
@@ -130,14 +130,14 @@ export function updateArenaEvents(dt) {
   if (profile.stageEvery > 0 && profile.stageMessages?.length) {
     event.stageElapsed += delta;
     const stage = Math.min(profile.stageMessages.length - 1, Math.floor(event.stageElapsed / profile.stageEvery));
-    if (stage > event.stage) { event.stage = stage; notify(profile.stageMessages[stage], profile.color); }
+    if (stage > event.stage) { event.stage = stage; notify(profile.label, profile.color); }
   }
 
   if (event.warning > 0) {
     event.warning = Math.max(0, event.warning - delta);
     if (event.warning === 0) {
       event.active = profile.activeDuration ?? GUST_DURATION;
-      notify(`${profile.label} · ¡AHORA!`, profile.color);
+      notify(profile.label, profile.color);
     }
     return;
   }
@@ -152,7 +152,7 @@ export function updateArenaEvents(dt) {
     event.direction *= -1;
     event.warning = profile.warning ?? WARNING_DURATION;
     event.cycle += 1;
-    notify(`${profile.label} EN ${(profile.warning ?? WARNING_DURATION).toFixed(1)} s`, profile.color);
+    notify(profile.label, profile.color);
   }
 }
 
