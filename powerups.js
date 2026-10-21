@@ -33,9 +33,9 @@ export const POWERUPS = [
  {id:'chromaticarena',name:'Arena prismática',symbol:'◈',color:'#ff9be8',description:'La arena cambia de color continuamente durante unos segundos.'},
  {id:'chaos',name:'Rebote caótico',symbol:'✳',color:'#ffcf70',description:'Los rebotes alteran más el ángulo de la pelota.'},
  {id:'crosswind',name:'Viento cruzado',symbol:'≋',color:'#8adfff',description:'Una corriente desvía la pelota hacia arriba o abajo.'},
- {id:'eclipse',name:'Eclipse',symbol:'◐',color:'#9b8bce',description:'Oscurece la arena y genera una deriva sutil en la pelota.'},
- {id:'quake',name:'Terremoto',symbol:'⌁',color:'#e5a16c',description:'La arena se agrieta y sacudidas breves alteran la trayectoria de la pelota.'},
- {id:'prism',name:'Prisma',symbol:'◇',color:'#ff9be8',description:'La arena se refracta y los golpes reciben una desviación prismática leve.'},
+ {id:'eclipse',name:'Eclipse',symbol:'◐',color:'#9b8bce',description:'Oscurece la arena y provoca una deriva ondulante perceptible en todas las pelotas.'},
+ {id:'quake',name:'Terremoto',symbol:'⌁',color:'#e5a16c',description:'La arena se agrieta y cada pelota recibe sacudidas sísmicas repetidas que cambian su trayectoria.'},
+ {id:'prism',name:'Prisma',symbol:'◇',color:'#ff9be8',description:'La arena se refracta y la trayectoria se desvía continuamente; los golpes también reciben un cambio angular.'},
  {id:'aura',name:'Aura de contraataque',symbol:'✦',color:'#f4e6a4',description:'Tu próximo golpe gana potencia y recibe un aura.'},
  {id:'shrink',name:'Maldición diminuta',symbol:'↧',color:'#d6a4ff',description:'Reduce de forma acumulativa la paleta rival durante este partido. Coloso puede contrarrestarla; hay un límite mínimo.'},
  {id:'freeze',name:'Prisión glacial',symbol:'❄',color:'#8ee9ff',description:'Inmoviliza brevemente la paleta rival.'},
@@ -122,7 +122,7 @@ function safePhaseDestination(ball){
  // No fuerza el salto a través de otra pelota o de un muro: se pospondrá el intento.
  return null;
 }
-export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0,rainbowArena:0};state.chaosArena={time:0,pulse:0,cycle:0};state.ballPower=EMPTY_BALL_POWER();for(const b of state.balls||[]){if(b){b.powerEffect=null;b.matchEffects={sizeScale:1,trajectory:'',color:'',polygonSides:0};b.baseR=BALL_BASE_R;b.r=BALL_BASE_R;b.color='#f6f4ed';}}for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert','aimBonus','divineMotor','chaosCoil','seismicPulse','seismicPulseCooldown','mutantPaddle','mutantPaddleTime','spectralPhase','spectralPhaseCooldown','spectralPhaseWarning','spectralPhaseOffset','segmentedPaddle','runeExtensions'])p[key]=0;p.matchSizeScale=1;p.powerColor='';p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
+export function resetPowerups(){state.temporaryWalls=[];state.worldEffects={eclipse:0,quake:0,quakePulse:0,prism:0,crosswind:0,gravity:0,curve:0,storm:0,rainbowArena:0};state.chaosArena={time:0,pulse:0,cycle:0};state.ballPower=EMPTY_BALL_POWER();for(const b of state.balls||[]){if(b){b.powerEffect=null;b.quakePulseCooldown=0;b.matchEffects={sizeScale:1,trajectory:'',color:'',polygonSides:0};b.baseR=BALL_BASE_R;b.r=BALL_BASE_R;b.color='#f6f4ed';}}for(const side of ['p1','p2']){const p=state.paddles[side];if(p){for(const key of ['haste','aura','freeze','palette','bonusPoint','shield','grow','shrink','powerGrow','powerShrink','slow','invert','aimBonus','divineMotor','chaosCoil','seismicPulse','seismicPulseCooldown','mutantPaddle','mutantPaddleTime','spectralPhase','spectralPhaseCooldown','spectralPhaseWarning','spectralPhaseOffset','segmentedPaddle','runeExtensions'])p[key]=0;p.matchSizeScale=1;p.powerColor='';p.shieldMode='';if(p.baseH)p.h=p.baseH;}}}
 function summonRuneBarricades(){
  const cx=SETTINGS.width/2,cy=SETTINGS.height/2;
  const layouts=[
@@ -167,7 +167,7 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'chromaticarena': state.worldEffects.rainbowArena=8;break;
   case 'crosswind': state.worldEffects.crosswind=4.5;break;
   case 'eclipse': state.worldEffects.eclipse=5;break;
-  case 'quake': state.worldEffects.quake=3.5;state.worldEffects.quakePulse=.4;break;
+  case 'quake': state.worldEffects.quake=3.8;state.worldEffects.quakePulse=.1;for(const b of state.balls||[])if(b)b.quakePulseCooldown=.08;break;
   case 'prism': state.worldEffects.prism=6;break;
   case 'aura': owner.aura=7;break;
   case 'shrink': opponent.matchSizeScale=clamp((opponent.matchSizeScale||1)-PADDLE_SIZE_STEP,PADDLE_SIZE_MIN,PADDLE_SIZE_MAX);break;
@@ -199,7 +199,7 @@ export function updatePowerups(dt){
    const selected=[],count=Math.random()<.68?3:2;
    while(selected.length<count){const pick=effects[Math.floor(Math.random()*effects.length)];if(!selected.includes(pick))selected.push(pick);}
    for(const key of selected)state.worldEffects[key]=Math.max(state.worldEffects[key]||0,.85+Math.random()*.85);
-   if(selected.includes('quake'))state.worldEffects.quakePulse=.08;
+   if(selected.includes('quake')){state.worldEffects.quakePulse=.08;for(const b of state.balls||[])if(b)b.quakePulseCooldown=.05;}
    arenaChaos.cycle=(arenaChaos.cycle||0)+1;arenaChaos.pulse=.58+Math.random()*.34;
    const colors=['#ff8fe8','#8df0d2','#ffcf70','#9b8bff','#8adfff','#ff785d'];burst(SETTINGS.width/2,SETTINGS.height/2,colors[arenaChaos.cycle%colors.length],10,2.4);
   }
@@ -298,7 +298,7 @@ export function drawPowerupEffects(ctx){
  }
  if(e.eclipse>0){ctx.save();ctx.fillStyle='rgba(9,7,24,.48)';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#a99bdf';ctx.globalAlpha=.7;ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,78+Math.sin(performance.now()/220)*5,0,Math.PI*2);ctx.stroke();ctx.restore();}
  if(e.prism>0){ctx.save();const t=state.settings?.reducedMotion?0:performance.now()/700;ctx.globalAlpha=.12;ctx.fillStyle=`hsl(${(t*80)%360},85%,62%)`;ctx.fillRect(0,0,cx,H);ctx.fillStyle=`hsl(${(t*80+165)%360},85%,62%)`;ctx.fillRect(cx,0,W-cx,H);ctx.globalAlpha=.32;ctx.lineWidth=2;const facets=state.settings?.quality==='low'?5:9;for(let i=0;i<facets;i++){const x=(i/facets)*W+(state.settings?.reducedMotion?0:Math.sin(t+i)*16);ctx.strokeStyle=`hsl(${(t*80+i*43)%360},100%,78%)`;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+70,H*.35);ctx.lineTo(x-35,H*.68);ctx.lineTo(x+20,H);ctx.stroke();}ctx.globalAlpha=.22;ctx.strokeStyle='#ffffff';for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(cx,cy,110+i*44,38+i*27,t*.2+i*.2,0,Math.PI*2);ctx.stroke();}ctx.restore();}
- if(e.quake>0&&!state.settings?.reducedMotion&&state.settings?.quality!=='low'){ctx.save();ctx.globalAlpha=.2;ctx.strokeStyle='#e5a16c';ctx.lineWidth=2;for(let i=0;i<5;i++){const y=65+i*112,offset=Math.sin(performance.now()/80+i)*8;ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(cx+offset,y-8);ctx.lineTo(W-24,y+offset);ctx.stroke();}ctx.restore();}
+ if(e.quake>0){ctx.save();const reduced=Boolean(state.settings?.reducedMotion),t=reduced?0:performance.now()/1000;ctx.globalAlpha=.38;ctx.strokeStyle='#e5a16c';ctx.lineWidth=2.4;for(let i=0;i<6;i++){const y=48+i*96,offset=reduced?0:Math.sin(t*8+i)*14;ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(cx-55+offset,y-18);ctx.lineTo(cx-18-offset,y+13);ctx.lineTo(cx+13+offset,y-9);ctx.lineTo(W-24,y+offset);ctx.stroke();}ctx.globalAlpha=.34;ctx.lineWidth=2;for(let i=0;i<3;i++){const r=34+i*54+(reduced?0:((t*92)%54));ctx.beginPath();ctx.ellipse(cx,cy,r,r*.42,0,0,Math.PI*2);ctx.stroke();}ctx.restore();}
  if(e.crosswind>0){ctx.save();ctx.globalAlpha=.24;ctx.strokeStyle='#8adfff';ctx.lineWidth=2;const drift=Math.sin(performance.now()/250)*18;for(let i=0;i<6;i++){const y=55+i*95;ctx.beginPath();ctx.moveTo(65+drift,y);ctx.bezierCurveTo(cx-130,y-20-drift,cx+130,y+20+drift,W-65-drift,y);ctx.stroke();ctx.beginPath();ctx.moveTo(W-75-drift,y-5);ctx.lineTo(W-65-drift,y);ctx.lineTo(W-75-drift,y+5);ctx.stroke();}ctx.restore();}
  if(e.gravity>0){ctx.save();ctx.globalAlpha=.25;ctx.strokeStyle='#c4a7ff';ctx.lineWidth=2;for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(cx,cy,45+i*24,24+i*15,performance.now()/900+i*.4,0,Math.PI*2);ctx.stroke();}ctx.restore();}
  if(e.curve>0){ctx.save();ctx.globalAlpha=.18;ctx.strokeStyle='#8df0d2';ctx.lineWidth=2;for(let i=0;i<4;i++){ctx.beginPath();for(let x=35;x<=W-35;x+=12){const y=cy+i*28-42+Math.sin(x/48+performance.now()/250+i)*12;if(x===35)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();}ctx.restore();}

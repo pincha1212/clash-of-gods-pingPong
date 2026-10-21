@@ -174,11 +174,13 @@ function updatePhysicsSingle(dt,isPrimary){
  // Las fuerzas ambientales se suman en una sola autoridad y se limitan para que
  // acumular varios Power-ups no vuelva la pelota casi vertical de forma incontrolable.
  const now=performance.now?.()||0;let fieldForce=0;
- if(state.worldEffects?.eclipse>0)fieldForce+=Math.sin(now/360)*1.05;
- if(state.worldEffects?.crosswind>0)fieldForce+=Math.sin(now/310)*2.8;
- if(state.worldEffects?.gravity>0)fieldForce+=2.1;
- if(state.worldEffects?.curve>0)fieldForce+=Math.sin(now/105)*3.4;
- if(state.worldEffects?.storm>0)fieldForce+=Math.sin(now/170)*2.1;
+ if(state.worldEffects?.eclipse>0)fieldForce+=Math.sin(now/330)*1.65;
+ if(state.worldEffects?.crosswind>0)fieldForce+=Math.sin(now/310)*3.25;
+ if(state.worldEffects?.gravity>0)fieldForce+=2.35;
+ if(state.worldEffects?.curve>0)fieldForce+=Math.sin(now/190)*4.15;
+ if(state.worldEffects?.storm>0)fieldForce+=Math.sin(now/210)*3.15;
+ // El prisma no depende de que la pelota llegue a una paleta: refracta su trayectoria durante toda la activación.
+ if(state.worldEffects?.prism>0)fieldForce+=Math.sin(now/145+((Number(String(b.id||'').replace(/\D/g,''))||0)*.7))*2.15;
  const arenaForce=getArenaForces(),directorForce=getArenaDirectorForces(b);
  fieldForce+=arenaForce.y+directorForce.y;
  b.vy+=clamp(fieldForce,-4.8,4.8)*dt;
@@ -186,7 +188,16 @@ function updatePhysicsSingle(dt,isPrimary){
  // Cada Núcleo gravitatorio afecta a las otras pelotas cercanas, sin copiarles su poder.
  for(const source of state.balls||[]){if(source===b||source?.powerEffect?.type!=='magnetball'||(source.powerEffect.time||0)<=0)continue;const dx=source.x-b.x,dy=source.y-b.y,dist=Math.hypot(dx,dy);if(dist<18||dist>235)continue;const falloff=1-dist/235,force=17*falloff*falloff;b.vx+=dx/dist*force*dt;b.vy+=dy/dist*force*dt;}
  if(state.mutationMode==='mutation')applyMutationArenaForce(b,dt);
- if(isPrimary&&state.worldEffects?.quake>0){state.worldEffects.quakePulse=Math.max(0,(state.worldEffects.quakePulse||0)-dt);if(state.worldEffects.quakePulse<=0){b.vy+=((Math.random()-.5)*1.7);state.worldEffects.quakePulse=.55;}}
+ if(state.worldEffects?.quake>0){
+  // Cada pelota recibe sus propios pulsos; antes solo se sacudía la principal y el impulso era casi imperceptible.
+  b.quakePulseCooldown=Math.max(0,(b.quakePulseCooldown??0)-dt);
+  if(b.quakePulseCooldown<=0){
+   const verticalKick=(Math.random()<.5?-1:1)*(2.1+Math.random()*1.7);
+   const horizontalKick=(Math.random()-.5)*2.5;
+   b.vy+=verticalKick;b.vx+=horizontalKick;b.quakePulseCooldown=.38+Math.random()*.12;
+   if(Math.random()<.35)burst(b.x,b.y,'#e5a16c',4,1.6);
+  }
+ }else if(b.quakePulseCooldown>0)b.quakePulseCooldown=0;
  enforceBallTrajectory(b);
  // El modificador de velocidad se aplica al recoger el objeto y se conserva en los golpes.
  // No forzar la pelota a una velocidad fija cada fotograma: eso anulaba la aceleración del rally.

@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.75 — IA divina más rápida e inteligente
+# Clash of Gods V0.2.77 — Efectos ambientales corregidos y CPU divina
 
 ## Dificultad de la CPU
 
@@ -22,3 +22,13 @@
 - Predice la posición de impacto considerando rebotes verticales y conserva brevemente el objetivo cuando dos amenazas llegan casi al mismo tiempo, reduciendo cambios erráticos.
 - En dificultad alta, aumenta la velocidad de desplazamiento.
 - Validación estática: sintaxis de módulos y consistencia de versiones; no sustituye una partida manual.
+
+
+## V0.2.77 — Power-ups ambientales con efecto real
+
+- **Terremoto:** corregido para sacudir cada pelota activa, no solo la principal; los impulsos sísmicos son más notorios y se repiten durante la activación. Las grietas y ondas de choque también se ven en calidad baja y con movimiento reducido (sin animación en este último caso).
+- **Prisma:** ahora refracta continuamente la trayectoria durante su duración, además de modificar el ángulo de los rebotes; ya no depende exclusivamente de que ocurra un golpe a tiempo.
+- **Eclipse, viento, gravedad, trayectoria serpentina y tempestad:** ajustada la intensidad de las fuerzas para que se perciban mejor durante la partida sin saltarse el límite general de aceleración.
+- Los efectos de terremoto se reinician correctamente al limpiar los power-ups y también funcionan en partidas con varias pelotas.
+- Actualizada la versión visible, metadatos y caché de la PWA a `0.2.77`.
+- Revisión estática de sintaxis y paquetes ZIP. No se ejecutaron pruebas automatizadas ni una partida en navegador; queda pendiente la validación manual de los efectos en juego.
