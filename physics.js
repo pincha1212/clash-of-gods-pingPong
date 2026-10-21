@@ -258,12 +258,41 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const ball=state.ball;let target=ball.y-p2.h/2;const difficulty=state.difficulty||'normal';const incoming=ball.vx>0;
-  // En Divina, la CPU calcula dónde llegará la pelota, incluyendo rebotes verticales.
-  // En Equilibrada solo anticipa un poco; Iniciación sigue siendo accesible.
-  if(incoming&&Math.abs(ball.vx)>.01&&difficulty!=='easy'){const contactX=p2.x-ball.r;const travelTime=Math.max(0,(contactX-ball.x)/(ball.vx*60));const anticipation=difficulty==='hard'?Math.min(travelTime,1.8):Math.min(travelTime,.38);const minY=24+ball.r,maxY=SETTINGS.height-24-ball.r,span=maxY-minY;let projected=ball.y+ball.vy*anticipation*60;const folded=((projected-minY)%(2*span)+2*span)%(2*span);target=minY+(folded<=span?folded:2*span-folded)-p2.h/2;}
-  // La CPU divina se mueve con decisión y recupera la posición sin titubeos artificiales.
-  let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:4.0,normal:6.7,hard:10.2})[difficulty]||6.7;const speed=Math.min(max,Math.abs(diff))*(inverted?.62:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
+  const difficulty=state.difficulty||'normal';
+  // CPU multi-ball: evalúa TODAS las pelotas que se acercan a su lado y
+  // prioriza la amenaza que llegará primero, en vez de seguir siempre state.ball.
+  const activeBalls=Array.isArray(state.balls)&&state.balls.length?state.balls.filter(Boolean):(state.ball?[state.ball]:[]);
+  const threats=[];
+  for(const candidate of activeBalls){
+   if(!Number.isFinite(candidate.x)||!Number.isFinite(candidate.y)||!Number.isFinite(candidate.vx)||!Number.isFinite(candidate.vy)||candidate.vx<=.01)continue;
+   const contactX=p2.x-(candidate.r||0);
+   const eta=Math.max(0,(contactX-candidate.x)/(candidate.vx*60));
+   const minY=24+(candidate.r||0),maxY=SETTINGS.height-24-(candidate.r||0),span=Math.max(1,maxY-minY);
+   // Proyección completa con rebotes, usada para ordenar amenazas y apuntar.
+   const projected=candidate.y+candidate.vy*eta*60;
+   const folded=((projected-minY)%(2*span)+2*span)%(2*span);
+   const impactY=minY+(folded<=span?folded:2*span-folded);
+   threats.push({ball:candidate,eta,impactY});
+  }
+  threats.sort((a,b)=>a.eta-b.eta);
+  let selected=threats[0]||null;
+  // Evita cambios nerviosos entre dos pelotas que llegarán casi a la vez,
+  // pero nunca mantiene una amenaza claramente menos urgente.
+  const previousThreat=threats.find(t=>t.ball.id===p2.cpuTargetBallId);
+  if(selected&&previousThreat&&previousThreat.eta<=selected.eta+.10)selected=previousThreat;
+  if(selected)p2.cpuTargetBallId=selected.ball.id;
+  else p2.cpuTargetBallId=null;
+  const fallback=activeBalls.reduce((best,b)=>!best||Math.abs((b.x||0)-p2.x)<Math.abs((best.x||0)-p2.x)?b:best,null)||state.ball;
+  let target=(selected?selected.impactY:fallback.y)-p2.h/2;
+  // Las dificultades bajas siguen teniendo errores y menor anticipación.
+  if(selected&&difficulty!=='easy'&&difficulty!=='hard'){
+   const shortEta=Math.min(selected.eta,.38),b=selected.ball;
+   const minY=24+(b.r||0),maxY=SETTINGS.height-24-(b.r||0),span=Math.max(1,maxY-minY);
+   const projected=b.y+b.vy*shortEta*60,folded=((projected-minY)%(2*span)+2*span)%(2*span);
+   target=minY+(folded<=span?folded:2*span-folded)-p2.h/2;
+  }
+  // La CPU divina se desplaza con más rapidez y reevalúa las amenazas en cada actualización.
+  let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:4.0,normal:6.7,hard:12.4})[difficulty]||6.7;const speed=Math.min(max,Math.abs(diff))*(inverted?.62:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }

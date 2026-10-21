@@ -14,3 +14,11 @@
 - Revisión estática de sintaxis de `physics.js` y `abilities.js`.
 - Validación de JSON para `package.json` y `package-lock.json`.
 - No se ejecutaron pruebas automatizadas ni una partida en navegador. Se recomienda validar manualmente las tres dificultades, en especial Divina, con rebotes, habilidades y eventos de arena activos.
+
+
+## V0.2.76 — CPU multiball
+
+- La CPU evalúa todas las pelotas activas que se aproximan a su lado y prioriza la que llegará primero.
+- Predice la posición de impacto considerando rebotes verticales y conserva brevemente el objetivo cuando dos amenazas llegan casi al mismo tiempo, reduciendo cambios erráticos.
+- En dificultad alta, aumenta la velocidad de desplazamiento.
+- Validación estática: sintaxis de módulos y consistencia de versiones; no sustituye una partida manual.
