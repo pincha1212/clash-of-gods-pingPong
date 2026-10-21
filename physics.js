@@ -94,29 +94,36 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  const localHeight=p.segmentedPaddle>0?Math.max(1,(p.h-10)/3):p.h;
  const localCenter=p.segmentedPaddle>0?p.y+segmentIndex*(localHeight+5)+localHeight/2:p.y+p.h/2;
  const norm=clamp((hitY-localCenter)/(localHeight/2),-1,1),dir=side==='p1'?1:-1;
- // Conserva la escala de los modificadores de pelota y aumenta la intensidad
- // de forma gradual según la duración del intercambio, sin saltos bruscos.
- const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier(b);
- const rallyFloor=baseSpeed*(1+Math.min(state.rally,16)*.018);
- let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(rallyFloor,ballMagnitude(b)*1.012));
+ // Un rebote normal conserva la rapidez que trae la pelota: no hay aceleración
+ // automática por rally ni impulso oculto en cada contacto con la paleta.
+ let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(3.2,ballMagnitude(b)));
  if(p.counter>0){const charge=clamp(Number(p.counter)||1.5,1,2);const counterMultiplier=1.24+Math.max(0,charge-1.5)*.08-Math.max(0,1.5-charge)*.06;speed=Math.min(SETTINGS.maxBallSpeed,speed*counterMultiplier);p.counter=0;b.specialEffect=p.godId||'';b.effectTime=.55;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'CONTRAATAQUE',color:p.color}}));}
- // El movimiento vertical de la paleta influye sutilmente en el ángulo:
- // permite apuntar con intención sin hacer que el control sea impredecible.
+ // Rebote tipo raqueta: el punto de impacto determina el ángulo, mientras que
+ // el movimiento de la paleta solo aporta un efecto pequeño y legible. La
+ // componente vertical entrante conserva continuidad y evita ángulos artificiales.
+ const incomingSpeed=Math.max(1e-6,ballMagnitude(b));
+ const incomingVertical=clamp(b.vy/incomingSpeed,-1,1);
  const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
- let angle=norm*1.08+paddleMotion*.20+(p.aimBonus>0?Math.sign(norm||1)*p.aimBonus:0);p.aimBonus=0;
+ const maxBounceAngle=1.12;
+ let angle=norm*maxBounceAngle+incomingVertical*.10+paddleMotion*.075+(p.aimBonus>0?Math.sign(norm||1)*Math.min(.16,p.aimBonus):0);p.aimBonus=0;
  if(getBallPowerType(b)==='chaos')angle+=(Math.random()-.5)*.7;if(p.chaosCoil>0)angle+=(Math.random()-.5)*.88;if(p.segmentedPaddle>0)angle+=(segmentIndex-1)*.16;
+ if(getBallPowerType(b)==='topspin')angle+=Math.sign(norm||incomingVertical||1)*.16;
+ if(getBallPowerType(b)==='backspin')angle-=Math.sign(norm||incomingVertical||1)*.12;
+ if(getBallPowerType(b)==='sweetspot')angle*=.72;
  // Sinergias v0.2.66: combinaciones breves, legibles y con velocidad acotada.
  if(p.segmentedPaddle>0&&p.runeExtensions>0){angle+=(segmentIndex-1)*.055;speed=Math.min(SETTINGS.maxBallSpeed,speed*1.025);burst(b.x,b.y,p.color,3,1.35);}
  if(p.mutantPaddle>0&&p.chaosCoil>0)angle+=(Math.random()-.5)*.22;
  if(p.divineMotor>0&&p.segmentedPaddle>0)speed=Math.min(SETTINGS.maxBallSpeed,speed*1.018);
- if(getBallPowerType(b)==='ricochet')angle+=(Math.random()-.5)*1.0;
+ if(getBallPowerType(b)==='ricochet')angle+=(Math.random()-.5)*.42;
  if(state.worldEffects?.prism>0)angle+=Math.sin((performance.now?.()||0)/180)*.12;
  if(p.palette>0)angle+=Math.sin((performance.now?.()||0)/240)*.09;
  if(getBallPowerType(b)==='fireball')speed=Math.min(SETTINGS.maxBallSpeed,speed*1.045);
  angle=clamp(angle,-1.18,1.18);
  const perfect=Math.abs(norm)>=.22&&Math.abs(norm)<=.38;
- if(perfect){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.07);burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'GOLPE PRECISO',color:p.color}}));}
+ if(perfect){burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'GOLPE PRECISO',color:p.color}}));}
+ if(getBallPowerType(b)==='softbounce')speed=Math.max(3.2,speed*.84);
  b.vx=dir*speed*Math.cos(angle);b.vy=speed*Math.sin(angle);b.speed=speed;b.lastHit=side;b.fire=0;b.color=b.matchEffects?.color||'#f6f4ed';state.rally++;
+ if(['topspin','backspin','sweetspot','softbounce'].includes(getBallPowerType(b))){b.powerEffect=null;}
  if(p.aura>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.22);const magnitude=ballMagnitude(b);b.vx=b.vx/magnitude*speed;b.vy=b.vy/magnitude*speed;p.aura=0;p.counter=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'AURA DE CONTRAATAQUE',color:p.color}}));}
  if(state.mutationMode==='mutation')applyMutationPaddleHit(side,b);
  burst(b.x,b.y,p.color,perfect?4:2,perfect?1.8:1.1);playTone(perfect?side==='p1'?560:680:side==='p1'?410:520,perfect?.075:.055,'triangle',perfect?.045:.035);return true;

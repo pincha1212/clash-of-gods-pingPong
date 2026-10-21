@@ -1,3 +1,13 @@
+# Clash of Gods V0.2.71 — rebote más natural y power-ups de trayectoria
+
+- Los rebotes ordinarios conservan la rapidez entrante; se elimina la aceleración automática por intercambio y el impulso de velocidad oculto en golpes precisos.
+- El ángulo de salida depende principalmente del punto de contacto; el movimiento de la paleta y la velocidad vertical entrante influyen de forma secundaria.
+- Se agregan cuatro power-ups de rebote: Topspin divino, Retroceso lunar, Punto dulce y Toque amortiguado. Sus efectos se consumen en el siguiente contacto con una paleta.
+- El rebote titánico reduce su desviación aleatoria para que sea intenso sin volver la salida arbitraria.
+- Verificación estática: sintaxis de módulos modificados, JSON del paquete y recursos de precaché. No se ejecutaron partidas ni pruebas automatizadas.
+
+---
+
 # Clash of Gods V0.2.70 — corrección de sintaxis de UI histórica
 
 ## Cambios

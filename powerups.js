@@ -43,6 +43,10 @@ export const POWERUPS = [
  {id:'gravity',name:'Pozo gravitatorio',symbol:'◉',color:'#c4a7ff',description:'La gravedad curva la trayectoria de la pelota.'},
  {id:'curveball',name:'Trayectoria serpentina',symbol:'〰',color:'#8df0d2',description:'La pelota serpentea durante unos segundos.'},
  {id:'ricochet',name:'Rebote titánico',symbol:'⤴',color:'#ffd479',description:'Los rebotes contra la pared y las paletas son más extremos.'},
+ {id:'topspin',name:'Topspin divino',symbol:'↗',color:'#ffad72',description:'El próximo rebote en una paleta añade un giro hacia delante moderado y legible.'},
+ {id:'backspin',name:'Retroceso lunar',symbol:'↙',color:'#a9c7ff',description:'El próximo rebote en una paleta aplica retroceso, suavizando el ángulo de salida.'},
+ {id:'sweetspot',name:'Punto dulce',symbol:'⊙',color:'#fff0a1',description:'El próximo contacto con una paleta reduce el ángulo extremo y favorece un rebote más estable.'},
+ {id:'softbounce',name:'Toque amortiguado',symbol:'◡',color:'#9ff0d1',description:'El próximo rebote en una paleta conserva la dirección del impacto y reduce ligeramente la velocidad.'},
  {id:'secondchance',name:'Segunda oportunidad',symbol:'⛨',color:'#9fe7a5',description:'Una salvada devuelve la pelota con un contraataque acelerado.'},
  {id:'doublepoint',name:'Juicio doble',symbol:'Ⅱ',color:'#ff8f91',description:'Si ganas el próximo punto, suma dos puntos.'},
  {id:'chromaaura',name:'Aura cromática',symbol:'✺',color:'#ff9fe5',description:'Tu paleta gana movilidad mientras su aura está activa.'},
@@ -170,6 +174,7 @@ export function applyPowerup(id,side,ball=state.ball){const def=byId[id];if(!def
   case 'gravity': state.worldEffects.gravity=4.5;break;
   case 'curveball': state.worldEffects.curve=4.5;break;
   case 'ricochet': setBallPower(id,5,ball);break;
+  case 'topspin': case 'backspin': case 'sweetspot': case 'softbounce': setBallPower(id,8,ball);break;
   case 'secondchance': owner.shield=Math.max(owner.shield||0,4.5);owner.shieldMode='secondchance';break;
   case 'doublepoint': owner.bonusPoint=1;break;
   case 'chromaaura': owner.palette=6;break;
@@ -322,7 +327,7 @@ export function drawBallPower(ctx,b){const effect=b?.powerEffect?.time>0?b.power
   ctx.globalAlpha=charging?1:.9;ctx.beginPath();ctx.moveTo(b.x-4,b.y-b.r-8);ctx.lineTo(b.x+4,b.y-2);ctx.lineTo(b.x-3,b.y+2);ctx.lineTo(b.x+4,b.y+b.r+8);ctx.stroke();
   if(charging){ctx.globalAlpha=.65;ctx.lineWidth=3;ctx.beginPath();ctx.arc(b.x,b.y,b.r+16,0,Math.PI*2);ctx.stroke();}
  }else if(effect==='fractalball'){const t=state.settings?.reducedMotion?0:performance.now()/130;ctx.globalAlpha=.7;for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(b.x,b.y,b.r+5+i*4,b.r+3+i*3,t+i*.6,0,Math.PI*2);ctx.stroke();}ctx.globalAlpha=.95;ctx.beginPath();ctx.moveTo(b.x,b.y-b.r-10);ctx.lineTo(b.x+5,b.y-2);ctx.lineTo(b.x-5,b.y+2);ctx.lineTo(b.x,b.y+b.r+10);ctx.stroke();
- }else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}
+ }else if(effect==='chaos'||effect==='ricochet'){for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(b.x,b.y,b.r+3+i*3,i*2.1,i*2.1+1.4);ctx.stroke();}}else if(['topspin','backspin','sweetspot','softbounce'].includes(effect)){ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(b.x,b.y,b.r+5,0,Math.PI*2);ctx.stroke();const sign=effect==='backspin'?-1:1;ctx.beginPath();ctx.moveTo(b.x-sign*(b.r+9),b.y-4);ctx.lineTo(b.x-sign*(b.r+3),b.y);ctx.lineTo(b.x-sign*(b.r+9),b.y+4);ctx.stroke();if(effect==='sweetspot'){ctx.beginPath();ctx.arc(b.x,b.y,b.r+10,0,Math.PI*2);ctx.stroke();}}
  if(persistent.sizeScale&&persistent.sizeScale!==1){ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(b.x,b.y,b.r+3,0,Math.PI*2);ctx.stroke();}
  if(persistent.trajectory){ctx.globalAlpha=.9;ctx.beginPath();if(persistent.trajectory==='flat'){ctx.moveTo(b.x-b.r-7,b.y);ctx.lineTo(b.x+b.r+7,b.y);ctx.moveTo(b.x+b.r+3,b.y-4);ctx.lineTo(b.x+b.r+7,b.y);ctx.lineTo(b.x+b.r+3,b.y+4);}else if(persistent.trajectory==='vertical'){ctx.moveTo(b.x,b.y-b.r-7);ctx.lineTo(b.x,b.y+b.r+7);ctx.moveTo(b.x-4,b.y+b.r+3);ctx.lineTo(b.x,b.y+b.r+7);ctx.lineTo(b.x+4,b.y+b.r+3);}else{for(let i=0;i<3;i++){const a=performance.now()/260+i*Math.PI*2/3;ctx.moveTo(b.x+Math.cos(a)*(b.r+3),b.y+Math.sin(a)*(b.r+3));ctx.lineTo(b.x+Math.cos(a+1.4)*(b.r+10),b.y+Math.sin(a+1.4)*(b.r+10));}}ctx.stroke();}
  ctx.restore();}
