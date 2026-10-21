@@ -1,3 +1,13 @@
+# Clash of Gods V0.2.72 — protección del renderizado de arenas
+
+- Las capas visuales ambientales se aíslan para que un error de un fenómeno no interrumpa el dibujo de pelota y paletas.
+- Se normaliza alpha/composición del Canvas antes de dibujar las entidades principales.
+- El director ignora referencias de eventos inválidas o antiguas en vez de abortar el fotograma.
+- No se afirma que la causa original esté reproducida en navegador; este cambio añade defensas al renderizado.
+- Revisión estática únicamente; sin pruebas automatizadas ni ejecución de partida.
+
+---
+
 # Clash of Gods V0.2.71 — rebote más natural y power-ups de trayectoria
 
 - Los rebotes ordinarios conservan la rapidez entrante; se elimina la aceleración automática por intercambio y el impulso de velocidad oculto en golpes precisos.

@@ -16,6 +16,9 @@ import {drawArenaDirector,resetArenaDirector,clearArenaDirector} from './arena-d
 import {drawArenaIdentity} from './arena-art.js';
 import {beginSurvival,prepareSurvivalOpponent,completeSurvivalMatch,resetSurvival,survivalCampaign,getSurvivalRecord,getSavedSurvivalCampaign,resumeSavedSurvivalCampaign,clearSavedSurvivalCampaign,persistActiveCampaign} from './survival.js';
 const canvas=document.getElementById('game-canvas'),ctx=canvas.getContext('2d',{alpha:false});const arenaCache=document.createElement('canvas');arenaCache.width=SETTINGS.width;arenaCache.height=SETTINGS.height;const arenaCtx=arenaCache.getContext('2d',{alpha:false});let messageTimer=0,messageText='',messageColor='#fff',countdown=0,lastHud=0,lastMutationRotBucket=-1;
+// Los efectos ambientales son secundarios: un fallo de un fenómeno nunca debe cortar el dibujo de pelota y paletas.
+const failedRenderLayers=new Set();
+function drawOptionalLayer(name, drawLayer){try{drawLayer();}catch(error){if(!failedRenderLayers.has(name)){failedRenderLayers.add(name);console.error(`[Clash of Gods] Se omitió la capa visual '${name}' tras un error de renderizado.`,error);}}}
 function drawMutationArenaSurface(c,W,H,quality='balanced',rot=0){
  // La pudrición de la superficie es persistente: no baja cuando una vacuna cura al jugador.
  const low=quality==='low',stage=rot>=75?4:rot>=50?3:rot>=25?2:1;
@@ -122,7 +125,9 @@ function draw(){
  const W=SETTINGS.width,H=SETTINGS.height;
  ctx.clearRect(0,0,W,H);
  // El campo está prerenderizado una sola vez; cada frame reutiliza una imagen estática.
- ctx.drawImage(arenaCache,0,0);drawMythicArenaEffects(ctx);drawMutationAtmosphere(ctx);drawMutationArenaEvent(ctx);drawArenaEvent(ctx);drawArenaDirector(ctx);drawPowerupEffects(ctx);
+ ctx.drawImage(arenaCache,0,0);drawOptionalLayer('efectos míticos',()=>drawMythicArenaEffects(ctx));drawOptionalLayer('atmósfera de mutación',()=>drawMutationAtmosphere(ctx));drawOptionalLayer('evento de mutación',()=>drawMutationArenaEvent(ctx));drawOptionalLayer('evento de arena',()=>drawArenaEvent(ctx));drawOptionalLayer('director de arena',()=>drawArenaDirector(ctx));drawOptionalLayer('efectos de power-ups',()=>drawPowerupEffects(ctx));
+ // Normalizar el estado básico antes de dibujar entidades esenciales. Las capas de ambiente no deben heredar alpha/composición.
+ ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);ctx.shadowBlur=0;ctx.filter='none';
  // Barricadas rúnicas: núcleo oscuro, doble contorno y marcas geométricas sin blur pesado.
  for(const wall of state.temporaryWalls||[]){
   const life=Math.max(0,Math.min(1,(wall.life??1)/(wall.maxLife||1)));

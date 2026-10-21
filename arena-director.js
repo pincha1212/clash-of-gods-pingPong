@@ -379,23 +379,31 @@ export function drawArenaDirector(ctx) {
   if (!active.length && !warning) return;
   ctx.save(); ctx.beginPath(); ctx.rect(24, 24, SETTINGS.width - 48, SETTINGS.height - 48); ctx.clip();
   for (const event of active) {
-    const spec = EVENTS[event.id], pulse = reduced ? .5 : .5 + .5 * Math.sin(t * 5.5 + event.age);
+    const spec = EVENTS[event.id];
+    // Estado antiguo o corrupto del director: ignorar el evento desconocido, no romper el frame completo.
+    if (!spec) continue;
+    const pulse = reduced ? .5 : .5 + .5 * Math.sin(t * 5.5 + event.age);
     ctx.globalAlpha = .045 + pulse * .035; ctx.fillStyle = spec.color; ctx.fillRect(24, 24, SETTINGS.width - 48, SETTINGS.height - 48);
     drawArenaPhenomenon(ctx, event, t, pulse, quality);
   }
   if (active.some(e => e.synergy)) drawArenaSynergy(ctx, director.arenaId, t, SYNERGIES[director.arenaId]?.color || profile.color, reduced ? .3 : .5 + .5 * Math.sin(t * 6), quality);
   if (warning) {
-    const spec = EVENTS[warning.id], phase = reduced ? .3 : .24 + Math.sin(t * 12) * .1;
+    const spec = EVENTS[warning.id];
+    if (spec) {
+    const phase = reduced ? .3 : .24 + Math.sin(t * 12) * .1;
     ctx.globalAlpha = phase; ctx.strokeStyle = spec.color; ctx.lineWidth = 2.5; ctx.setLineDash([8, 7]);
     ctx.strokeRect(32, 32, SETTINGS.width - 64, SETTINGS.height - 64); ctx.setLineDash([]);
     // Emblema anticipatorio distinto: el jugador puede reconocer qué fenómeno llega.
     ctx.globalAlpha = .62; ctx.strokeStyle = spec.color; ctx.lineWidth = 2;
     drawArenaPhenomenon(ctx, warning, t, .45, quality);
+    }
   }
   ctx.restore();
   const comboActive = active.some(e => e.synergy);
-  const label = warning ? `SE ACERCA: ${EVENTS[warning.id].label}` : comboActive ? (SYNERGIES[director.arenaId]?.label || EVENTS[active[0].id].label) : active.map(e => EVENTS[e.id].label).join(' + ');
-  const color = warning ? EVENTS[warning.id].color : comboActive ? (SYNERGIES[director.arenaId]?.color || profile.color) : EVENTS[active[0].id].color;
+  const warningLabel = warning && EVENTS[warning.id] ? `SE ACERCA: ${EVENTS[warning.id].label}` : '';
+  const activeLabels = active.map(e => EVENTS[e.id]?.label).filter(Boolean);
+  const label = warningLabel || (comboActive ? (SYNERGIES[director.arenaId]?.label || activeLabels[0] || profile.name) : (activeLabels.join(' + ') || profile.name));
+  const color = warning && EVENTS[warning.id] ? EVENTS[warning.id].color : comboActive ? (SYNERGIES[director.arenaId]?.color || profile.color) : (EVENTS[active[0]?.id]?.color || profile.color);
   ctx.save(); ctx.globalAlpha = .9; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.font = 'bold 11px sans-serif'; ctx.fillText(label, SETTINGS.width / 2, 47); ctx.restore();
 }
 
