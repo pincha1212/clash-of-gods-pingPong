@@ -83,8 +83,8 @@ export function isArenaModifierEnabled() {
   // Todas las crónicas (incluidos ambos jefes) conservan sus eventos originales.
   // El gestor genérico solo funciona en Clásico para evitar duplicar fuerzas y avisos.
   if (mode !== 'classic') return false;
-  // Las tres arenas del prototipo usan el director global nuevo, no dos sistemas a la vez.
-  if (['arena_japanese', 'arena_greek', 'arena_norse'].includes(selectedArena()?.id)) return false;
+  // Todas las arenas mitológicas compartidas usan el director global; evitar fuerzas y avisos duplicados.
+  if (selectedArena()) return false;
   return Boolean(selectedArena());
 }
 

@@ -1,3 +1,33 @@
+# Clash of Gods V0.2.68 — expansión del director de arenas
+
+## Novedades
+- El director de eventos se amplía a las 17 arenas mitológicas compartidas, conservando un único motor.
+- Cada arena selecciona fenómenos propios y compartidos mediante pesos condicionados por velocidad/posición de la pelota, marcador, duración del rally, último golpe y estado del competidor.
+- Se incorporan 28 fenómenos exclusivos nuevos para las 14 arenas restantes y una sinergia diseñada por arena.
+- Las señales visuales, avisos, fases, límites de fuerza y máximo de dos fenómenos simultáneos se mantienen; no se añaden obstáculos invisibles.
+- Crónicas, jefes y Mutación conservan sus gestores separados.
+
+## Arenas nuevas del director
+- Egipto: Llamarada de Ra, Deriva del Eclipse — Carrera de la Barca Solar.
+- India: Órbita del Mandala, Resonancia del Mantra — Danza Cósmica.
+- Mexica: Tormenta de Plumas, Latido de la Piedra Solar — Tempestad de Quetzal.
+- Primordial: Fisura de los Titanes, Oleada del Caos — Colapso Titánico.
+- China: Dragón entre las Nubes, Niebla de Jade — Despertar del Dragón.
+- Mesopotamia: Crecida de los Dos Ríos, Puerta de Ishtar — Compuertas del Destino.
+- Celta: Raíces Despiertas, Susurro del Druida — Pacto del Bosque.
+- Artúrica: Resonancia del Grial, Espada Espectral — Grial Ascendente.
+- Persa: Ascenso del Simurg, Lluvia de Brasas — Vuelo del Simurg.
+- Romana: Marcha de las Legiones, Corona de Laurel — Águila de las Legiones.
+- Anglosajona: Zumbido de las Runas, Eco del Salón — Juramento Resonante.
+- Germánica: Cacería Salvaje, Carga bajo la Luna — Tempestad de la Cacería.
+- Europa medieval: Desplazamiento de Leylines, Floración de Cristales — Red de Leylines.
+- Levantina: Marea de la Luna Creciente, Brújula de Estrellas — Navegación Celeste.
+
+## Verificación
+Se realizaron inspecciones estáticas de sintaxis e integridad del paquete. No se ejecutaron pruebas automatizadas ni se afirmó haber probado el juego en navegador; la comprobación de partidas queda a cargo de la persona usuaria.
+
+---
+
 # V0.2.67 — Director global de evolución de arenas
 
 - Nuevo módulo `arena-director.js`: elige fenómenos por azar ponderado, identidad de arena, estado del rally, velocidad/posición de la pelota, último golpe y marcador.
