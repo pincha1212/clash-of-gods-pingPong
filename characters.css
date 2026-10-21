@@ -150,3 +150,20 @@ body.codex-detail-open{overflow:hidden}
 @media(max-width:760px){.codex-compare-cards{grid-template-columns:repeat(var(--compare-count),minmax(225px,1fr));overflow-x:auto;padding:2px 2px 10px}.codex-compare-card{padding:14px}.codex-library-panel{padding:15px}.codex-extra-tools{padding:17px}}
 @media(max-width:560px){.codex-tools-actions{display:grid;grid-template-columns:1fr 1fr}.codex-tools-actions .button{min-width:0;min-height:48px;padding:9px 7px;font-size:8px;line-height:1.45}.codex-tools-actions .button:first-child{grid-column:1/-1}.codex-library-heading{gap:10px}.codex-library-heading h3{font-size:22px}.codex-library-heading .button{padding:8px;font-size:7px}.codex-favorites-grid{grid-template-columns:1fr}.codex-compare-cards{grid-template-columns:repeat(var(--compare-count),minmax(245px,80vw));gap:10px}.codex-compare-identity h4{font-size:22px}}
 .codex-compare-empty.hidden{display:none!important}
+/* Códice de arenas: comparte la arquitectura de fichas, con identidad visual propia. */
+.codex-choice-arenas{--codex-tone:#80c9d8;grid-column:1/-1;min-height:160px;background:linear-gradient(115deg,#12242d,#10131d 76%)}
+.codex-choice-arenas .god-symbol{font-size:30px}
+.codex-arena-card{background:linear-gradient(145deg,#17202b,#10131d)}
+.codex-arena-symbol{color:var(--god);border-color:color-mix(in srgb,var(--god),transparent 55%);background:color-mix(in srgb,var(--god),transparent 92%);font-size:21px!important;overflow:hidden}
+.codex-arena-tags,.codex-chip-list{display:flex;flex-wrap:wrap;gap:6px}
+.codex-arena-tags{min-height:29px;margin:8px 0 12px}
+.codex-arena-tags span{font-size:8px;line-height:1.4;padding:5px 7px;border:1px solid color-mix(in srgb,var(--god),transparent 76%);color:#c7cedc;background:#0c111a}
+.codex-arena-read-state{font-size:8px;letter-spacing:.04em;color:var(--muted);align-self:center}
+.codex-arena-detail-hero .codex-detail-symbol{color:var(--god);border-color:color-mix(in srgb,var(--god),transparent 55%);background:color-mix(in srgb,var(--god),transparent 92%)}
+.codex-arena-swatches{display:flex;flex-wrap:wrap;gap:14px;margin-top:15px}
+.codex-arena-swatches span{display:flex;align-items:center;gap:6px;font-size:8px;letter-spacing:.08em;color:var(--muted)}
+.codex-arena-swatches i{width:13px;height:13px;border-radius:50%;border:1px solid #ffffff40;display:inline-block}
+#codex-arena-tools{margin-top:24px}
+#codex-arena-tools .codex-progress-line{margin-top:12px;max-width:420px}
+#codex-arena-favorites-content{margin-top:16px}
+@media(max-width:560px){.codex-choice-arenas{grid-column:auto;min-height:170px}.codex-arena-tags{min-height:0}}

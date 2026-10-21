@@ -1,6 +1,6 @@
 /* Clash of Gods PWA shell. Keep this list in sync with the static app shell. */
 const CACHE_PREFIX = 'clash-of-gods-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}0.2.66`;
+const CACHE_NAME = `${CACHE_PREFIX}0.2.79`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -25,7 +25,10 @@ const APP_SHELL = [
   './powerups.js',
   './mutation.js',
   './arena-events.js',
+  './arena-director.js',
+  './arena-art.js',
   './codex-profiles.js',
+  './codex-arenas.js',
   './codex-relations.js',
   './pwa.js',
   './pwa.css',
