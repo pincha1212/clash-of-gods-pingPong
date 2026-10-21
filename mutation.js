@@ -189,7 +189,7 @@ export function getMutationArenaStage() {
 }
 export function getMutationArenaEvent() { return { ...ensureMutationState().arenaEvent }; }
 export function applyMutationArenaForce(ball, dt) {
-  if (!ball || state.mutationMode !== 'mutation') return;
+  if (!ball || state.mutationMode !== 'mutation' || state.settings?.arenaEvents === false) return;
   const event = ensureMutationState().arenaEvent;
   if (event.active <= 0 || !Number.isFinite(ball.vx) || !Number.isFinite(ball.vy)) return;
   const stage = getMutationArenaStage();
@@ -258,6 +258,7 @@ export function updateMutationEffects(dt, ball = state.ball) {
   }
 
   const event = mutation.arenaEvent;
+  if(state.settings?.arenaEvents===false){event.warning=0;event.active=0;event.cooldown=4.2;return;}
   const arenaStage = getMutationArenaStage();
   if (arenaStage < 2) {
     event.warning = 0; event.active = 0; event.cooldown = 4.2;

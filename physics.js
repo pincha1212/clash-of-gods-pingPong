@@ -45,7 +45,7 @@ function resolveBallCollisions(dt){
    if(impact){const impulse=-(1+.96)*along/(1/mA+1/mB);a.vx-=impulse*nx/mA;a.vy-=impulse*ny/mA;b.vx+=impulse*nx/mB;b.vy+=impulse*ny/mB;}
    if(t<1){const remain=frameScale*(1-t);a.x+=a.vx*remain;a.y+=a.vy*remain;b.x+=b.vx*remain;b.y+=b.vy*remain;}
    capBallSpeed(a);capBallSpeed(b);a.speed=ballMagnitude(a);b.speed=ballMagnitude(b);
-   const bossArena=state.mythicMode==='boss-jormungandr',top=24+(bossArena?Math.max(0,state.jormungandr?.inset||0):0),bottom=SETTINGS.height-24-(bossArena?Math.max(0,state.jormungandr?.inset||0):0);
+   const bossArena=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',top=24+(bossArena?Math.max(0,state.jormungandr?.inset||0):0),bottom=SETTINGS.height-24-(bossArena?Math.max(0,state.jormungandr?.inset||0):0);
    for(const ball of [a,b]){if(ball.y-ball.r<top){ball.y=top+ball.r;if(ball.vy<0)ball.vy=Math.abs(ball.vy);}if(ball.y+ball.r>bottom){ball.y=bottom-ball.r;if(ball.vy>0)ball.vy=-Math.abs(ball.vy);}}
    if(impact){const colorA=a.matchEffects?.color||a.color||'#8ee9ff',colorB=b.matchEffects?.color||b.color||'#ff9fe5';
     burst((a.x+b.x)/2,(a.y+b.y)/2,colorA,4,1.7);burst((a.x+b.x)/2,(a.y+b.y)/2,colorB,3,1.35);
@@ -149,9 +149,9 @@ function updatePhysicsSingle(dt,isPrimary){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const b=state.ball;
  if(isPrimary){for(let i=state.items.length-1;i>=0;i--){state.items[i].life-=dt;if(state.items[i].life<=0)state.items.splice(i,1);}}
- if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);const mutationScale=state.mutationMode==='mutation'?getMutationShieldScale(side):1;const mutantScale=p.mutantPaddle>0?1+.28*Math.sin((p.mutantPaddleTime||0)*9):1;const spectralScale=p.spectralPhase>0?(p.spectralPhaseOffset===1?.72:1.22):1;p.h=clamp(p.baseH*(p.matchSizeScale||1)*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1)*mutationScale*mutantScale*spectralScale,32,220);const bossBounds=state.mythicMode==='boss-jormungandr',fieldInset=bossBounds?Math.max(0,state.jormungandr?.inset||0):0;p.y=clamp(p.y,24+fieldInset,SETTINGS.height-24-fieldInset-p.h);if(p.shield<=0)p.shieldMode='';}
+ if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);const mutationScale=state.mutationMode==='mutation'?getMutationShieldScale(side):1;const mutantScale=p.mutantPaddle>0?1+.28*Math.sin((p.mutantPaddleTime||0)*9):1;const spectralScale=p.spectralPhase>0?(p.spectralPhaseOffset===1?.72:1.22):1;p.h=clamp(p.baseH*(p.matchSizeScale||1)*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1)*mutationScale*mutantScale*spectralScale,32,220);const bossBounds=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',fieldInset=bossBounds?Math.max(0,state.jormungandr?.inset||0):0;p.y=clamp(p.y,24+fieldInset,SETTINGS.height-24-fieldInset-p.h);if(p.shield<=0)p.shieldMode='';}
  if(state.serveTimer>0){state.serveTimer=Math.max(0,state.serveTimer-dt);return;}
- if(isPrimary){
+ if(isPrimary && state.settings?.arenaEvents !== false){
  if(state.mythicMode==='olympus'){state.mythicSurgeCooldown=Math.max(0,(state.mythicSurgeCooldown||0)-dt);state.mythicSurgeTime=Math.max(0,(state.mythicSurgeTime||0)-dt);if(state.mythicSurgeCooldown<=0&&state.mythicSurgeTime<=0){state.mythicSurgeTime=1.35;state.mythicSurgeCooldown=8.25;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL OLIMPO',color:'#ffe17a'}}));}}
  if(state.mythicMode==='ragnarok'){state.mythicRagnarokElapsed=(state.mythicRagnarokElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicRagnarokElapsed/15));if(stage>(state.mythicRagnarokStage||0)){state.mythicRagnarokStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL VIENTO DEL NORTE DESPIERTA','LAS RAÍCES DE MIDGARD SE QUIEBRAN','EL CIELO DEL RAGNARÖK SE ABRE','EL FIN DE LOS DIOSES SE ACERCA'][stage],color:'#a9d6df'}}));}state.mythicRagnarokPulse=Math.max(0,(state.mythicRagnarokPulse||0)-dt);state.mythicRagnarokCooldown=Math.max(0,(state.mythicRagnarokCooldown||0)-dt);if(state.mythicRagnarokCooldown<=0&&state.mythicRagnarokPulse<=0){state.mythicRagnarokPulse=1.05;state.mythicRagnarokCooldown=Math.max(5.5,8.5-stage*.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL RAGNARÖK',color:'#a9d6df'}}));}}
  if(state.mythicMode==='throne'){state.mythicThroneElapsed=(state.mythicThroneElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicThroneElapsed/12));if(stage>(state.mythicThroneStage||0)){state.mythicThroneStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL CONSEJO DIVINO SE REÚNE','EL DESIERTO RECLAMA SU PRECIO','EL SOL ENTRA EN ECLIPSE','EL TRONO EXIGE UN HEREDERO'][stage],color:stage>=2?'#cf8064':'#e8c66f'}}));}state.mythicThronePulse=Math.max(0,(state.mythicThronePulse||0)-dt);state.mythicThroneCooldown=Math.max(0,(state.mythicThroneCooldown||0)-dt);if(state.mythicThroneCooldown<=0&&state.mythicThronePulse<=0){state.mythicThronePulse=.85;state.mythicThroneCooldown=9;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'ECLIPSE DEL JUICIO',color:'#cf8064'}}));}}
@@ -162,15 +162,15 @@ function updatePhysicsSingle(dt,isPrimary){
  }
  // Las condiciones de cada modo avanzan una sola vez; la fuerza resultante se aplica a todas las pelotas.
  const modeNow=performance.now?.()||0;
- if(state.mythicMode==='olympus'&&state.mythicSurgeTime>0)b.vy+=Math.sin(modeNow/210)*dt*2.0;
- if(state.mythicMode==='ragnarok'&&state.mythicRagnarokPulse>0)b.vy+=Math.sin(modeNow/240)*dt*(1.15+Math.min(3,state.mythicRagnarokStage||0)*.28);
- if(state.mythicMode==='throne'&&state.mythicThronePulse>0)b.vy+=Math.sin(modeNow/285)*dt*.95;
- if(state.mythicMode==='waters'&&state.mythicWatersPulse>0)b.vy+=Math.sin(modeNow/260)*dt*(.8+Math.min(3,state.mythicWatersStage||0)*.18);
- if(state.mythicMode==='boss-typhon'&&(state.typhon?.active||0)>0){const boss=state.typhon,stage=boss.stage||0;b.vy+=(boss.direction||1)*(1.25+stage*.42)*dt+Math.sin(modeNow/115)*(.45+stage*.12)*dt;}
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='olympus'&&state.mythicSurgeTime>0)b.vy+=Math.sin(modeNow/210)*dt*2.0;
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='ragnarok'&&state.mythicRagnarokPulse>0)b.vy+=Math.sin(modeNow/240)*dt*(1.15+Math.min(3,state.mythicRagnarokStage||0)*.28);
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='throne'&&state.mythicThronePulse>0)b.vy+=Math.sin(modeNow/285)*dt*.95;
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='waters'&&state.mythicWatersPulse>0)b.vy+=Math.sin(modeNow/260)*dt*(.8+Math.min(3,state.mythicWatersStage||0)*.18);
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='boss-typhon'&&(state.typhon?.active||0)>0){const boss=state.typhon,stage=boss.stage||0;b.vy+=(boss.direction||1)*(1.25+stage*.42)*dt+Math.sin(modeNow/115)*(.45+stage*.12)*dt;}
  capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y});if(b.trail.length>12)b.trail.shift();
  if(b.effectTime>0)b.effectTime=Math.max(0,b.effectTime-dt);else b.specialEffect='';
  b.x+=b.vx*dt*60;b.y+=b.vy*dt*60;
- const bossArena=state.mythicMode==='boss-jormungandr',arenaTop=24,arenaBottom=SETTINGS.height-24,bossInset=bossArena?Math.max(0,state.jormungandr?.inset||0):0,topLimit=arenaTop+bossInset,bottomLimit=arenaBottom-bossInset;if(b.y-b.r<topLimit){b.y=topLimit+b.r;b.vy=Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>bottomLimit){b.y=bottomLimit-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
+ const bossArena=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',arenaTop=24,arenaBottom=SETTINGS.height-24,bossInset=bossArena?Math.max(0,state.jormungandr?.inset||0):0,topLimit=arenaTop+bossInset,bottomLimit=arenaBottom-bossInset;if(b.y-b.r<topLimit){b.y=topLimit+b.r;b.vy=Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>bottomLimit){b.y=bottomLimit-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
  // Las fuerzas ambientales se suman en una sola autoridad y se limitan para que
  // acumular varios Power-ups no vuelva la pelota casi vertical de forma incontrolable.
  const now=performance.now?.()||0;let fieldForce=0;
@@ -204,7 +204,7 @@ function updatePhysicsSingle(dt,isPrimary){
  capBallSpeed(b);
 
  // Mutación reemplaza los potenciadores comunes por vacunas. Los modos normales conservan el catálogo actual.
- if(isPrimary&&state.itemsEnabled&&(state.mythicMode!=='boss-jormungandr'||state.mutationMode==='mutation')){
+ if(isPrimary&&(state.itemsEnabled||state.mutationMode==='mutation')&&(state.mythicMode!=='boss-jormungandr'||state.mutationMode==='mutation')){
   state.powerupSpawnTimer=(state.powerupSpawnTimer??1)-dt;
   if(state.mutationMode==='mutation'){
    if(state.powerupSpawnTimer<=0&&!state.items.some(item=>item.type==='mutation-vaccine')){
@@ -216,9 +216,8 @@ function updatePhysicsSingle(dt,isPrimary){
     const rot=Math.max(0,Math.min(100,state.mutation?.rot||0));
     state.powerupSpawnTimer=9+Math.random()*3+rot*.07;
    }
-  }else if(state.powerupSpawnTimer<=0&&state.items.length<5){
-   const available=POWERUPS.filter(x=>x.id!=='aegis'||state.paddles.p1.shield<=0||state.paddles.p2.shield<=0);
-   const pick=choosePowerup(available);
+  }else if(state.itemsEnabled&&state.mythicMode!=='boss-jormungandr'&&state.powerupSpawnTimer<=0&&state.items.length<5){
+   const pick=choosePowerup(POWERUPS);
    const zones=[{x:300,y:95},{x:500,y:130},{x:700,y:95},{x:330,y:500},{x:670,y:500},{x:500,y:470},{x:410,y:300},{x:590,y:300}];
    const free=zones.filter(z=>!state.items.some(it=>Math.hypot(it.x-z.x,it.y-z.y)<35));const spot=free.length?free[Math.floor(Math.random()*free.length)]:{x:300+Math.random()*400,y:85+Math.random()*430};
    state.items.push({x:spot.x,y:spot.y,r:13,life:12,type:pick.id});state.powerupSpawnTimer=2.1+Math.random()*1.0;
@@ -258,7 +257,7 @@ function updatePhysicsSingle(dt,isPrimary){
 export function updatePaddles(dt){
  if(!state.running||state.paused||state.finished)return;const {p1,p2}=state.paddles;
  const move=(p,up,down,side)=>{
-  const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p.h;
+  const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p.h;
   if(state.touchDrag[side]!==null){const inverted=p.invert>0;const dragDelta=Number(state.touchDragDelta?.[side])||0; p.y=clamp(p.y+dragDelta*(inverted?-1:1),topLimit,bottomLimit);if(state.touchDragDelta)state.touchDragDelta[side]=0;p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
   let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
   const mutationMultiplier=state.mutationMode==='mutation'?getMutationMovementMultiplier(side):1;p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*mutationMultiplier*dt*60,topLimit,bottomLimit);
@@ -304,6 +303,6 @@ export function updatePaddles(dt){
   }
   // La CPU divina se desplaza con más rapidez y reevalúa las amenazas en cada actualización.
   let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:4.0,normal:6.7,hard:12.4})[difficulty]||6.7;const speed=Math.min(max,Math.abs(diff))*(inverted?.62:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
-  const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
+  const bossMode=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }

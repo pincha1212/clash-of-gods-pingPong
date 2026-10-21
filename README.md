@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.77 — Efectos ambientales corregidos y CPU divina
+# Clash of Gods V0.2.78 — Catálogo de Power-ups, reglas configurables y flujo de elenco
 
 ## Dificultad de la CPU
 
@@ -32,3 +32,14 @@
 - Los efectos de terremoto se reinician correctamente al limpiar los power-ups y también funcionan en partidas con varias pelotas.
 - Actualizada la versión visible, metadatos y caché de la PWA a `0.2.77`.
 - Revisión estática de sintaxis y paquetes ZIP. No se ejecutaron pruebas automatizadas ni una partida en navegador; queda pendiente la validación manual de los efectos en juego.
+
+
+## V0.2.78 — Control de reglas y aparición de Power-ups
+
+- Catálogo de 58 Power-ups verificado: cada identificador registrado tiene una rama de aplicación. La aparición usa una bolsa barajada sin repetición hasta recorrer el catálogo completo; el ciclo persiste entre partidas para evitar que cada nueva partida vuelva a ocultar los mismos poderes.
+- El selector de elenco queda en la pantalla inicial de personajes. Se eliminó el selector duplicado de configuración y su antigua ruta de retorno a Personajes.
+- Se agregaron preferencias independientes en Ajustes para eventos ambientales, Power-ups/objetos y habilidades de personaje. Los controles se sincronizan con las reglas de preparación y se aplican durante una partida.
+- Desactivar eventos detiene avisos, efectos físicos y visuales de eventos de arena y de crónicas; las reglas centrales de Mutación se conservan, pero sus pulsos de arena se pueden desactivar. Las vacunas de Mutación siguen apareciendo porque son un recurso esencial del modo.
+- Desactivar Power-ups retira los objetos sin recoger y detiene nuevas apariciones en partidas compatibles. El jefe Jörmungandr conserva su restricción específica de no usar Power-ups.
+- Actualizados versión visible, metadatos del paquete, README y caché de la PWA a `0.2.78`.
+- Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.

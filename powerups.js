@@ -63,6 +63,21 @@ export const POWERUPS = [
  {id:'divinestorm',name:'Tempestad divina',symbol:'ϟ',color:'#8adfff',description:'Transforma la arena en una tormenta eléctrica y desvía la pelota con ráfagas de viento.'}
 ];
 const byId = Object.fromEntries(POWERUPS.map(p=>[p.id,p]));
+// Bolsa barajada persistente entre partidas: cada Power-up del catálogo aparece
+// una vez antes de comenzar un nuevo ciclo. Evita rachas aleatorias que oculten
+// poderes poco frecuentes durante muchas partidas cortas.
+let powerupDeck=[];
+let powerupDeckIndex=0;
+let powerupDeckSignature='';
+let lastPowerupId='';
+function refillPowerupDeck(available=POWERUPS){
+ const unique=[...new Map((Array.isArray(available)?available:POWERUPS).filter(item=>item&&byId[item.id]).map(item=>[item.id,byId[item.id]])).values()];
+ powerupDeck=unique.slice();
+ for(let i=powerupDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[powerupDeck[i],powerupDeck[j]]=[powerupDeck[j],powerupDeck[i]];}
+ if(powerupDeck.length>1&&powerupDeck[0]?.id===lastPowerupId){const swapIndex=1+Math.floor(Math.random()*(powerupDeck.length-1));[powerupDeck[0],powerupDeck[swapIndex]]=[powerupDeck[swapIndex],powerupDeck[0]];}
+ powerupDeckIndex=0;
+ powerupDeckSignature=unique.map(item=>item.id).sort().join('|');
+}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const BALL_POWER_SCALE={heavyball:.72,lightningball:1.22};
 const BALL_BASE_R=9;
@@ -336,10 +351,12 @@ export function drawBallPower(ctx,b){const effect=b?.powerEffect?.time>0?b.power
  if(persistent.trajectory){ctx.globalAlpha=.9;ctx.beginPath();if(persistent.trajectory==='flat'){ctx.moveTo(b.x-b.r-7,b.y);ctx.lineTo(b.x+b.r+7,b.y);ctx.moveTo(b.x+b.r+3,b.y-4);ctx.lineTo(b.x+b.r+7,b.y);ctx.lineTo(b.x+b.r+3,b.y+4);}else if(persistent.trajectory==='vertical'){ctx.moveTo(b.x,b.y-b.r-7);ctx.lineTo(b.x,b.y+b.r+7);ctx.moveTo(b.x-4,b.y+b.r+3);ctx.lineTo(b.x,b.y+b.r+7);ctx.lineTo(b.x+4,b.y+b.r+3);}else{for(let i=0;i<3;i++){const a=performance.now()/260+i*Math.PI*2/3;ctx.moveTo(b.x+Math.cos(a)*(b.r+3),b.y+Math.sin(a)*(b.r+3));ctx.lineTo(b.x+Math.cos(a+1.4)*(b.r+10),b.y+Math.sin(a+1.4)*(b.r+10));}}ctx.stroke();}
  ctx.restore();}
 export function choosePowerup(available=POWERUPS){
- const weight=item=>['rouletteball','fractalball','chaosarena','mirrorball'].includes(item.id)?2.0:item.id==='phaseball'?0.62:item.id==='invert'?0.72:1;
- const total=available.reduce((sum,item)=>sum+weight(item),0);let roll=Math.random()*total;
- for(const item of available){roll-=weight(item);if(roll<=0)return item;}
- return available[available.length-1]||POWERUPS[0];
+ const source=Array.isArray(available)&&available.length?available:POWERUPS;
+ const signature=[...new Set(source.filter(item=>item&&byId[item.id]).map(item=>item.id))].sort().join('|');
+ if(!powerupDeck.length||powerupDeckIndex>=powerupDeck.length||signature!==powerupDeckSignature)refillPowerupDeck(source);
+ const selected=powerupDeck[powerupDeckIndex++];
+ if(selected)lastPowerupId=selected.id;
+ return selected||POWERUPS[0];
 }
 export function getPowerupDefinition(id){return byId[id]||POWERUPS[0];}
 export function getBallSpeedMultiplier(ball=state.ball){return ball?.powerEffect?.time>0?(ball.powerEffect.scale||BALL_POWER_SCALE[ball.powerEffect.type]||1):1;}

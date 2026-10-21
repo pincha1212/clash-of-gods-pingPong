@@ -90,7 +90,7 @@ function normalizedArenaId() {
   return id;
 }
 function enabled() {
-  return state.running && !state.paused && !state.finished && state.mutationMode !== 'mutation' && (state.mythicMode || 'classic') === 'classic' && Boolean(PROFILES[normalizedArenaId()]);
+  return state.running && !state.paused && !state.finished && state.settings?.arenaEvents !== false && state.mutationMode !== 'mutation' && (state.mythicMode || 'classic') === 'classic' && Boolean(PROFILES[normalizedArenaId()]);
 }
 function notify(title, color) {
   if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') window.dispatchEvent(new CustomEvent('god-message', { detail: { title, text:title, color, category:'arena' } }));

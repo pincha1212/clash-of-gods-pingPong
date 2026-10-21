@@ -78,6 +78,7 @@ function currentProfile() {
 }
 
 export function isArenaModifierEnabled() {
+  if (state.settings?.arenaEvents === false) return false;
   if (state.mutationMode === 'mutation') return false;
   const mode = state.mythicMode || 'classic';
   // Todas las crónicas (incluidos ambos jefes) conservan sus eventos originales.
