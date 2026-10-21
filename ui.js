@@ -116,7 +116,8 @@ function selectChip(groupId, element) {
     if (groupId === 'group-skill-cd') config.skillCooldownMultiplier = parseFloat(value);
 }
 
-function applyPreset(presetType) {
+// Preset alternativo conservado para la UI histórica; evita redeclarar applyPreset.
+function applyLegacyPreset(presetType) {
     if (presetType === 'competitive') {
         config.ballSpeed = 8;
         config.arenaMode = 'normal';

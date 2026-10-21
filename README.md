@@ -1,3 +1,17 @@
+# Clash of Gods V0.2.70 — corrección de sintaxis de UI histórica
+
+## Cambios
+- Se elimina el error de sintaxis por doble declaración de `applyPreset` en `ui.js`, renombrando la segunda variante a `applyLegacyPreset` sin borrar su lógica.
+- Se actualizan la versión del proyecto, la etiqueta visible y la caché versionada del service worker a `0.2.70`.
+- `ui.js` está documentado como archivo histórico y no se carga desde `index.html`; esta corrección sanea el archivo, pero no cambia el flujo de la interfaz activa.
+
+## Verificación
+- `node --check ui.js` y comprobaciones de sintaxis de los módulos activos completadas.
+- Se verificaron referencias locales de la precaché y la integridad del ZIP delta.
+- No se ejecutaron pruebas automatizadas ni una partida en navegador.
+
+---
+
 # Clash of Gods V0.2.69 — identidad visual avanzada de las arenas
 
 ## Novedades
