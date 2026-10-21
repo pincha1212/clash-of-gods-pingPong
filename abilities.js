@@ -145,8 +145,9 @@ export function shouldCPUUseAbility(){
   if(!state.running||state.paused||state.finished||!state.skillsEnabled||state.mode!=='cpu')return false;
   if(!p||!god||!ball||p.cooldown>0||p.abilityTime>0||(state.serveTimer||0)>0)return false;
   const profile=getAbilityAIProfile(god);
-  if(profile==='attack'&&ball.vx<-.35&&ball.x>360)return true;
-  if(profile==='defense'&&ball.vx>.35&&ball.x>650&&ball.x<SETTINGS.width+ball.r)return true;
+  if(profile==='attack'&&ball.vx<-.35&&ball.x>360&&ball.x<SETTINGS.width*.86)return true;
+  if(profile==='defense'&&ball.vx>.35&&ball.x>SETTINGS.width*.66&&ball.x<SETTINGS.width+ball.r){const timeToPaddle=(SETTINGS.width*.94-ball.x)/Math.max(.35,ball.vx);return timeToPaddle<1.25||Math.abs(ball.y-(p.y+p.h/2))<p.h*.8;}
+  if(profile==='defense'&&ball.vx<-.35&&ball.x>SETTINGS.width*.78&&Math.abs(ball.y-(p.y+p.h/2))<p.h*.55)return true;
   return false;
 }
 

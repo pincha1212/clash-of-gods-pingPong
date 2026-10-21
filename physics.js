@@ -258,7 +258,12 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const target=state.ball.y-p2.h/2;let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*(inverted?.5:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
+  const ball=state.ball;let target=ball.y-p2.h/2;const difficulty=state.difficulty||'normal';const incoming=ball.vx>0;
+  // En Divina, la CPU calcula dónde llegará la pelota, incluyendo rebotes verticales.
+  // En Equilibrada solo anticipa un poco; Iniciación sigue siendo accesible.
+  if(incoming&&Math.abs(ball.vx)>.01&&difficulty!=='easy'){const contactX=p2.x-ball.r;const travelTime=Math.max(0,(contactX-ball.x)/(ball.vx*60));const anticipation=difficulty==='hard'?Math.min(travelTime,1.8):Math.min(travelTime,.38);const minY=24+ball.r,maxY=SETTINGS.height-24-ball.r,span=maxY-minY;let projected=ball.y+ball.vy*anticipation*60;const folded=((projected-minY)%(2*span)+2*span)%(2*span);target=minY+(folded<=span?folded:2*span-folded)-p2.h/2;}
+  // La CPU divina se mueve con decisión y recupera la posición sin titubeos artificiales.
+  let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:4.0,normal:6.7,hard:10.2})[difficulty]||6.7;const speed=Math.min(max,Math.abs(diff))*(inverted?.62:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
   const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }
