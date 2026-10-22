@@ -7,3 +7,7 @@
 .pwa-help button{flex:0 0 auto;border:0;background:transparent;color:inherit;font-size:22px;padding:0 6px}
 @media(max-width:380px){.install-button,.update-button{max-width:66px;white-space:normal;line-height:1.2}.wordmark{font-size:9px}.mark{width:24px;height:24px}}
 @media(max-width:620px){.gear-button{padding:8px 9px}#sound-toggle{width:32px;padding:8px 0;font-size:0;letter-spacing:0}#sound-toggle:before{content:"♫";font-size:14px;line-height:1}}
+/* El control de pantalla completa vive en la cabecera, solo en el menú principal. */
+.fullscreen-header-button{display:none;white-space:nowrap}
+body:has(#screen-menu.active) .fullscreen-header-button{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:620px){body:has(#screen-menu.active) .fullscreen-header-button{font-size:0;padding:8px 10px;min-width:34px;justify-content:center}.fullscreen-header-button::first-letter{font-size:17px}}

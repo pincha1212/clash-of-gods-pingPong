@@ -1,11 +1,11 @@
-# Clash of Gods V0.2.90 — Crónicas vivas y PWA
+# Clash of Gods V0.2.91 — Crónicas vivas y PWA
 
-## V0.2.90 — Crónicas y detección de instalación
+## V0.2.91 — Crónicas y detección de instalación
 - El botón «Instalar app» se oculta cuando el juego se ejecuta como PWA instalada.
 - Se recuerda el evento `appinstalled` para evitar volver a ofrecer la instalación en el mismo navegador.
 - Se conserva la opción de instalación en el navegador cuando la aplicación aún no está instalada.
 - Las seis crónicas existentes conservan sus sistemas dedicados; se aumenta la influencia jugable de las fases avanzadas de la Disputa por el Trono para que su progresión no sea solo visual.
-- Actualizados versión visible, metadatos y caché de la PWA a `0.2.90`.
+- Actualizados versión visible, metadatos y caché de la PWA a `0.2.91`.
 
 
 ## V0.2.75 — Dificultad de la CPU
@@ -115,7 +115,7 @@ Revisión de esta entrega: comprobación estática de sintaxis, JSON y archivos 
 - Siluetas mutantes de paleta dentro de su área de colisión, con cambios independientes y límites de forma.
 
 
-## V0.2.90 — Ritmo constante de Mutación
+## V0.2.91 — Ritmo constante de Mutación
 
 - Las mutaciones visuales de cada pelota arrancan de forma escalonada, con temporizadores independientes, para evitar que todas cambien de forma o tamaño al mismo tiempo.
 - Cada efecto individual dura entre 7 y 9 segundos antes de cambiar, dando tiempo a leer el estado de la pelota sin volver estático el combate.
