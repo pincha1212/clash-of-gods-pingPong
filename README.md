@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.86 — Mutaciones visuales y defensa equilibrada
+# Clash of Gods V0.2.87 — Colores Gamma y mutaciones persistentes
 
 ## Dificultad de la CPU
 
@@ -45,7 +45,7 @@
 - Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.
 
 
-## V0.2.86 — Paletas y pelotas mutantes
+## V0.2.87 — Colores Gamma y mutaciones persistentes
 
 - Las pelotas del modo Mutación cambian progresivamente de forma: polígonos, cristales y fragmentos angulares según la corrupción ambiental; los demás modos conservan su apariencia habitual.
 - El tamaño físico aumenta gradualmente con la corrupción, con un tope del 16% y un radio máximo controlado. La escala se calcula desde el radio base para evitar acumulaciones entre fotogramas o saques.
@@ -97,3 +97,10 @@
 La Cancha Mutante incorpora tres eventos propios que se habilitan conforme avanza la corrupción: **Tirón gravitatorio** (curva la pelota hacia el eje central), **Fractura de fase** (invierte el componente vertical a mitad del evento) y **Cancha fracturada** (aplica impulsos verticales irregulares). Los eventos se mantienen separados del director de eventos genérico de los otros modos y respetan el interruptor propio de eventos de Mutación. La representación visual y los avisos previos identifican cada evento.
 
 Revisión de esta entrega: comprobación estática de sintaxis, JSON y archivos ZIP. No se ejecutó una partida en navegador ni pruebas automatizadas.
+
+
+- Colores Gamma por jugador en la configuración de Mutación; el color de la CPU se sortea al iniciar.
+- Cancha dividida en los colores elegidos, con paletas y efectos ambientales tintados por lado.
+- Cada pelota conserva su propio color de contacto, forma y escala mutante hasta que su siguiente efecto independiente la cambia.
+- Estela de grietas con el color de la última paleta tocada.
+- Siluetas mutantes de paleta dentro de su área de colisión, con cambios independientes y límites de forma.

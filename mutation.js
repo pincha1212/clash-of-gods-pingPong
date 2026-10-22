@@ -278,7 +278,7 @@ export function updateMutationEffects(dt, ball = state.ball) {
     if (!chaos.type) {
       chaos.cooldown = Math.max(0, chaos.cooldown - dt);
       if (chaos.cooldown <= 0 && mutation.rot >= 18) {
-        const pool = mutation.rot >= 70 ? ['giant', 'tiny', 'spike', 'gamma'] : ['giant', 'tiny', 'spike'];
+        const pool = mutation.rot >= 70 ? ['spike', 'gamma'] : ['spike'];
         chaos.type = pool[Math.floor(Math.random() * pool.length)];
         chaos.side = Math.random() < .5 ? 'p1' : 'p2';
         chaos.time = chaos.duration = chaos.type === 'gamma' ? 2.8 : 3.4;
@@ -289,16 +289,43 @@ export function updateMutationEffects(dt, ball = state.ball) {
   const mutationBallScale = 1 + (mutation.rot / 100) * 0.16;
   for (const activeBall of balls) {
     if (!activeBall) continue;
+    if (!activeBall.matchEffects || typeof activeBall.matchEffects !== 'object') activeBall.matchEffects = { sizeScale: 1, trajectory: '', color: '', polygonSides: 0 };
+    const fx = activeBall.matchEffects;
+    if (state.mutationOptions?.ballPowersEnabled === false) {
+      fx.mutationEffect = ''; fx.mutationEffectTimer = 0; fx.sizeScale = 1; fx.polygonSides = 0; fx.mutationShape = '';
+    } else {
+      fx.mutationEffectTimer = Math.max(0, (Number(fx.mutationEffectTimer) || 0) - dt);
+      if (!fx.mutationEffect || fx.mutationEffectTimer <= 0) {
+        const pool = mutation.rot >= 72 ? ['giant', 'tiny', 'diamond', 'shard', 'hex'] : mutation.rot >= 32 ? ['giant', 'tiny', 'diamond', 'hex'] : ['giant', 'tiny', 'diamond'];
+        const choices = pool.filter(effect => effect !== fx.mutationEffect);
+        fx.mutationEffect = choices[Math.floor(Math.random() * choices.length)] || 'diamond';
+        fx.mutationEffectTimer = 4.5 + Math.random() * 5.5;
+        fx.sizeScale = fx.mutationEffect === 'giant' ? 1.65 : fx.mutationEffect === 'tiny' ? .48 : 1;
+        fx.mutationShape = fx.mutationEffect === 'shard' ? 'shard' : fx.mutationEffect === 'diamond' ? 'diamond' : fx.mutationEffect === 'hex' ? 'polygon' : '';
+        fx.polygonSides = fx.mutationEffect === 'hex' ? 6 : fx.mutationEffect === 'diamond' ? 4 : fx.mutationEffect === 'shard' ? 5 : 0;
+        notify('god-message', { title: ({ giant: 'GIGANTISMO', tiny: 'MICROPELOTA', diamond: 'CRISTAL GAMMA', shard: 'FRAGMENTO GAMMA', hex: 'GEOMETRÍA MUTANTE' })[fx.mutationEffect], color: fx.color || state.mutationColors?.[activeBall.lastHit] || activeBall.color || '#baff80', category: 'arena' });
+      }
+    }
     const baseRadius = Math.max(4, Number(activeBall.baseR) || Number(activeBall.r) || 9);
-    const persistentScale = Math.max(.65, Math.min(1.65, Number(activeBall.matchEffects?.sizeScale) || 1));
-    const chaosScale = chaos.time > 0 && chaos.type === 'giant' ? 1.72 : chaos.time > 0 && chaos.type === 'tiny' ? .42 : 1;
-    activeBall.r = Math.max(3, Math.min(18, baseRadius * persistentScale * mutationBallScale * chaosScale));
+    const persistentScale = Math.max(.48, Math.min(1.65, Number(fx.sizeScale) || 1));
+    activeBall.r = Math.max(3, Math.min(18, baseRadius * persistentScale * mutationBallScale));
   }
   for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers;
     // La apariencia de la paleta persigue la carga real: la curación visual es gradual.
     const visualStep = 28 * dt;
     player.visualCharge += Math.max(-visualStep, Math.min(visualStep, player.charge - player.visualCharge));
+    const paddle = state.paddles?.[side];
+    if (paddle && state.mutationOptions?.defensePowersEnabled !== false && player.charge >= 18) {
+      if (!Number.isFinite(Number(paddle.mutationShapeTimer))) paddle.mutationShapeTimer = 3 + Math.random() * 3;
+      paddle.mutationShapeTimer = Math.max(0, Number(paddle.mutationShapeTimer) - dt);
+      if (paddle.mutationShapeTimer <= 0) {
+        const shapes = ['flat', 'notched', 'hourglass', 'serrated'];
+        const choices = shapes.filter(shape => shape !== paddle.mutationShape);
+        paddle.mutationShape = choices[Math.floor(Math.random() * choices.length)] || 'flat';
+        paddle.mutationShapeTimer = 5 + Math.random() * 6;
+      }
+    } else if (paddle) { paddle.mutationShape = 'flat'; paddle.mutationShapeTimer = 0; }
     const hadShield = power.shieldTime > 0, hadRupture = power.ruptureBoost > 0;
     for (const key of ['pulseCooldown', 'pulsePenalty', 'riftCooldown', 'sporeCooldown', 'echoCooldown', 'phaseCooldown', 'shieldTime', 'shieldPenalty', 'ruptureCooldown', 'ruptureBoost', 'rupturePenalty', 'avatarActive', 'avatarPenalty']) power[key] = Math.max(0, power[key] - dt);
     if (hadShield && power.shieldTime === 0) power.shieldPenalty = .42;
