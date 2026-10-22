@@ -164,7 +164,7 @@ function updatePhysicsSingle(dt,isPrimary){
  const modeNow=performance.now?.()||0;
  if(state.settings?.arenaEvents!==false&&state.mythicMode==='olympus'&&state.mythicSurgeTime>0)b.vy+=Math.sin(modeNow/210)*dt*2.0;
  if(state.settings?.arenaEvents!==false&&state.mythicMode==='ragnarok'&&state.mythicRagnarokPulse>0)b.vy+=Math.sin(modeNow/240)*dt*(1.15+Math.min(3,state.mythicRagnarokStage||0)*.28);
- if(state.settings?.arenaEvents!==false&&state.mythicMode==='throne'&&state.mythicThronePulse>0)b.vy+=Math.sin(modeNow/285)*dt*.95;
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='throne'&&state.mythicThronePulse>0)b.vy+=Math.sin(modeNow/285)*dt*(.95+Math.min(3,state.mythicThroneStage||0)*.32);
  if(state.settings?.arenaEvents!==false&&state.mythicMode==='waters'&&state.mythicWatersPulse>0)b.vy+=Math.sin(modeNow/260)*dt*(.8+Math.min(3,state.mythicWatersStage||0)*.18);
  if(state.settings?.arenaEvents!==false&&state.mythicMode==='boss-typhon'&&(state.typhon?.active||0)>0){const boss=state.typhon,stage=boss.stage||0;b.vy+=(boss.direction||1)*(1.25+stage*.42)*dt+Math.sin(modeNow/115)*(.45+stage*.12)*dt;}
  capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y,color:b.matchEffects?.color||b.color||'#f6f4ed'});if(b.trail.length>12)b.trail.shift();

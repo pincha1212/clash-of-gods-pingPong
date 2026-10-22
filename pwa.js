@@ -6,6 +6,23 @@ const pwaHelpText = document.getElementById('pwa-help-text');
 let deferredInstallPrompt = null;
 let serviceWorkerRegistration = null;
 
+function isRunningInstalled() {
+  return window.matchMedia?.('(display-mode: standalone)').matches === true
+    || window.matchMedia?.('(display-mode: fullscreen)').matches === true
+    || window.navigator.standalone === true;
+}
+
+function hasInstallRecord() {
+  try { return localStorage.getItem('cog-installed') === '1'; } catch (_) { return false; }
+}
+
+function syncInstallButton() {
+  if (!installButton) return;
+  const installed = isRunningInstalled() || hasInstallRecord();
+  installButton.hidden = installed;
+  if (installed && pwaHelp) pwaHelp.hidden = true;
+}
+
 function setNetworkStatus() {
   const online = navigator.onLine;
   document.documentElement.dataset.connection = online ? 'online' : 'offline';
@@ -31,6 +48,7 @@ function showUpdateAvailable() {
 }
 
 installButton?.addEventListener('click', async () => {
+  if (isRunningInstalled() || hasInstallRecord()) { syncInstallButton(); return; }
   if (!deferredInstallPrompt) {
     showInstallHelp();
     return;
@@ -55,10 +73,12 @@ window.addEventListener('beforeinstallprompt', event => {
   event.preventDefault();
   deferredInstallPrompt = event;
   if (installButton) installButton.textContent = 'INSTALAR APP';
+  syncInstallButton();
 });
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
-  if (installButton) installButton.textContent = 'APP INSTALADA';
+  try { localStorage.setItem('cog-installed', '1'); } catch (_) {}
+  syncInstallButton();
   if (pwaHelp) pwaHelp.hidden = true;
 });
 window.addEventListener('online', setNetworkStatus);
@@ -85,3 +105,5 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 }
 
 setNetworkStatus();
+syncInstallButton();
+window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', syncInstallButton);
