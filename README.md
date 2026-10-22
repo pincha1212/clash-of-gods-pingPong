@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.81 — Códice organizado por pestañas
+# Clash of Gods V0.2.82 — Códice organizado por pestañas
 
 ## Dificultad de la CPU
 
@@ -45,7 +45,7 @@
 - Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.
 
 
-## V0.2.81 — Contadores y paneles sincronizados con cada pestaña
+## V0.2.82 — Contadores y paneles sincronizados con cada pestaña
 
 - El contador principal cambia según la pestaña activa: **124 registros** en Personajes y **17 registros** en Arenas de batalla.
 - El selector de dioses, héroes, titanes y monstruos se oculta por completo al entrar en Arenas de batalla.

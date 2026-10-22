@@ -5,6 +5,7 @@ import {playTone} from './audio.js';
 import {POWERUPS,choosePowerup,applyPowerup,updatePowerups,getBallSpeedMultiplier,getPaddleSpeedMultiplier,getBallPowerType,enforceBallTrajectory} from './powerups.js';
 import {registerMutationGoal,reduceMutationCharge,updateMutationEffects,applyMutationArenaForce,applyMutationPaddleHit,getMutationMovementMultiplier,getMutationShieldScale,consumeMutationShield,resetMutationRally} from './mutation.js';
 import {updateArenaEvents,getArenaForces,resetArenaEventState,clearArenaEventState} from './arena-events.js';
+import {updateArenaDirector,getArenaDirectorForces,clearArenaDirector} from './arena-director.js';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ballMagnitude=b=>Math.hypot(b.vx,b.vy)||1;
@@ -44,7 +45,7 @@ function resolveBallCollisions(dt){
    if(impact){const impulse=-(1+.96)*along/(1/mA+1/mB);a.vx-=impulse*nx/mA;a.vy-=impulse*ny/mA;b.vx+=impulse*nx/mB;b.vy+=impulse*ny/mB;}
    if(t<1){const remain=frameScale*(1-t);a.x+=a.vx*remain;a.y+=a.vy*remain;b.x+=b.vx*remain;b.y+=b.vy*remain;}
    capBallSpeed(a);capBallSpeed(b);a.speed=ballMagnitude(a);b.speed=ballMagnitude(b);
-   const bossArena=state.mythicMode==='boss-jormungandr',top=bossArena?24+Math.max(0,state.jormungandr?.inset||0):0,bottom=bossArena?SETTINGS.height-24-Math.max(0,state.jormungandr?.inset||0):SETTINGS.height;
+   const bossArena=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',top=24+(bossArena?Math.max(0,state.jormungandr?.inset||0):0),bottom=SETTINGS.height-24-(bossArena?Math.max(0,state.jormungandr?.inset||0):0);
    for(const ball of [a,b]){if(ball.y-ball.r<top){ball.y=top+ball.r;if(ball.vy<0)ball.vy=Math.abs(ball.vy);}if(ball.y+ball.r>bottom){ball.y=bottom-ball.r;if(ball.vy>0)ball.vy=-Math.abs(ball.vy);}}
    if(impact){const colorA=a.matchEffects?.color||a.color||'#8ee9ff',colorB=b.matchEffects?.color||b.color||'#ff9fe5';
     burst((a.x+b.x)/2,(a.y+b.y)/2,colorA,4,1.7);burst((a.x+b.x)/2,(a.y+b.y)/2,colorB,3,1.35);
@@ -93,37 +94,44 @@ function collideWithPaddle(b,prevX,prevY,p,side){
  const localHeight=p.segmentedPaddle>0?Math.max(1,(p.h-10)/3):p.h;
  const localCenter=p.segmentedPaddle>0?p.y+segmentIndex*(localHeight+5)+localHeight/2:p.y+p.h/2;
  const norm=clamp((hitY-localCenter)/(localHeight/2),-1,1),dir=side==='p1'?1:-1;
- // Conserva la escala de los modificadores de pelota y aumenta la intensidad
- // de forma gradual según la duración del intercambio, sin saltos bruscos.
- const baseSpeed=SETTINGS.ballSpeed*getBallSpeedMultiplier(b);
- const rallyFloor=baseSpeed*(1+Math.min(state.rally,16)*.018);
- let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(rallyFloor,ballMagnitude(b)*1.012));
- if(p.counter>0){const charge=clamp(Number(p.counter)||1.5,1,2);const counterMultiplier=1.24+Math.max(0,charge-1.5)*.08-Math.max(0,1.5-charge)*.06;speed=Math.min(SETTINGS.maxBallSpeed,speed*counterMultiplier);p.counter=0;b.specialEffect=p.godId||'';b.effectTime=.55;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'CONTRAATAQUE',color:p.color}}));}
- // El movimiento vertical de la paleta influye sutilmente en el ángulo:
- // permite apuntar con intención sin hacer que el control sea impredecible.
+ // Un rebote normal conserva la rapidez que trae la pelota: no hay aceleración
+ // automática por rally ni impulso oculto en cada contacto con la paleta.
+ let speed=Math.min(SETTINGS.maxBallSpeed,Math.max(3.2,ballMagnitude(b)));
+ if(p.counter>0){const charge=clamp(Number(p.counter)||1.5,1,2);const counterMultiplier=1.24+Math.max(0,charge-1.5)*.08-Math.max(0,1.5-charge)*.06;speed=Math.min(SETTINGS.maxBallSpeed,speed*counterMultiplier);p.counter=0;b.specialEffect=p.godId||'';b.effectTime=.55;burst(b.x,b.y,p.color,6,2.2);window.dispatchEvent(new CustomEvent('god-message',{detail:{title:'CONTRAATAQUE',text:'CONTRAATAQUE',color:p.color,category:'ability'}}));}
+ // Rebote tipo raqueta: el punto de impacto determina el ángulo, mientras que
+ // el movimiento de la paleta solo aporta un efecto pequeño y legible. La
+ // componente vertical entrante conserva continuidad y evita ángulos artificiales.
+ const incomingSpeed=Math.max(1e-6,ballMagnitude(b));
+ const incomingVertical=clamp(b.vy/incomingSpeed,-1,1);
  const paddleMotion=clamp((p.motion||0)/Math.max(1,p.speed),-1,1);
- let angle=norm*1.08+paddleMotion*.20+(p.aimBonus>0?Math.sign(norm||1)*p.aimBonus:0);p.aimBonus=0;
+ const maxBounceAngle=1.12;
+ let angle=norm*maxBounceAngle+incomingVertical*.10+paddleMotion*.075+(p.aimBonus>0?Math.sign(norm||1)*Math.min(.16,p.aimBonus):0);p.aimBonus=0;
  if(getBallPowerType(b)==='chaos')angle+=(Math.random()-.5)*.7;if(p.chaosCoil>0)angle+=(Math.random()-.5)*.88;if(p.segmentedPaddle>0)angle+=(segmentIndex-1)*.16;
+ if(getBallPowerType(b)==='topspin')angle+=Math.sign(norm||incomingVertical||1)*.16;
+ if(getBallPowerType(b)==='backspin')angle-=Math.sign(norm||incomingVertical||1)*.12;
+ if(getBallPowerType(b)==='sweetspot')angle*=.72;
  // Sinergias v0.2.66: combinaciones breves, legibles y con velocidad acotada.
  if(p.segmentedPaddle>0&&p.runeExtensions>0){angle+=(segmentIndex-1)*.055;speed=Math.min(SETTINGS.maxBallSpeed,speed*1.025);burst(b.x,b.y,p.color,3,1.35);}
  if(p.mutantPaddle>0&&p.chaosCoil>0)angle+=(Math.random()-.5)*.22;
  if(p.divineMotor>0&&p.segmentedPaddle>0)speed=Math.min(SETTINGS.maxBallSpeed,speed*1.018);
- if(getBallPowerType(b)==='ricochet')angle+=(Math.random()-.5)*1.0;
+ if(getBallPowerType(b)==='ricochet')angle+=(Math.random()-.5)*.42;
  if(state.worldEffects?.prism>0)angle+=Math.sin((performance.now?.()||0)/180)*.12;
  if(p.palette>0)angle+=Math.sin((performance.now?.()||0)/240)*.09;
  if(getBallPowerType(b)==='fireball')speed=Math.min(SETTINGS.maxBallSpeed,speed*1.045);
  angle=clamp(angle,-1.18,1.18);
  const perfect=Math.abs(norm)>=.22&&Math.abs(norm)<=.38;
- if(perfect){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.07);burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'GOLPE PRECISO',color:p.color}}));}
+ if(perfect){burst(b.x,b.y,p.color,5,1.9);window.dispatchEvent(new CustomEvent('god-message',{detail:{title:'GOLPE PRECISO',text:'GOLPE PRECISO',color:p.color,category:'ability'}}));}
+ if(getBallPowerType(b)==='softbounce')speed=Math.max(3.2,speed*.84);
  b.vx=dir*speed*Math.cos(angle);b.vy=speed*Math.sin(angle);b.speed=speed;b.lastHit=side;b.fire=0;b.color=b.matchEffects?.color||'#f6f4ed';state.rally++;
- if(p.aura>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.22);const magnitude=ballMagnitude(b);b.vx=b.vx/magnitude*speed;b.vy=b.vy/magnitude*speed;p.aura=0;p.counter=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'AURA DE CONTRAATAQUE',color:p.color}}));}
+ if(['topspin','backspin','sweetspot','softbounce'].includes(getBallPowerType(b))){b.powerEffect=null;}
+ if(p.aura>0){speed=Math.min(SETTINGS.maxBallSpeed,speed*1.22);const magnitude=ballMagnitude(b);b.vx=b.vx/magnitude*speed;b.vy=b.vy/magnitude*speed;p.aura=0;p.counter=0;window.dispatchEvent(new CustomEvent('god-message',{detail:{title:'AURA DE CONTRAATAQUE',text:'AURA DE CONTRAATAQUE',color:p.color,category:'ability'}}));}
  if(state.mutationMode==='mutation')applyMutationPaddleHit(side,b);
  burst(b.x,b.y,p.color,perfect?4:2,perfect?1.8:1.1);playTone(perfect?side==='p1'?560:680:side==='p1'?410:520,perfect?.075:.055,'triangle',perfect?.045:.035);return true;
 }
 
 export function serve(direction=Math.random()>.5?1:-1,servingBall=null){
  const b=servingBall||(Array.isArray(state.balls)&&state.balls.length?state.balls[0]:state.ball);
- const persistentEffects={sizeScale:b?.matchEffects?.sizeScale||1,trajectory:b?.matchEffects?.trajectory||'',color:b?.matchEffects?.color||'',orbitDirection:b?.matchEffects?.orbitDirection||0};
+ const persistentEffects={sizeScale:b?.matchEffects?.sizeScale||1,trajectory:b?.matchEffects?.trajectory||'',color:b?.matchEffects?.color||'',orbitDirection:b?.matchEffects?.orbitDirection||0,polygonSides:b?.matchEffects?.polygonSides||0};
  const baseRadius=b?.baseR||9;
  resetBallCollection(b);state.temporaryWalls=[];b.x=SETTINGS.width/2;b.y=SETTINGS.height/2;b.speed=SETTINGS.ballSpeed;b.vx=direction*b.speed;b.vy=(Math.random()-.5)*b.speed*.65;b.glow=0;b.fire=0;b.specialEffect='';b.effectTime=0;b.trail=[];b.lastHit=direction>0?'p1':'p2';b.baseR=baseRadius;b.matchEffects=persistentEffects;b.r=baseRadius*persistentEffects.sizeScale;b.powerEffect=null;b.color=persistentEffects.color||'#f6f4ed';state.ballPower={type:'',time:0,baseSpeed:0,scale:1};state.serveTimer=.65;state.rally=0;if(state.mutationMode==='mutation')resetMutationRally();resetArenaEventState();
 }
@@ -131,7 +139,7 @@ export function serve(direction=Math.random()>.5?1:-1,servingBall=null){
 export function updatePhysics(dt){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const balls=ensureBallCollection().slice();for(const b of balls){b.frameStartX=b.x;b.frameStartY=b.y;}if(state.serveTimer>0){state.ball=balls[0];updatePhysicsSingle(dt,true);return;}
- updatePowerups(dt);const primary=balls[0];if(state.mutationMode==='mutation')updateMutationEffects(dt,primary);updateArenaEvents(dt);
+ updatePowerups(dt);const primary=balls[0];if(state.mutationMode==='mutation')updateMutationEffects(dt,primary);updateArenaEvents(dt);updateArenaDirector(dt);
  for(let i=0;i<balls.length;i++){const b=balls[i];if(!state.balls.includes(b))continue;state.ball=b;updatePhysicsSingle(dt,b===primary);if(state.finished||state.serveTimer>0)break;}
  if(!state.finished&&state.serveTimer<=0&&state.balls.length>1)resolveBallCollisions(dt);
  state.ball=state.balls[0]||null;
@@ -141,9 +149,9 @@ function updatePhysicsSingle(dt,isPrimary){
  if(!state.running||state.paused||state.finished)return;
  dt=clamp(Number.isFinite(dt)?dt:0,0,.033);const b=state.ball;
  if(isPrimary){for(let i=state.items.length-1;i>=0;i--){state.items[i].life-=dt;if(state.items[i].life<=0)state.items.splice(i,1);}}
- if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);const mutationScale=state.mutationMode==='mutation'?getMutationShieldScale(side):1;const mutantScale=p.mutantPaddle>0?1+.28*Math.sin((p.mutantPaddleTime||0)*9):1;const spectralScale=p.spectralPhase>0?(p.spectralPhaseOffset===1?.72:1.22):1;p.h=clamp(p.baseH*(p.matchSizeScale||1)*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1)*mutationScale*mutantScale*spectralScale,32,220);p.y=clamp(p.y,0,SETTINGS.height-p.h);if(p.shield<=0)p.shieldMode='';}
+ if(isPrimary)for(const side of ['p1','p2']){const p=state.paddles[side];p.cooldown=Math.max(0,p.cooldown-dt);p.abilityTime=Math.max(0,p.abilityTime-dt);if(p.abilityTime<=0)p.abilityEffect='';p.slow=Math.max(0,p.slow-dt);p.invert=Math.max(0,p.invert-dt);p.shield=Math.max(0,p.shield-dt);p.grow=Math.max(0,p.grow-dt);p.shrink=Math.max(0,p.shrink-dt);p.powerGrow=Math.max(0,p.powerGrow||0);p.powerShrink=Math.max(0,p.powerShrink||0);const growScale=p.grow>0?(p.skillGrowScale||1.65):1,shrinkScale=p.shrink>0?(p.skillShrinkScale||.62):1,powerGrowScale=p.powerGrow>0?1.65:1,powerShrinkScale=p.powerShrink>0?.62:1;const activeGrow=Math.max(growScale,powerGrowScale);const activeShrink=Math.min(shrinkScale,powerShrinkScale);const mutationScale=state.mutationMode==='mutation'?getMutationShieldScale(side):1;const mutantScale=p.mutantPaddle>0?1+.28*Math.sin((p.mutantPaddleTime||0)*9):1;const spectralScale=p.spectralPhase>0?(p.spectralPhaseOffset===1?.72:1.22):1;p.h=clamp(p.baseH*(p.matchSizeScale||1)*(activeGrow>1?activeGrow:activeShrink<1?activeShrink:1)*mutationScale*mutantScale*spectralScale,32,220);const bossBounds=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',fieldInset=bossBounds?Math.max(0,state.jormungandr?.inset||0):0;p.y=clamp(p.y,24+fieldInset,SETTINGS.height-24-fieldInset-p.h);if(p.shield<=0)p.shieldMode='';}
  if(state.serveTimer>0){state.serveTimer=Math.max(0,state.serveTimer-dt);return;}
- if(isPrimary){
+ if(isPrimary && state.settings?.arenaEvents !== false){
  if(state.mythicMode==='olympus'){state.mythicSurgeCooldown=Math.max(0,(state.mythicSurgeCooldown||0)-dt);state.mythicSurgeTime=Math.max(0,(state.mythicSurgeTime||0)-dt);if(state.mythicSurgeCooldown<=0&&state.mythicSurgeTime<=0){state.mythicSurgeTime=1.35;state.mythicSurgeCooldown=8.25;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL OLIMPO',color:'#ffe17a'}}));}}
  if(state.mythicMode==='ragnarok'){state.mythicRagnarokElapsed=(state.mythicRagnarokElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicRagnarokElapsed/15));if(stage>(state.mythicRagnarokStage||0)){state.mythicRagnarokStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL VIENTO DEL NORTE DESPIERTA','LAS RAÍCES DE MIDGARD SE QUIEBRAN','EL CIELO DEL RAGNARÖK SE ABRE','EL FIN DE LOS DIOSES SE ACERCA'][stage],color:'#a9d6df'}}));}state.mythicRagnarokPulse=Math.max(0,(state.mythicRagnarokPulse||0)-dt);state.mythicRagnarokCooldown=Math.max(0,(state.mythicRagnarokCooldown||0)-dt);if(state.mythicRagnarokCooldown<=0&&state.mythicRagnarokPulse<=0){state.mythicRagnarokPulse=1.05;state.mythicRagnarokCooldown=Math.max(5.5,8.5-stage*.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'RÁFAGA DEL RAGNARÖK',color:'#a9d6df'}}));}}
  if(state.mythicMode==='throne'){state.mythicThroneElapsed=(state.mythicThroneElapsed||0)+dt;const stage=Math.min(3,Math.floor(state.mythicThroneElapsed/12));if(stage>(state.mythicThroneStage||0)){state.mythicThroneStage=stage;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:['EL CONSEJO DIVINO SE REÚNE','EL DESIERTO RECLAMA SU PRECIO','EL SOL ENTRA EN ECLIPSE','EL TRONO EXIGE UN HEREDERO'][stage],color:stage>=2?'#cf8064':'#e8c66f'}}));}state.mythicThronePulse=Math.max(0,(state.mythicThronePulse||0)-dt);state.mythicThroneCooldown=Math.max(0,(state.mythicThroneCooldown||0)-dt);if(state.mythicThroneCooldown<=0&&state.mythicThronePulse<=0){state.mythicThronePulse=.85;state.mythicThroneCooldown=9;window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'ECLIPSE DEL JUICIO',color:'#cf8064'}}));}}
@@ -154,38 +162,49 @@ function updatePhysicsSingle(dt,isPrimary){
  }
  // Las condiciones de cada modo avanzan una sola vez; la fuerza resultante se aplica a todas las pelotas.
  const modeNow=performance.now?.()||0;
- if(state.mythicMode==='olympus'&&state.mythicSurgeTime>0)b.vy+=Math.sin(modeNow/210)*dt*2.0;
- if(state.mythicMode==='ragnarok'&&state.mythicRagnarokPulse>0)b.vy+=Math.sin(modeNow/240)*dt*(1.15+Math.min(3,state.mythicRagnarokStage||0)*.28);
- if(state.mythicMode==='throne'&&state.mythicThronePulse>0)b.vy+=Math.sin(modeNow/285)*dt*.95;
- if(state.mythicMode==='waters'&&state.mythicWatersPulse>0)b.vy+=Math.sin(modeNow/260)*dt*(.8+Math.min(3,state.mythicWatersStage||0)*.18);
- if(state.mythicMode==='boss-typhon'&&(state.typhon?.active||0)>0){const boss=state.typhon,stage=boss.stage||0;b.vy+=(boss.direction||1)*(1.25+stage*.42)*dt+Math.sin(modeNow/115)*(.45+stage*.12)*dt;}
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='olympus'&&state.mythicSurgeTime>0)b.vy+=Math.sin(modeNow/210)*dt*2.0;
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='ragnarok'&&state.mythicRagnarokPulse>0)b.vy+=Math.sin(modeNow/240)*dt*(1.15+Math.min(3,state.mythicRagnarokStage||0)*.28);
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='throne'&&state.mythicThronePulse>0)b.vy+=Math.sin(modeNow/285)*dt*.95;
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='waters'&&state.mythicWatersPulse>0)b.vy+=Math.sin(modeNow/260)*dt*(.8+Math.min(3,state.mythicWatersStage||0)*.18);
+ if(state.settings?.arenaEvents!==false&&state.mythicMode==='boss-typhon'&&(state.typhon?.active||0)>0){const boss=state.typhon,stage=boss.stage||0;b.vy+=(boss.direction||1)*(1.25+stage*.42)*dt+Math.sin(modeNow/115)*(.45+stage*.12)*dt;}
  capBallSpeed(b);const prevX=b.x,prevY=b.y;b.trail.push({x:b.x,y:b.y});if(b.trail.length>12)b.trail.shift();
  if(b.effectTime>0)b.effectTime=Math.max(0,b.effectTime-dt);else b.specialEffect='';
  b.x+=b.vx*dt*60;b.y+=b.vy*dt*60;
- const bossArena=state.mythicMode==='boss-jormungandr',arenaTop=bossArena?24:0,arenaBottom=bossArena?SETTINGS.height-24:SETTINGS.height,bossInset=bossArena?Math.max(0,state.jormungandr?.inset||0):0,topLimit=arenaTop+bossInset,bottomLimit=arenaBottom-bossInset;if(b.y-b.r<topLimit){b.y=topLimit+b.r;b.vy=Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>bottomLimit){b.y=bottomLimit-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
+ const bossArena=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',arenaTop=24,arenaBottom=SETTINGS.height-24,bossInset=bossArena?Math.max(0,state.jormungandr?.inset||0):0,topLimit=arenaTop+bossInset,bottomLimit=arenaBottom-bossInset;if(b.y-b.r<topLimit){b.y=topLimit+b.r;b.vy=Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,1);playTone(250,.025,'sine',.015);}if(b.y+b.r>bottomLimit){b.y=bottomLimit-b.r;b.vy=-Math.abs(b.vy);if(getBallPowerType(b)==='ricochet')deflectTitanic(b,-1);playTone(250,.025,'sine',.015);}
  // Las fuerzas ambientales se suman en una sola autoridad y se limitan para que
  // acumular varios Power-ups no vuelva la pelota casi vertical de forma incontrolable.
  const now=performance.now?.()||0;let fieldForce=0;
- if(state.worldEffects?.eclipse>0)fieldForce+=Math.sin(now/360)*1.05;
- if(state.worldEffects?.crosswind>0)fieldForce+=Math.sin(now/310)*2.8;
- if(state.worldEffects?.gravity>0)fieldForce+=2.1;
- if(state.worldEffects?.curve>0)fieldForce+=Math.sin(now/105)*3.4;
- if(state.worldEffects?.storm>0)fieldForce+=Math.sin(now/170)*2.1;
- const arenaForce=getArenaForces();
- fieldForce+=arenaForce.y;
+ if(state.worldEffects?.eclipse>0)fieldForce+=Math.sin(now/330)*1.65;
+ if(state.worldEffects?.crosswind>0)fieldForce+=Math.sin(now/310)*3.25;
+ if(state.worldEffects?.gravity>0)fieldForce+=2.35;
+ if(state.worldEffects?.curve>0)fieldForce+=Math.sin(now/190)*4.15;
+ if(state.worldEffects?.storm>0)fieldForce+=Math.sin(now/210)*3.15;
+ // El prisma no depende de que la pelota llegue a una paleta: refracta su trayectoria durante toda la activación.
+ if(state.worldEffects?.prism>0)fieldForce+=Math.sin(now/145+((Number(String(b.id||'').replace(/\D/g,''))||0)*.7))*2.15;
+ const arenaForce=getArenaForces(),directorForce=getArenaDirectorForces(b);
+ fieldForce+=arenaForce.y+directorForce.y;
  b.vy+=clamp(fieldForce,-4.8,4.8)*dt;
- b.vx+=clamp(arenaForce.x,-1.25,1.25)*dt;
+ b.vx+=clamp(arenaForce.x+directorForce.x,-1.25,1.25)*dt;
  // Cada Núcleo gravitatorio afecta a las otras pelotas cercanas, sin copiarles su poder.
  for(const source of state.balls||[]){if(source===b||source?.powerEffect?.type!=='magnetball'||(source.powerEffect.time||0)<=0)continue;const dx=source.x-b.x,dy=source.y-b.y,dist=Math.hypot(dx,dy);if(dist<18||dist>235)continue;const falloff=1-dist/235,force=17*falloff*falloff;b.vx+=dx/dist*force*dt;b.vy+=dy/dist*force*dt;}
  if(state.mutationMode==='mutation')applyMutationArenaForce(b,dt);
- if(isPrimary&&state.worldEffects?.quake>0){state.worldEffects.quakePulse=Math.max(0,(state.worldEffects.quakePulse||0)-dt);if(state.worldEffects.quakePulse<=0){b.vy+=((Math.random()-.5)*1.7);state.worldEffects.quakePulse=.55;}}
+ if(state.worldEffects?.quake>0){
+  // Cada pelota recibe sus propios pulsos; antes solo se sacudía la principal y el impulso era casi imperceptible.
+  b.quakePulseCooldown=Math.max(0,(b.quakePulseCooldown??0)-dt);
+  if(b.quakePulseCooldown<=0){
+   const verticalKick=(Math.random()<.5?-1:1)*(2.1+Math.random()*1.7);
+   const horizontalKick=(Math.random()-.5)*2.5;
+   b.vy+=verticalKick;b.vx+=horizontalKick;b.quakePulseCooldown=.38+Math.random()*.12;
+   if(Math.random()<.35)burst(b.x,b.y,'#e5a16c',4,1.6);
+  }
+ }else if(b.quakePulseCooldown>0)b.quakePulseCooldown=0;
  enforceBallTrajectory(b);
  // El modificador de velocidad se aplica al recoger el objeto y se conserva en los golpes.
  // No forzar la pelota a una velocidad fija cada fotograma: eso anulaba la aceleración del rally.
  capBallSpeed(b);
 
  // Mutación reemplaza los potenciadores comunes por vacunas. Los modos normales conservan el catálogo actual.
- if(isPrimary&&state.itemsEnabled&&(state.mythicMode!=='boss-jormungandr'||state.mutationMode==='mutation')){
+ if(isPrimary&&(state.mutationMode==='mutation' ? state.mutationOptions?.vaccinesEnabled !== false : state.itemsEnabled)&&(state.mythicMode!=='boss-jormungandr'||state.mutationMode==='mutation')){
   state.powerupSpawnTimer=(state.powerupSpawnTimer??1)-dt;
   if(state.mutationMode==='mutation'){
    if(state.powerupSpawnTimer<=0&&!state.items.some(item=>item.type==='mutation-vaccine')){
@@ -197,9 +216,8 @@ function updatePhysicsSingle(dt,isPrimary){
     const rot=Math.max(0,Math.min(100,state.mutation?.rot||0));
     state.powerupSpawnTimer=9+Math.random()*3+rot*.07;
    }
-  }else if(state.powerupSpawnTimer<=0&&state.items.length<5){
-   const available=POWERUPS.filter(x=>x.id!=='aegis'||state.paddles.p1.shield<=0||state.paddles.p2.shield<=0);
-   const pick=choosePowerup(available);
+  }else if(state.itemsEnabled&&state.mythicMode!=='boss-jormungandr'&&state.powerupSpawnTimer<=0&&state.items.length<5){
+   const pick=choosePowerup(POWERUPS);
    const zones=[{x:300,y:95},{x:500,y:130},{x:700,y:95},{x:330,y:500},{x:670,y:500},{x:500,y:470},{x:410,y:300},{x:590,y:300}];
    const free=zones.filter(z=>!state.items.some(it=>Math.hypot(it.x-z.x,it.y-z.y)<35));const spot=free.length?free[Math.floor(Math.random()*free.length)]:{x:300+Math.random()*400,y:85+Math.random()*430};
    state.items.push({x:spot.x,y:spot.y,r:13,life:12,type:pick.id});state.powerupSpawnTimer=2.1+Math.random()*1.0;
@@ -219,7 +237,7 @@ function updatePhysicsSingle(dt,isPrimary){
    burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),32,4.3);
    playTone(180,.25,'sawtooth',.04);
    window.dispatchEvent(new CustomEvent('mutation-goal-confirmed',{detail:{winner,loser:conceding,gain:result.gain||0,charge:result.charge||0,streak:result.streak||0,defeated:Boolean(result.defeated),ballId:b.id}}));
-   if(result.defeated){clearArenaEventState();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner,loser:conceding,reason:'corruption',charge:result.charge}}));}
+   if(result.defeated){clearArenaEventState();clearArenaDirector();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner,loser:conceding,reason:'corruption',charge:result.charge}}));}
    else{removeBall(b);if(state.balls.length===0)serve(winner==='p1'?1:-1,b);}
    return;
   }
@@ -227,20 +245,20 @@ function updatePhysicsSingle(dt,isPrimary){
   for(const side of ['p1','p2'])if(state.paddles[side])state.paddles[side].bonusPoint=0;
   if(doublePoint)window.dispatchEvent(new CustomEvent('god-message',{detail:{text:'JUICIO DOBLE · +2',color:scorer.color}}));
   burst(SETTINGS.width/2,SETTINGS.height/2,winner==='p1'?getColor('p1'):getColor('p2'),45,5);playTone(180,.25,'sawtooth',.04);window.dispatchEvent(new CustomEvent('point-scored',{detail:{winner,ballId:b.id,remainingBalls:Math.max(0,state.balls.length-1)}}));
-  if(state.scores[winner]>=state.winScore){clearArenaEventState();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner}}));}
+  if(state.scores[winner]>=state.winScore){clearArenaEventState();clearArenaDirector();state.running=false;state.finished=true;state.lastWinner=winner;window.dispatchEvent(new CustomEvent('match-finished',{detail:{winner}}));}
   else{removeBall(b);if(state.balls.length===0)serve(winner==='p1'?1:-1,b);}
   return; // La jugada continúa mientras quede al menos una pelota real en cancha.
  }
  b.fire=0;b.color=b.matchEffects?.color||b.color||'#f6f4ed';b.glow=0;
  if(state.mythicMode==='boss-jormungandr'&&state.mutationMode!=='mutation')state.items.length=0;
- for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';if(state.mutationMode==='mutation'){if(item.type==='mutation-vaccine'){const result=reduceMutationCharge(ownerSide);burst(item.x,item.y,'#a7ff7c',12,2.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{text:result.reduction?`VACUNA · -${result.reduction}% CORRUPCIÓN`:'VACUNA · CORRUPCIÓN ESTABILIZADA',color:'#a7ff7c'}}));}}else applyPowerup(item.type,ownerSide,b);state.items.splice(i,1);}}
+ for(let i=state.items.length-1;i>=0;i--){const item=state.items[i];if(item.life<=0){state.items.splice(i,1);continue;}if(Math.hypot(b.x-item.x,b.y-item.y)<b.r+item.r){const ownerSide=b.lastHit==='p2'?'p2':'p1';if(state.mutationMode==='mutation'){if(item.type==='mutation-vaccine'){const result=reduceMutationCharge(ownerSide);burst(item.x,item.y,'#a7ff7c',12,2.7);window.dispatchEvent(new CustomEvent('god-message',{detail:{title:'VACUNA',text:'VACUNA',color:'#a7ff7c',category:'powerup'}}));}}else applyPowerup(item.type,ownerSide,b);state.items.splice(i,1);}}
 }
 
 export function updatePaddles(dt){
  if(!state.running||state.paused||state.finished)return;const {p1,p2}=state.paddles;
  const move=(p,up,down,side)=>{
-  const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p.h:SETTINGS.height-p.h;
-  if(state.touchDrag[side]!==null){const inverted=p.invert>0;if(inverted){const dragDelta=Number(state.touchDragDelta?.[side])||0;p.y=clamp(p.y-dragDelta,topLimit,bottomLimit);}else{const target=state.touchDrag[side]-(p.h/2);p.y=clamp(target,topLimit,bottomLimit);}if(state.touchDragDelta)state.touchDragDelta[side]=0;p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
+  const oldY=p.y;p.previousY=oldY;if(p.freeze>0){p.motion=0;return;}const bossMode=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p.h;
+  if(state.touchDrag[side]!==null){const inverted=p.invert>0;const dragDelta=Number(state.touchDragDelta?.[side])||0; p.y=clamp(p.y+dragDelta*(inverted?-1:1),topLimit,bottomLimit);if(state.touchDragDelta)state.touchDragDelta[side]=0;p.motion=dt>0?(p.y-oldY)/(dt*60):0;return;}
   let dir=(up?-1:0)+(down?1:0);if(p.invert>0)dir*=-1;
   const mutationMultiplier=state.mutationMode==='mutation'?getMutationMovementMultiplier(side):1;p.y=clamp(p.y+dir*p.speed*(p.slow>0?.48:1)*getPaddleSpeedMultiplier(p)*mutationMultiplier*dt*60,topLimit,bottomLimit);
   p.motion=dt>0?(p.y-oldY)/(dt*60):0;
@@ -250,7 +268,41 @@ export function updatePaddles(dt){
  else{
   const oldY=p2.y;p2.previousY=oldY;
   if(p2.freeze>0){p2.motion=0;return;}
-  const target=state.ball.y-p2.h/2;let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:3.6,normal:5.5,hard:7.5})[state.difficulty]||5.5,speed=Math.min(max,Math.abs(diff))*(inverted?.5:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
-  const bossMode=state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=bossMode?24+inset:0,bottomLimit=bossMode?SETTINGS.height-24-inset-p2.h:SETTINGS.height-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
+  const difficulty=state.difficulty||'normal';
+  // CPU multi-ball: evalúa TODAS las pelotas que se acercan a su lado y
+  // prioriza la amenaza que llegará primero, en vez de seguir siempre state.ball.
+  const activeBalls=Array.isArray(state.balls)&&state.balls.length?state.balls.filter(Boolean):(state.ball?[state.ball]:[]);
+  const threats=[];
+  for(const candidate of activeBalls){
+   if(!Number.isFinite(candidate.x)||!Number.isFinite(candidate.y)||!Number.isFinite(candidate.vx)||!Number.isFinite(candidate.vy)||candidate.vx<=.01)continue;
+   const contactX=p2.x-(candidate.r||0);
+   const eta=Math.max(0,(contactX-candidate.x)/(candidate.vx*60));
+   const minY=24+(candidate.r||0),maxY=SETTINGS.height-24-(candidate.r||0),span=Math.max(1,maxY-minY);
+   // Proyección completa con rebotes, usada para ordenar amenazas y apuntar.
+   const projected=candidate.y+candidate.vy*eta*60;
+   const folded=((projected-minY)%(2*span)+2*span)%(2*span);
+   const impactY=minY+(folded<=span?folded:2*span-folded);
+   threats.push({ball:candidate,eta,impactY});
+  }
+  threats.sort((a,b)=>a.eta-b.eta);
+  let selected=threats[0]||null;
+  // Evita cambios nerviosos entre dos pelotas que llegarán casi a la vez,
+  // pero nunca mantiene una amenaza claramente menos urgente.
+  const previousThreat=threats.find(t=>t.ball.id===p2.cpuTargetBallId);
+  if(selected&&previousThreat&&previousThreat.eta<=selected.eta+.10)selected=previousThreat;
+  if(selected)p2.cpuTargetBallId=selected.ball.id;
+  else p2.cpuTargetBallId=null;
+  const fallback=activeBalls.reduce((best,b)=>!best||Math.abs((b.x||0)-p2.x)<Math.abs((best.x||0)-p2.x)?b:best,null)||state.ball;
+  let target=(selected?selected.impactY:fallback.y)-p2.h/2;
+  // Las dificultades bajas siguen teniendo errores y menor anticipación.
+  if(selected&&difficulty!=='easy'&&difficulty!=='hard'){
+   const shortEta=Math.min(selected.eta,.38),b=selected.ball;
+   const minY=24+(b.r||0),maxY=SETTINGS.height-24-(b.r||0),span=Math.max(1,maxY-minY);
+   const projected=b.y+b.vy*shortEta*60,folded=((projected-minY)%(2*span)+2*span)%(2*span);
+   target=minY+(folded<=span?folded:2*span-folded)-p2.h/2;
+  }
+  // La CPU divina se desplaza con más rapidez y reevalúa las amenazas en cada actualización.
+  let diff=target-p2.y;const inverted=p2.invert>0;if(inverted)diff*=-1;const max=({easy:4.0,normal:6.7,hard:12.4})[difficulty]||6.7;const speed=Math.min(max,Math.abs(diff))*(inverted?.62:1)*(p2.slow>0?.48:1)*getPaddleSpeedMultiplier(p2)*(state.mutationMode==='mutation'?getMutationMovementMultiplier('p2'):1);
+  const bossMode=state.settings?.arenaEvents!==false&&state.mythicMode==='boss-jormungandr',inset=bossMode?Math.max(0,state.jormungandr?.inset||0):0,topLimit=24+inset,bottomLimit=SETTINGS.height-24-inset-p2.h;p2.y=clamp(p2.y+Math.sign(diff)*speed*dt*60,topLimit,bottomLimit);p2.motion=dt>0?(p2.y-oldY)/(dt*60):0;
  }
 }

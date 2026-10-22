@@ -1,15 +1,16 @@
 // mutation.js — Corrupción individual, poderes compartidos y eventos de la Cancha Mutante.
 // La física de la pelota sigue perteneciendo a physics.js: este módulo solo propone
 // modificaciones acotadas sobre la pelota existente y administra sus temporizadores.
-import { state } from './state.js';
+import { state, spawnBall } from './state.js';
 import { SETTINGS } from './config.js';
 
 export const MUTATION_MAX_CHARGE = 100;
-export const MUTATION_THRESHOLDS = [25, 50, 75, 90];
+export const MUTATION_THRESHOLDS = [25, 35, 50, 60, 75, 90];
 export const MUTATION_VACCINE_REDUCTION = 12;
 const SIDES = ['p1', 'p2'];
 const POWER_DEFAULTS = Object.freeze({
   pulseCooldown: 0, pulsePenalty: 0,
+  riftCooldown: 0, sporeCooldown: 0,
   shieldTime: 0, shieldPenalty: 0, shieldUsedRally: false,
   ruptureCooldown: 0, ruptureBoost: 0, rupturePenalty: 0,
   avatarActive: 0, avatarPenalty: 0, avatarPending: false
@@ -19,7 +20,7 @@ function makePlayerMutation() {
   return {
     charge: 0,
     visualCharge: 0,
-    unlocked: { 25: false, 50: false, 75: false, 90: false },
+    unlocked: { 25: false, 35: false, 50: false, 60: false, 75: false, 90: false },
     lastGain: 0,
     lastSource: null,
     concededStreak: 0,
@@ -37,6 +38,8 @@ function ensureMutationState() {
   mutation.maxCharge = MUTATION_MAX_CHARGE;
   mutation.rot = Math.max(0, Math.min(100, Number(mutation.rot) || 0));
   mutation.rotElapsed = Math.max(0, Number(mutation.rotElapsed) || 0);
+  if (!state.mutationOptions || typeof state.mutationOptions !== 'object') state.mutationOptions = { powersEnabled: true, arenaEventsEnabled: true, passiveRotEnabled: true, vaccinesEnabled: true };
+  state.mutationOptions = { powersEnabled: true, arenaEventsEnabled: true, passiveRotEnabled: true, vaccinesEnabled: true, ...state.mutationOptions };
   if (!mutation.players || typeof mutation.players !== 'object') mutation.players = {};
   for (const side of SIDES) {
     const player = mutation.players[side];
@@ -189,7 +192,7 @@ export function getMutationArenaStage() {
 }
 export function getMutationArenaEvent() { return { ...ensureMutationState().arenaEvent }; }
 export function applyMutationArenaForce(ball, dt) {
-  if (!ball || state.mutationMode !== 'mutation' || state.settings?.arenaEvents === false) return;
+  if (!ball || state.mutationMode !== 'mutation' || state.settings?.arenaEvents === false || state.mutationOptions?.arenaEventsEnabled === false) return;
   const event = ensureMutationState().arenaEvent;
   if (event.active <= 0 || !Number.isFinite(ball.vx) || !Number.isFinite(ball.vy)) return;
   const stage = getMutationArenaStage();
@@ -224,7 +227,7 @@ export function updateMutationEffects(dt, ball = state.ball) {
   const previousArenaStage = getMutationArenaStage();
   mutation.rotElapsed += dt;
   // La cancha se pudre lentamente aunque nadie reciba goles. Cada gol acelera esa evolución.
-  mutation.rot = Math.min(100, mutation.rot + dt * 0.12);
+  if (state.mutationOptions?.passiveRotEnabled !== false) mutation.rot = Math.min(100, mutation.rot + dt * 0.12);
   if (getMutationArenaStage() > previousArenaStage) {
     notify('mutation-rot-stage-changed', { stage: getMutationArenaStage(), rot: mutation.rot, reason: 'time' });
     notify('god-message', { text: `LA CANCHA MUTÓ · ${getArenaStageName()}`, color: '#aaff69' });
@@ -235,13 +238,13 @@ export function updateMutationEffects(dt, ball = state.ball) {
     const visualStep = 28 * dt;
     player.visualCharge += Math.max(-visualStep, Math.min(visualStep, player.charge - player.visualCharge));
     const hadShield = power.shieldTime > 0, hadRupture = power.ruptureBoost > 0;
-    for (const key of ['pulseCooldown', 'pulsePenalty', 'shieldTime', 'shieldPenalty', 'ruptureCooldown', 'ruptureBoost', 'rupturePenalty', 'avatarActive', 'avatarPenalty']) power[key] = Math.max(0, power[key] - dt);
+    for (const key of ['pulseCooldown', 'pulsePenalty', 'riftCooldown', 'sporeCooldown', 'shieldTime', 'shieldPenalty', 'ruptureCooldown', 'ruptureBoost', 'rupturePenalty', 'avatarActive', 'avatarPenalty']) power[key] = Math.max(0, power[key] - dt);
     if (hadShield && power.shieldTime === 0) power.shieldPenalty = .42;
     if (hadRupture && power.ruptureBoost === 0) power.rupturePenalty = .48;
   }
 
   // Escudo del abismo: en vez de anular un gol, amplía temporalmente la paleta al acercarse el peligro.
-  if (ball && ball.vx !== 0) for (const side of SIDES) {
+  if (state.mutationOptions?.powersEnabled !== false && ball && ball.vx !== 0) for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers, paddle = state.paddles?.[side];
     if (!player.unlocked[50] || power.shieldUsedRally || !paddle || paddle.shield > 0) continue;
     const threatened = side === 'p1'
@@ -258,7 +261,7 @@ export function updateMutationEffects(dt, ball = state.ball) {
   }
 
   const event = mutation.arenaEvent;
-  if(state.settings?.arenaEvents===false){event.warning=0;event.active=0;event.cooldown=4.2;return;}
+  if(state.settings?.arenaEvents===false || state.mutationOptions?.arenaEventsEnabled===false){event.warning=0;event.active=0;event.cooldown=4.2;return;}
   const arenaStage = getMutationArenaStage();
   if (arenaStage < 2) {
     event.warning = 0; event.active = 0; event.cooldown = 4.2;
@@ -294,7 +297,7 @@ export function updateMutationEffects(dt, ball = state.ball) {
 
 export function getMutationMovementMultiplier(side) {
   const player = ensureMutationState().players[side];
-  if (!player) return 1;
+  if (!player || state.mutationOptions?.powersEnabled === false) return 1;
   const power = player.powers;
   let multiplier = power.ruptureBoost > 0 ? 1.48 : 1;
   const penalties = [power.pulsePenalty, power.shieldPenalty, power.rupturePenalty, power.avatarPenalty].filter(value => value > 0);
@@ -313,20 +316,32 @@ export function consumeMutationShield(side) {
 
 export function getMutationShieldScale(side) {
   const player = ensureMutationState().players[side];
-  return player?.unlocked?.[50] && player.powers.shieldTime > 0 ? 1.28 : 1;
+  return state.mutationOptions?.powersEnabled !== false && player?.unlocked?.[50] && player.powers.shieldTime > 0 ? 1.28 : 1;
 }
 
 export function applyMutationPaddleHit(side, ball) {
-  if (state.mutationMode !== 'mutation' || !ball || !SIDES.includes(side)) return [];
+  if (state.mutationMode !== 'mutation' || state.mutationOptions?.powersEnabled === false || !ball || !SIDES.includes(side)) return [];
   const player = ensureMutationState().players[side], power = player.powers;
   const labels = [];
   let speed = Math.hypot(ball.vx, ball.vy) || ball.speed || SETTINGS.ballSpeed;
   let angle = Math.atan2(ball.vy, ball.vx);
+  if (player.unlocked[35] && power.riftCooldown <= 0) {
+    power.riftCooldown = 2.6;
+    const bend = (Math.random() < .5 ? -1 : 1) * (.24 + Math.random() * .14);
+    angle += bend;
+    labels.push('GRIETA DE TRAYECTORIA');
+  }
   if (player.unlocked[25] && power.pulseCooldown <= 0) {
     power.pulseCooldown = 1.8;
     power.pulsePenalty = .32;
     speed *= 1.07;
     labels.push('PULSO CAÓTICO');
+  }
+  if (player.unlocked[60] && power.sporeCooldown <= 0) {
+    power.sporeCooldown = 5.2;
+    const child = spawnBall(ball, { angle: (Math.random() < .5 ? -1 : 1) * (.34 + Math.random() * .25), mutation: 1 });
+    if (child) { child.r = Math.max(5, ball.r * .76); child.baseR = child.r; child.color = '#b9ff76'; child.glow = 17; labels.push('ESPORAS DIVISORAS'); }
+    else { speed *= 1.12; labels.push('ESPORAS CONCENTRADAS'); }
   }
   if (player.unlocked[75] && power.ruptureCooldown <= 0) {
     power.ruptureCooldown = 2.7;
@@ -357,7 +372,7 @@ export function resetMutationRally() {
   if (!mutation.active) return publicStatus(mutation);
   for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers;
-    power.pulseCooldown = 0; power.pulsePenalty = 0;
+    power.pulseCooldown = 0; power.pulsePenalty = 0; power.riftCooldown = 0; power.sporeCooldown = 0;
     power.shieldTime = 0; power.shieldPenalty = 0; power.shieldUsedRally = false;
     power.ruptureCooldown = 0; power.ruptureBoost = 0; power.rupturePenalty = 0;
     power.avatarActive = 0; power.avatarPenalty = 0;
@@ -365,13 +380,16 @@ export function resetMutationRally() {
     if (paddle?.shieldMode === 'mutation') { paddle.shield = 0; paddle.shieldMode = ''; }
     if (power.avatarPending) {
       power.avatarPending = false;
+      if (state.mutationOptions?.powersEnabled === false) continue;
       power.avatarActive = 5.0;
-      mutation.arenaEvent.warning = 0;
-      mutation.arenaEvent.type = 'pulse';
-      mutation.arenaEvent.elapsed = 0;
-      mutation.arenaEvent.active = 1.8;
-      mutation.arenaEvent.cooldown = 8;
-      mutation.arenaEvent.direction = Math.random() < .5 ? -1 : 1;
+      if (state.settings?.arenaEvents !== false && state.mutationOptions?.arenaEventsEnabled !== false) {
+        mutation.arenaEvent.warning = 0;
+        mutation.arenaEvent.type = 'pulse';
+        mutation.arenaEvent.elapsed = 0;
+        mutation.arenaEvent.active = 1.8;
+        mutation.arenaEvent.cooldown = 8;
+        mutation.arenaEvent.direction = Math.random() < .5 ? -1 : 1;
+      }
       notify('mutation-avatar-activated', { side, duration: 5.0 });
       notify('god-message', { text: 'AVATAR DE CORRUPCIÓN · TRANSFORMACIÓN', color: '#c5ff88' });
     }
