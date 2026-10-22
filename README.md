@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.82 — Códice organizado por pestañas
+# Clash of Gods V0.2.83 — Renovación del modo Mutación
 
 ## Dificultad de la CPU
 
@@ -43,6 +43,15 @@
 - Desactivar Power-ups retira los objetos sin recoger y detiene nuevas apariciones en partidas compatibles. El jefe Jörmungandr conserva su restricción específica de no usar Power-ups.
 - Actualizados versión visible, metadatos del paquete, README y caché de la PWA a `0.2.78`.
 - Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.
+
+
+## V0.2.83 — Renovación inicial del modo Mutación
+
+- Se conservaron los pilares exclusivos del modo: corrupción por goles, vacunas, evolución ambiental y eventos propios de la Cancha Mutante. Los eventos de Mutación se controlan de forma independiente de los eventos genéricos de otros modos.
+- Se dividieron los controles de preparación en mutaciones de pelota, defensa/movilidad, Avatar de corrupción, eventos de cancha y pudrición ambiental automática. Las vacunas siguen controlándose con el interruptor de objetos/vacunas.
+- Se añadieron dos poderes mutantes: **Eco mutante** (40% de corrupción), que elige una distorsión aleatoria de ángulo, velocidad o rebote; y **Desgarro de fase** (85%), que provoca una alteración de trayectoria impredecible. Ambos tienen recargas propias.
+- Se actualizaron los desbloqueos y el indicador de poderes para reflejar los nuevos umbrales.
+- Revisión estática de sintaxis de los módulos modificados y validación de JSON/ZIP. No se ejecutaron pruebas automatizadas ni se inició una partida en navegador; queda pendiente la comprobación manual.
 
 
 ## V0.2.82 — Contadores y paneles sincronizados con cada pestaña
