@@ -391,7 +391,26 @@ function init(){
  const openCodexDetail=id=>{const markup=renderCodexDetail(id);if(!markup)return;if(codexDetail.classList.contains('hidden'))codexLastFocus=document.activeElement;readProgress.add(id);safeWrite('clashOfGods.codexReadProgress',[...readProgress]);codexDetailContent.innerHTML=markup;codexDetail.classList.remove('hidden');codexDetail.setAttribute('aria-hidden','false');document.body.classList.add('codex-detail-open');syncCodexTools();document.getElementById('codex-detail-close').focus();};
  let activeCodexKind='god';
  const kindNames={god:'DIOSES',hero:'HÉROES',titan:'TITANES',monster:'MONSTRUOS',arena:'ARENAS DE BATALLA'};
- const kindButtons={god:'codex-gods',hero:'codex-heroes',titan:'codex-titans',monster:'codex-monsters',arena:'codex-arenas'};
+ const kindButtons={god:'codex-gods',hero:'codex-heroes',titan:'codex-titans',monster:'codex-monsters'};
+ let activeCodexTab='characters';
+ const setCodexTab=(tab)=>{
+  activeCodexTab=tab;
+  const characters=tab==='characters';
+  document.getElementById('codex-tab-characters').classList.toggle('is-active',characters);
+  document.getElementById('codex-tab-arenas').classList.toggle('is-active',!characters);
+  document.getElementById('codex-tab-characters').setAttribute('aria-selected',String(characters));
+  document.getElementById('codex-tab-arenas').setAttribute('aria-selected',String(!characters));
+  document.getElementById('codex-picker').classList.toggle('hidden',!characters||!codexBrowser.classList.contains('hidden'));
+  if(characters){
+   if(activeCodexKind==='arena'||!['god','hero','titan','monster'].includes(activeCodexKind)){codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');activeCodexKind='god';}
+   document.getElementById('codex-back').textContent='← CATEGORÍAS';
+   document.getElementById('codex-arena-tools').classList.add('hidden');
+   document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');
+  }else{
+   document.getElementById('codex-back').textContent='← PERSONAJES';
+   showCodexKind('arena');
+  }
+ };
  const arenaEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const renderArenaCodex=(query='',mythology='all',sort='name',ids=null)=>{
   const q=String(query||'').trim().toLocaleLowerCase('es');
@@ -428,8 +447,10 @@ function init(){
   Object.entries(kindButtons).forEach(([key,id])=>document.getElementById(id).setAttribute('aria-pressed',String(key===kind)));
   refreshCodex();
  };
- Object.entries(kindButtons).forEach(([kind,id])=>document.getElementById(id).addEventListener('click',()=>showCodexKind(kind)));
- document.getElementById('codex-back').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');document.getElementById('codex-arena-tools').classList.add('hidden');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');});
+ Object.entries(kindButtons).forEach(([kind,id])=>document.getElementById(id).addEventListener('click',()=>{setCodexTab('characters');showCodexKind(kind);}));
+ document.getElementById('codex-tab-characters').addEventListener('click',()=>setCodexTab('characters'));
+ document.getElementById('codex-tab-arenas').addEventListener('click',()=>setCodexTab('arenas'));
+ document.getElementById('codex-back').addEventListener('click',()=>{if(activeCodexKind==='arena'){setCodexTab('characters');return;}codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');document.getElementById('codex-arena-tools').classList.add('hidden');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');});
  const handleCodexAction=e=>{const fav=e.target.closest('[data-codex-favorite]');if(fav){e.preventDefault();toggleFavorite(fav.dataset.codexFavorite);return;}const compare=e.target.closest('[data-codex-compare]');if(compare){e.preventDefault();toggleCompare(compare.dataset.codexCompare);return;}const remove=e.target.closest('[data-codex-compare-remove]');if(remove){compareIds=compareIds.filter(id=>id!==remove.dataset.codexCompareRemove);safeWrite('clashOfGods.codexCompare',compareIds);refreshCodex();syncCodexTools();return;}const related=e.target.closest('[data-codex-related]');if(related)openCodexDetail(related.dataset.codexRelated);};
  const handleCodexGridClick=e=>{const arenaOpen=e.target.closest('[data-codex-arena-open]');if(arenaOpen){openArenaCodexDetail(arenaOpen.dataset.codexArenaOpen);return;}const arenaFav=e.target.closest('[data-codex-arena-favorite]');if(arenaFav){e.preventDefault();toggleArenaFavorite(arenaFav.dataset.codexArenaFavorite);return;}const trigger=e.target.closest('[data-codex-open]');if(trigger){openCodexDetail(trigger.dataset.codexOpen);return;}handleCodexAction(e);};
  codexGrid.addEventListener('click',handleCodexGridClick);
@@ -437,7 +458,7 @@ function init(){
  document.getElementById('codex-favorites-content').addEventListener('click',handleCodexGridClick);
  codexDetailContent.addEventListener('click',e=>{const fav=e.target.closest('[data-codex-arena-favorite]');if(fav){e.preventDefault();toggleArenaFavorite(fav.dataset.codexArenaFavorite);return;}handleCodexAction(e);});
  document.getElementById('codex-compare-content').addEventListener('click',handleCodexAction);
- document.getElementById('codex-arena-random').addEventListener('click',()=>{const pick=ARENAS[Math.floor(Math.random()*ARENAS.length)];if(activeCodexKind!=='arena'||codexBrowser.classList.contains('hidden'))showCodexKind('arena');openArenaCodexDetail(pick.id);});
+ document.getElementById('codex-arena-random').addEventListener('click',()=>{const pick=ARENAS[Math.floor(Math.random()*ARENAS.length)];if(activeCodexKind!=='arena'||codexBrowser.classList.contains('hidden')){setCodexTab('arenas');showCodexKind('arena');}openArenaCodexDetail(pick.id);});
  document.getElementById('codex-arena-favorites').addEventListener('click',()=>{arenaFavoritesOpen=!arenaFavoritesOpen;updateArenaCodexTools();if(arenaFavoritesOpen)document.getElementById('codex-arena-favorites-content').scrollIntoView({behavior:'smooth',block:'start'});});
  document.getElementById('codex-arena-progress-reset').addEventListener('click',()=>{if(!arenaReadProgress.size)return;if(!window.confirm('¿Reiniciar el progreso de exploración de arenas?'))return;arenaReadProgress.clear();safeWrite('clashOfGods.codexArenaReadProgress',[]);updateArenaCodexTools();if(activeCodexKind==='arena')refreshCodex();});
  document.getElementById('codex-random').addEventListener('click',()=>{const entries=Object.values(GODS);const pick=entries[Math.floor(Math.random()*entries.length)];const kind=pick.kind||'god';if(activeCodexKind!==kind||codexBrowser.classList.contains('hidden'))showCodexKind(kind);openCodexDetail(pick.id);});
@@ -453,11 +474,13 @@ function init(){
  document.addEventListener('keydown',e=>{if(codexDetail.classList.contains('hidden'))return;if(e.key==='Escape'){closeCodexDetail();return;}if(e.key==='Tab'){const focusables=[...codexDetail.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null);if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
  codexSearch.addEventListener('input',refreshCodex);codexRole.addEventListener('change',refreshCodex);codexSort.addEventListener('change',refreshCodex);
  document.getElementById('codex-clear-filters').addEventListener('click',()=>{codexSearch.value='';codexRole.value='all';codexSort.value='name';refreshCodex();codexSearch.focus();});
- const counts={god:countCodexKind('god'),hero:countCodexKind('hero'),titan:countCodexKind('titan'),monster:countCodexKind('monster'),arena:ARENAS.length};
+ const counts={god:countCodexKind('god'),hero:countCodexKind('hero'),titan:countCodexKind('titan'),monster:countCodexKind('monster')};
  document.querySelectorAll('[data-codex-count]').forEach(el=>el.textContent=counts[el.dataset.codexCount]??0);
  document.getElementById('codex-total-count').textContent=Object.values(GODS).length+ARENAS.length;
+ document.getElementById('codex-character-tab-count').textContent=Object.values(GODS).length;
+ document.getElementById('codex-arena-tab-count').textContent=ARENAS.length;
  syncCodexTools();
- document.getElementById('codex-button').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');document.getElementById('codex-arena-tools').classList.add('hidden');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');});
+ document.getElementById('codex-button').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');setCodexTab('characters');document.getElementById('codex-arena-tools').classList.add('hidden');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');});
  const arenaSelect=document.getElementById('arena-select');
  const arenaGroups=new Map();for(const arena of ARENAS){const mythology=ARENA_MYTHOLOGIES[arena.id]||'Mitología por clasificar';if(!arenaGroups.has(mythology))arenaGroups.set(mythology,[]);arenaGroups.get(mythology).push(arena);}arenaSelect.innerHTML=[...arenaGroups.entries()].map(([mythology,arenas])=>`<optgroup label="${mythology}">${arenas.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}</optgroup>`).join('');if(!ARENAS.some(a=>a.id===state.arenaId))state.arenaId=LEGACY_ARENA_MIGRATION[state.arenaId]||'arena_japanese';arenaSelect.value=state.arenaId;arenaSelect.addEventListener('change',()=>{clearArenaEventState();clearArenaDirector();state.arenaId=arenaSelect.value;buildArenaCache();});
  buildArenaCache();setupInput();setupSettings();bindUI();renderSelection();state.preparationMode='classic';syncPreparationUI();updateHUD();updateSurvivalResumePanel();

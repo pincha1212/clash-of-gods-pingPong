@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.79 — Códice enciclopédico de arenas
+# Clash of Gods V0.2.80 — Códice organizado por pestañas
 
 ## Dificultad de la CPU
 
@@ -54,3 +54,11 @@
 - Las fichas distinguen la inspiración mitológica de las mecánicas implementadas; no afirman que eventos o efectos estén activos si dependen de los ajustes de la partida.
 - Se actualizó el shell de la PWA para incluir el nuevo módulo `codex-arenas.js` y se incrementó la versión de caché a `0.2.79`.
 - Revisión estática de sintaxis de los módulos modificados. No se ejecutaron pruebas automatizadas ni una partida en navegador; queda pendiente la comprobación manual de navegación, favoritos y persistencia.
+
+
+## V0.2.80 — Navegación principal del Códice
+
+- Se reorganizó la entrada al Códice con dos pestañas principales: **Personajes** y **Arenas de batalla**.
+- La pestaña Personajes conserva las cuatro categorías existentes (dioses, héroes, titanes y monstruos) y sus herramientas originales.
+- La pestaña Arenas de batalla abre directamente el catálogo de las 17 arenas, manteniendo búsqueda, filtro por tradición, fichas, favoritos y progreso independiente.
+- Se eliminó la tarjeta de arenas del selector de categorías de personajes para evitar duplicar la navegación.

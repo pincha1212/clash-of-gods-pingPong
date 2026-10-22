@@ -167,3 +167,17 @@ body.codex-detail-open{overflow:hidden}
 #codex-arena-tools .codex-progress-line{margin-top:12px;max-width:420px}
 #codex-arena-favorites-content{margin-top:16px}
 @media(max-width:560px){.codex-choice-arenas{grid-column:auto;min-height:170px}.codex-arena-tags{min-height:0}}
+
+/* Códice: navegación principal entre el archivo de personajes y el de arenas. */
+.codex-main-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 22px;padding:6px;border:1px solid color-mix(in srgb,var(--codex-gold),transparent 78%);background:#090c15}
+.codex-main-tab{display:flex;align-items:center;gap:13px;min-width:0;padding:16px 18px;text-align:left;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.codex-main-tab>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.codex-main-tab strong{font-family:'Barlow Condensed',sans-serif;font-size:20px;letter-spacing:.1em;color:var(--text)}
+.codex-main-tab small{font-size:10px;line-height:1.45;color:var(--muted)}
+.codex-main-tab>b{display:grid;place-items:center;min-width:35px;height:30px;padding:0 7px;border:1px solid var(--line);font:600 15px 'Barlow Condensed',sans-serif;color:var(--text)}
+.codex-main-tab-icon{display:grid;place-items:center;flex:0 0 43px;width:43px;height:43px;border:1px solid #e7c77750;background:#e7c7770d;color:var(--codex-gold);font-size:23px}
+.codex-main-tab:hover{border-color:#e7c77770;background:#e7c77708}
+.codex-main-tab.is-active{border-color:var(--codex-gold);background:linear-gradient(110deg,#e7c77717,#e7c77704);color:var(--text)}
+.codex-main-tab.is-active>b{border-color:var(--codex-gold);color:var(--codex-gold)}
+.codex-main-tab:focus-visible{outline:2px solid var(--codex-gold);outline-offset:2px}
+@media(max-width:560px){.codex-main-tabs{grid-template-columns:1fr;gap:5px;padding:4px;margin-bottom:17px}.codex-main-tab{padding:12px;gap:10px}.codex-main-tab-icon{flex-basis:37px;width:37px;height:37px;font-size:20px}.codex-main-tab strong{font-size:18px}.codex-main-tab small{font-size:9px}}
