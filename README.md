@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.83 — Renovación del modo Mutación
+# Clash of Gods V0.2.84 — Renovación del modo Mutación
 
 ## Dificultad de la CPU
 
@@ -45,7 +45,7 @@
 - Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.
 
 
-## V0.2.83 — Renovación inicial del modo Mutación
+## V0.2.84 — Renovación inicial del modo Mutación
 
 - Se conservaron los pilares exclusivos del modo: corrupción por goles, vacunas, evolución ambiental y eventos propios de la Cancha Mutante. Los eventos de Mutación se controlan de forma independiente de los eventos genéricos de otros modos.
 - Se dividieron los controles de preparación en mutaciones de pelota, defensa/movilidad, Avatar de corrupción, eventos de cancha y pudrición ambiental automática. Las vacunas siguen controlándose con el interruptor de objetos/vacunas.
@@ -82,3 +82,10 @@
 - Las fichas distinguen la inspiración mitológica de las mecánicas implementadas; no afirman que eventos o efectos estén activos si dependen de los ajustes de la partida.
 - Se actualizó el shell de la PWA para incluir el nuevo módulo `codex-arenas.js` y se incrementó la versión de caché a `0.2.79`.
 - Revisión estática de sintaxis de los módulos modificados. No se ejecutaron pruebas automatizadas ni una partida en navegador; queda pendiente la comprobación manual de navegación, favoritos y persistencia.
+
+
+## V0.2.84 — Mutaciones de cancha avanzadas
+
+La Cancha Mutante incorpora tres eventos propios que se habilitan conforme avanza la corrupción: **Tirón gravitatorio** (curva la pelota hacia el eje central), **Fractura de fase** (invierte el componente vertical a mitad del evento) y **Cancha fracturada** (aplica impulsos verticales irregulares). Los eventos se mantienen separados del director de eventos genérico de los otros modos y respetan el interruptor propio de eventos de Mutación. La representación visual y los avisos previos identifican cada evento.
+
+Revisión de esta entrega: comprobación estática de sintaxis, JSON y archivos ZIP. No se ejecutó una partida en navegador ni pruebas automatizadas.

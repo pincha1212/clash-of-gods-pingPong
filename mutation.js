@@ -29,7 +29,7 @@ function makePlayerMutation() {
     powers: { ...POWER_DEFAULTS }
   };
 }
-function makeArenaEvent() { return { warning: 0, active: 0, duration: 0, cooldown: 4.2, direction: 1, type: 'pulse', elapsed: 0 }; }
+function makeArenaEvent() { return { warning: 0, active: 0, duration: 0, cooldown: 4.2, direction: 1, type: 'pulse', elapsed: 0, phaseFlipped: false, pulsePhase: -1 }; }
 function getArenaStageName(stage = getMutationArenaStage()) { return ['INACTIVA', 'CONTAMINACIÓN', 'INFECCIÓN', 'DESCOMPOSICIÓN', 'CORRUPCIÓN TOTAL'][stage] || 'INACTIVA'; }
 
 function ensureMutationState() {
@@ -69,8 +69,10 @@ function ensureMutationState() {
   }
   for (const key of ['warning', 'active', 'duration', 'cooldown']) mutation.arenaEvent[key] = Math.max(0, Number(mutation.arenaEvent[key]) || 0);
   mutation.arenaEvent.direction = mutation.arenaEvent.direction < 0 ? -1 : 1;
-  if (!['pulse', 'surge', 'heartbeat'].includes(mutation.arenaEvent.type)) mutation.arenaEvent.type = 'pulse';
+  if (!['pulse', 'surge', 'heartbeat', 'gravity', 'mirror', 'fracture'].includes(mutation.arenaEvent.type)) mutation.arenaEvent.type = 'pulse';
   mutation.arenaEvent.elapsed = Math.max(0, Number(mutation.arenaEvent.elapsed) || 0);
+  mutation.arenaEvent.phaseFlipped = Boolean(mutation.arenaEvent.phaseFlipped);
+  mutation.arenaEvent.pulsePhase = Number.isFinite(Number(mutation.arenaEvent.pulsePhase)) ? Number(mutation.arenaEvent.pulsePhase) : -1;
   return mutation;
 }
 
@@ -208,14 +210,36 @@ export function applyMutationArenaForce(ball, dt) {
     ball.speed = nextSpeed;
     return;
   }
-  // El pulso y el latido alteran el componente vertical sin invertir el sentido horizontal.
-  const strength = event.type === 'heartbeat'
-    ? (stage >= 4 ? 1.05 : stage >= 3 ? .78 : .52)
-    : (stage >= 4 ? 1.35 : stage >= 3 ? .92 : .58);
-  const secondBeat = event.type === 'heartbeat' && event.duration > 0 && event.elapsed >= event.duration * .5;
-  const direction = secondBeat ? -event.direction : event.direction;
-  ball.vy += direction * strength * dt;
-  const verticalLimit = speed * .68;
+  if (event.type === 'gravity') {
+    // Tirón gravitatorio: curva la pelota hacia el eje central del campo.
+    const distance = Math.max(-1, Math.min(1, (SETTINGS.height / 2 - ball.y) / (SETTINGS.height * .42)));
+    const strength = stage >= 4 ? 2.4 : stage >= 3 ? 1.8 : 1.25;
+    ball.vy += distance * strength * dt;
+  } else if (event.type === 'mirror') {
+    // La fase se invierte una sola vez, a mitad del evento, con aviso visual previo.
+    if (!event.phaseFlipped && event.duration > 0 && event.elapsed >= event.duration * .5) {
+      ball.vy *= -1;
+      event.phaseFlipped = true;
+      notify('god-message', { text: 'FRACTURA DE FASE · VERTICAL INVERTIDA', color: '#d8b7ff' });
+    }
+    ball.vy += event.direction * (stage >= 4 ? .42 : .28) * dt;
+  } else if (event.type === 'fracture') {
+    // Fractura por pulsos: cambia el empuje vertical en intervalos discretos.
+    const pulsePhase = Math.floor(event.elapsed / .32);
+    if (pulsePhase !== event.pulsePhase) {
+      event.pulsePhase = pulsePhase;
+      ball.vy += (Math.random() < .5 ? -1 : 1) * (stage >= 4 ? 2.3 : 1.7);
+    }
+  } else {
+    // El pulso y el latido alteran el componente vertical sin invertir el sentido horizontal.
+    const strength = event.type === 'heartbeat'
+      ? (stage >= 4 ? 1.05 : stage >= 3 ? .78 : .52)
+      : (stage >= 4 ? 1.35 : stage >= 3 ? .92 : .58);
+    const secondBeat = event.type === 'heartbeat' && event.duration > 0 && event.elapsed >= event.duration * .5;
+    const direction = secondBeat ? -event.direction : event.direction;
+    ball.vy += direction * strength * dt;
+  }
+  const verticalLimit = speed * .72;
   ball.vy = Math.max(-verticalLimit, Math.min(verticalLimit, ball.vy));
   const nextSpeed = Math.hypot(ball.vx, ball.vy);
   if (nextSpeed > maxSpeed) { ball.vx = ball.vx / nextSpeed * maxSpeed; ball.vy = ball.vy / nextSpeed * maxSpeed; }
@@ -278,7 +302,9 @@ export function updateMutationEffects(dt, ball = state.ball) {
       event.active = arenaStage >= 4 ? 1.9 : arenaStage >= 3 ? 1.6 : 1.25;
       event.duration = event.active;
       event.elapsed = 0;
-      const eventMessage = event.type === 'surge' ? 'SOBRECARGA DE SAVIA · LA PELOTA ACELERA' : event.type === 'heartbeat' ? 'LATIDO DEL NÚCLEO · DOBLE PULSO' : 'PULSO DE INFECCIÓN · TRAYECTORIA ALTERADA';
+      event.phaseFlipped = false;
+      event.pulsePhase = -1;
+      const eventMessage = ({surge:'SOBRECARGA DE SAVIA · LA PELOTA ACELERA',heartbeat:'LATIDO DEL NÚCLEO · DOBLE PULSO',gravity:'TIRÓN GRAVITATORIO · LA PELOTA BUSCA EL CENTRO',mirror:'FRACTURA DE FASE · LA TRAYECTORIA SE INVERTIRÁ',fracture:'CANCHA FRACTURADA · SE ACERCAN IMPULSOS ERRÁTICOS',pulse:'PULSO DE INFECCIÓN · TRAYECTORIA ALTERADA'})[event.type];
       notify('god-message', { text: eventMessage, color: '#b9ff76' });
     }
   } else {
@@ -287,10 +313,9 @@ export function updateMutationEffects(dt, ball = state.ball) {
       event.warning = arenaStage >= 4 ? 1.15 : arenaStage >= 3 ? 1.25 : 1.45;
       event.direction = Math.random() < .5 ? -1 : 1;
       const roll = Math.random();
-      if (arenaStage === 2) event.type = roll < .45 ? 'pulse' : roll < .72 ? 'surge' : 'heartbeat';
-      else if (arenaStage === 3) event.type = roll < .34 ? 'pulse' : roll < .66 ? 'surge' : 'heartbeat';
-      else event.type = roll < .30 ? 'pulse' : roll < .65 ? 'surge' : 'heartbeat';
-      const warningMessage = event.type === 'surge' ? 'SAVIA INESTABLE · PREPARATE PARA LA SOBRECARGA' : event.type === 'heartbeat' ? 'EL NÚCLEO LATE · PREPARATE PARA DOS PULSOS' : 'LA CANCHA SE CONTRAE · PREPARATE';
+      const pool = arenaStage === 2 ? ['pulse','surge','heartbeat','gravity'] : arenaStage === 3 ? ['pulse','surge','heartbeat','gravity','mirror'] : ['pulse','surge','heartbeat','gravity','mirror','fracture'];
+      event.type = pool[Math.floor(roll * pool.length)];
+      const warningMessage = ({surge:'SAVIA INESTABLE · PREPARATE PARA LA SOBRECARGA',heartbeat:'EL NÚCLEO LATE · PREPARATE PARA DOS PULSOS',gravity:'LA GRAVEDAD SE DISTORSIONA · PREPARATE',mirror:'LA FASE SE QUIEBRA · PREPARATE PARA LA INVERSIÓN',fracture:'LA CANCHA SE FRACTURA · PREPARATE PARA LOS IMPULSOS',pulse:'LA CANCHA SE CONTRAE · PREPARATE'})[event.type];
       notify('god-message', { text: warningMessage, color: '#c5ff88' });
     }
   }
