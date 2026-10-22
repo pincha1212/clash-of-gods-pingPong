@@ -181,3 +181,10 @@ body.codex-detail-open{overflow:hidden}
 .codex-main-tab.is-active>b{border-color:var(--codex-gold);color:var(--codex-gold)}
 .codex-main-tab:focus-visible{outline:2px solid var(--codex-gold);outline-offset:2px}
 @media(max-width:560px){.codex-main-tabs{grid-template-columns:1fr;gap:5px;padding:4px;margin-bottom:17px}.codex-main-tab{padding:12px;gap:10px}.codex-main-tab-icon{flex-basis:37px;width:37px;height:37px;font-size:20px}.codex-main-tab strong{font-size:18px}.codex-main-tab small{font-size:9px}}
+
+/* Estados de visibilidad del Códice: .hidden debe imponerse a display:grid/flex/block. */
+.codex-picker.hidden,
+.codex-browser.hidden,
+.codex-grid.hidden,
+.codex-empty.hidden,
+.codex-extra-tools.hidden { display:none !important; }

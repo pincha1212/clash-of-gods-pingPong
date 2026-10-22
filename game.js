@@ -367,18 +367,20 @@ function init(){
   document.getElementById('codex-favorite-count').textContent=String(favorites.size);
   document.getElementById('codex-compare-toolbar-count').textContent=`${compareIds.length}/3`;
   const compareToggle=document.getElementById('codex-compare-toggle');compareToggle.setAttribute('aria-expanded',String(comparePanelOpen));compareToggle.classList.toggle('is-active',comparePanelOpen);
-  document.getElementById('codex-progress-label').textContent=`PERSONAJES LEÍDOS · ${readProgress.size}/${Object.keys(GODS).length}`;
-  document.getElementById('codex-progress-bar').style.width=`${readProgress.size/Math.max(1,Object.keys(GODS).length)*100}%`;
+  if(activeCodexTab==='characters'){
+   document.getElementById('codex-progress-label').textContent=`PERSONAJES LEÍDOS · ${readProgress.size}/${Object.keys(GODS).length}`;
+   document.getElementById('codex-progress-bar').style.width=`${readProgress.size/Math.max(1,Object.keys(GODS).length)*100}%`;
+  }
   const filterButton=document.getElementById('codex-favorites-filter');filterButton.setAttribute('aria-pressed',String(favoritesPanelOpen));filterButton.setAttribute('aria-expanded',String(favoritesPanelOpen));filterButton.innerHTML=`${favoritesPanelOpen?'★ OCULTAR FAVORITOS':'☆ MIS FAVORITOS'} <span id="codex-favorite-count">${favorites.size}</span>`;
   document.getElementById('codex-favorites-panel-count').textContent=String(favorites.size);
-  const favoritesPanel=document.getElementById('codex-favorites-panel');favoritesPanel.classList.toggle('hidden',!favoritesPanelOpen);
+  const favoritesPanel=document.getElementById('codex-favorites-panel');favoritesPanel.classList.toggle('hidden',!favoritesPanelOpen||activeCodexTab!=='characters');
   const favoritesContent=document.getElementById('codex-favorites-content');
   favoritesContent.innerHTML=favorites.size?renderCodex('god','','all','name',[...favorites]):'';
   document.getElementById('codex-favorites-empty').classList.toggle('hidden',favorites.size!==0);
   document.querySelectorAll('[data-codex-favorite]').forEach(button=>{const saved=favorites.has(button.dataset.codexFavorite);button.setAttribute('aria-pressed',String(saved));button.innerHTML=saved?'★ <span>GUARDADO</span>':'☆ <span>GUARDAR</span>';button.setAttribute('aria-label',saved?`Quitar ${GODS[button.dataset.codexFavorite].name} de favoritos`:`Guardar ${GODS[button.dataset.codexFavorite].name} en favoritos`);});
   document.querySelectorAll('[data-codex-compare]').forEach(button=>{const selected=compareIds.includes(button.dataset.codexCompare);button.setAttribute('aria-pressed',String(selected));button.innerHTML=selected?'✓ <span>AGREGADO</span>':'＋ <span>COMPARAR</span>';button.setAttribute('aria-label',selected?`Quitar ${GODS[button.dataset.codexCompare].name} del comparador`:`Agregar ${GODS[button.dataset.codexCompare].name} al comparador`);});
   document.getElementById('codex-compare-count').textContent=`${compareIds.length}/3`;
-  const panel=document.getElementById('codex-compare-panel');panel.classList.toggle('hidden',!comparePanelOpen);
+  const panel=document.getElementById('codex-compare-panel');panel.classList.toggle('hidden',!comparePanelOpen||activeCodexTab!=='characters');
   const content=document.getElementById('codex-compare-content');
   if(!compareIds.length){content.innerHTML='<div class="codex-compare-empty"><span aria-hidden="true">⇄</span><strong>Todavía no hay personajes para comparar</strong><p>Volvé a las tarjetas y tocá <b>＋ COMPARAR</b> en cada personaje. Podés elegir hasta tres.</p></div>';return;}
   const entries=compareIds.map(id=>GODS[id]).filter(Boolean);
@@ -393,6 +395,21 @@ function init(){
  const kindNames={god:'DIOSES',hero:'HÉROES',titan:'TITANES',monster:'MONSTRUOS',arena:'ARENAS DE BATALLA'};
  const kindButtons={god:'codex-gods',hero:'codex-heroes',titan:'codex-titans',monster:'codex-monsters'};
  let activeCodexTab='characters';
+ const syncCodexOverview=()=>{
+  const arenas=activeCodexTab==='arenas';
+  const total=arenas?ARENAS.length:Object.keys(GODS).length;
+  document.getElementById('codex-total-count').textContent=String(total);
+  document.getElementById('codex-overview-description').textContent=arenas
+   ?'Explorá cada escenario, su contexto mitológico, sus elementos distintivos y su identidad dentro del combate.'
+   :'Explorá el elenco y sus perfiles, poderes, dominios y relaciones mitológicas. Las estadísticas del juego se muestran por separado de la tradición.';
+  if(arenas){
+   document.getElementById('codex-progress-label').textContent=`ARENAS EXPLORADAS · ${arenaReadProgress.size}/${ARENAS.length}`;
+   document.getElementById('codex-progress-bar').style.width=`${arenaReadProgress.size/Math.max(1,ARENAS.length)*100}%`;
+  }else{
+   document.getElementById('codex-progress-label').textContent=`PERSONAJES LEÍDOS · ${readProgress.size}/${Object.keys(GODS).length}`;
+   document.getElementById('codex-progress-bar').style.width=`${readProgress.size/Math.max(1,Object.keys(GODS).length)*100}%`;
+  }
+ };
  const setCodexTab=(tab)=>{
   activeCodexTab=tab;
   const characters=tab==='characters';
@@ -400,16 +417,28 @@ function init(){
   document.getElementById('codex-tab-arenas').classList.toggle('is-active',!characters);
   document.getElementById('codex-tab-characters').setAttribute('aria-selected',String(characters));
   document.getElementById('codex-tab-arenas').setAttribute('aria-selected',String(!characters));
-  document.getElementById('codex-picker').classList.toggle('hidden',!characters||!codexBrowser.classList.contains('hidden'));
+  const picker=document.getElementById('codex-picker');
+  const characterTools=document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]');
+  const arenaTools=document.getElementById('codex-arena-tools');
   if(characters){
-   if(activeCodexKind==='arena'||!['god','hero','titan','monster'].includes(activeCodexKind)){codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');activeCodexKind='god';}
+   // Al volver desde arenas, regresar al selector de las cuatro categorías.
+   if(activeCodexKind==='arena'||!['god','hero','titan','monster'].includes(activeCodexKind)){
+    activeCodexKind='god';
+    codexBrowser.classList.add('hidden');
+   }
+   const showingPicker=codexBrowser.classList.contains('hidden');
+   picker.classList.toggle('hidden',!showingPicker);
    document.getElementById('codex-back').textContent='← CATEGORÍAS';
-   document.getElementById('codex-arena-tools').classList.add('hidden');
-   document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');
+   arenaTools.classList.add('hidden');
+   characterTools.classList.remove('hidden');
   }else{
+   picker.classList.add('hidden');
    document.getElementById('codex-back').textContent='← PERSONAJES';
    showCodexKind('arena');
   }
+  syncCodexTools();
+  updateArenaCodexTools();
+  syncCodexOverview();
  };
  const arenaEsc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const renderArenaCodex=(query='',mythology='all',sort='name',ids=null)=>{
@@ -420,7 +449,7 @@ function init(){
   return entries.map((a,index)=>{const p=getCodexArenaProfile(a.id)||{};const saved=arenaFavorites.has(a.id);const read=arenaReadProgress.has(a.id);return `<article class="codex-card codex-arena-card" style="--god:${arenaEsc(a.accent||'#e7c777')}" data-codex-entry="${arenaEsc(a.id)}"><div class="codex-card-index">${String(index+1).padStart(2,'0')}</div><div class="codex-top"><span class="god-symbol codex-arena-symbol">${arenaEsc(p.symbol||'⌂')}</span><div><h3>${arenaEsc(a.name)}</h3><small>${arenaEsc(ARENA_MYTHOLOGIES[a.id]||'Tradición por clasificar')}</small></div></div><div class="codex-role-tag">${arenaEsc(p.subtitle||'Arena mitológica')}</div><p class="codex-description">${arenaEsc(p.overview||'Explorá la identidad y las particularidades de este escenario.')}</p><div class="codex-arena-tags">${(p.features||[]).slice(0,3).map(item=>`<span>${arenaEsc(item)}</span>`).join('')}</div><button type="button" class="codex-detail-trigger" data-codex-arena-open="${arenaEsc(a.id)}">EXPLORAR FICHA <span aria-hidden="true">↗</span></button><div class="codex-card-tools"><button type="button" class="codex-favorite-action" data-codex-arena-favorite="${arenaEsc(a.id)}" aria-pressed="${saved}">${saved?'★':'☆'} <span>${saved?'GUARDADA':'GUARDAR'}</span></button><span class="codex-arena-read-state">${read?'✓ YA EXPLORADA':'○ SIN EXPLORAR'}</span></div></article>`;}).join('');
  };
  const renderArenaDetail=id=>{const a=ARENAS.find(item=>item.id===id);if(!a)return '';const p=getCodexArenaProfile(id)||{};const esc=arenaEsc;const chips=items=>(items||[]).map(item=>`<span>${esc(item)}</span>`).join('');const saved=arenaFavorites.has(id);return `<div class="codex-detail-hero codex-arena-detail-hero" style="--god:${esc(a.accent||'#e7c777')}"><div class="codex-detail-symbol">${esc(p.symbol||'⌂')}</div><div><p class="eyebrow">FICHA DEL CÓDICE / ARENA DE BATALLA</p><h2 id="codex-detail-title">${esc(a.name)}</h2><p>${esc(ARENA_MYTHOLOGIES[id]||'Tradición por clasificar')} · ${esc(p.subtitle||'Escenario mitológico')}</p><div class="codex-role-tag">ESTILO VISUAL · ${esc(a.style)}</div></div></div><p class="codex-detail-intro">${esc(p.overview||'Una arena de Clash of Gods con identidad propia.')}</p><div class="codex-detail-quick-actions"><button type="button" class="codex-favorite-action" data-codex-arena-favorite="${esc(id)}" aria-pressed="${saved}">${saved?'★':'☆'} <span>${saved?'GUARDADA EN FAVORITOS':'GUARDAR EN FAVORITOS'}</span></button></div><div class="codex-detail-section"><p class="eyebrow">ORIGEN E IDENTIDAD</p><section class="codex-detail-block"><h4>CONTEXTO MITOLÓGICO</h4><p>${esc(p.lore||p.overview||'Contenido en desarrollo.')}</p></section><section class="codex-detail-block"><h4>ELEMENTOS DISTINTIVOS</h4><div class="codex-chip-list">${chips(p.features)}</div></section></div><div class="codex-detail-section"><p class="eyebrow">LA ARENA EN EL JUEGO</p><section class="codex-detail-block"><h4>IDENTIDAD VISUAL Y COMBATE</h4><p>${esc(p.combat||'Los fenómenos dependen de las reglas activas de la partida.')}</p><div class="codex-arena-swatches"><span><i style="background:${esc(a.bg)}"></i>FONDO</span><span><i style="background:${esc(a.field)}"></i>CAMPO</span><span><i style="background:${esc(a.accent)}"></i>ACENTO</span></div></section></div><div class="codex-detail-section"><p class="eyebrow">ARCHIVO DE DESCUBRIMIENTOS</p><section class="codex-detail-block"><h4>QUÉ PODÉS DESCUBRIR</h4><div class="codex-chip-list">${chips(p.discoveries)}</div><p>${esc(p.note||'La ficha distingue la inspiración mitológica de las mecánicas implementadas.')}</p></section></div><p class="codex-detail-footnote">La información de esta ficha describe la inspiración cultural y el diseño del escenario. Los eventos y efectos concretos dependen de las funciones realmente habilitadas en el juego.</p>`;};
- const updateArenaCodexTools=()=>{document.getElementById('codex-arena-progress-label').textContent=`ARENAS EXPLORADAS · ${arenaReadProgress.size}/${ARENAS.length}`;document.getElementById('codex-arena-progress-bar').style.width=`${arenaReadProgress.size/Math.max(1,ARENAS.length)*100}%`;document.getElementById('codex-arena-favorite-count').textContent=String(arenaFavorites.size);const panel=document.getElementById('codex-arena-favorites-content');panel.classList.toggle('hidden',!arenaFavoritesOpen);panel.innerHTML=arenaFavoritesOpen?renderArenaCodex('', 'all','name',[...arenaFavorites]):'';document.getElementById('codex-arena-favorites').setAttribute('aria-pressed',String(arenaFavoritesOpen));document.getElementById('codex-arena-favorites').innerHTML=`${arenaFavoritesOpen?'★ OCULTAR FAVORITAS':'☆ MIS ARENAS FAVORITAS'} <span id="codex-arena-favorite-count">${arenaFavorites.size}</span>`;};
+ const updateArenaCodexTools=()=>{document.getElementById('codex-arena-progress-label').textContent=`ARENAS EXPLORADAS · ${arenaReadProgress.size}/${ARENAS.length}`;document.getElementById('codex-arena-progress-bar').style.width=`${arenaReadProgress.size/Math.max(1,ARENAS.length)*100}%`;document.getElementById('codex-arena-favorite-count').textContent=String(arenaFavorites.size);const panel=document.getElementById('codex-arena-favorites-content');panel.classList.toggle('hidden',!arenaFavoritesOpen||activeCodexTab!=='arenas');panel.innerHTML=arenaFavoritesOpen?renderArenaCodex('', 'all','name',[...arenaFavorites]):'';document.getElementById('codex-arena-favorites').setAttribute('aria-pressed',String(arenaFavoritesOpen));document.getElementById('codex-arena-favorites').innerHTML=`${arenaFavoritesOpen?'★ OCULTAR FAVORITAS':'☆ MIS ARENAS FAVORITAS'} <span id="codex-arena-favorite-count">${arenaFavorites.size}</span>`;};
  const toggleArenaFavorite=id=>{if(!ARENAS.some(a=>a.id===id))return;if(arenaFavorites.has(id))arenaFavorites.delete(id);else arenaFavorites.add(id);safeWrite('clashOfGods.codexArenaFavorites',[...arenaFavorites]);if(activeCodexKind==='arena')refreshCodex();updateArenaCodexTools();if(!codexDetail.classList.contains('hidden')){const detailId=codexDetailContent.querySelector('[data-codex-arena-favorite]')?.dataset.codexArenaFavorite;if(detailId===id)codexDetailContent.innerHTML=renderArenaDetail(id);}};
  const openArenaCodexDetail=id=>{const markup=renderArenaDetail(id);if(!markup)return;if(codexDetail.classList.contains('hidden'))codexLastFocus=document.activeElement;arenaReadProgress.add(id);safeWrite('clashOfGods.codexArenaReadProgress',[...arenaReadProgress]);codexDetailContent.innerHTML=markup;document.getElementById('codex-detail-eyebrow').textContent='ARCHIVO MITOLÓGICO / ARENA DE BATALLA';codexDetail.classList.remove('hidden');codexDetail.setAttribute('aria-hidden','false');document.body.classList.add('codex-detail-open');updateArenaCodexTools();if(activeCodexKind==='arena'){refreshCodex();codexLastFocus=document.querySelector(`[data-codex-arena-open="${id}"]`)||codexLastFocus;}document.getElementById('codex-detail-close').focus();};
  const refreshCodex=()=>{
@@ -434,7 +463,7 @@ function init(){
   codexEmpty.classList.toggle('hidden',count!==0);
   codexGrid.classList.toggle('hidden',count===0);
   syncCodexTools();
-  const arenaMode=activeCodexKind==='arena';document.getElementById('codex-arena-tools').classList.toggle('hidden',!arenaMode);document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.toggle('hidden',arenaMode);if(arenaMode){document.getElementById('codex-progress-label').textContent=`ARENAS EXPLORADAS · ${arenaReadProgress.size}/${ARENAS.length}`;document.getElementById('codex-progress-bar').style.width=`${arenaReadProgress.size/Math.max(1,ARENAS.length)*100}%`;updateArenaCodexTools();}else{document.getElementById('codex-progress-label').textContent=`PERSONAJES LEÍDOS · ${readProgress.size}/${Object.keys(GODS).length}`;document.getElementById('codex-progress-bar').style.width=`${readProgress.size/Math.max(1,Object.keys(GODS).length)*100}%`;document.getElementById('codex-detail-eyebrow').textContent='ARCHIVO MITOLÓGICO / PERFIL DE PERSONAJE';}
+  const arenaMode=activeCodexKind==='arena';document.getElementById('codex-arena-tools').classList.toggle('hidden',!arenaMode||activeCodexTab!=='arenas');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.toggle('hidden',arenaMode||activeCodexTab!=='characters');if(arenaMode){updateArenaCodexTools();}else{document.getElementById('codex-detail-eyebrow').textContent='ARCHIVO MITOLÓGICO / PERFIL DE PERSONAJE';}syncCodexOverview();
  };
  const showCodexKind=kind=>{
   activeCodexKind=kind;
@@ -450,7 +479,7 @@ function init(){
  Object.entries(kindButtons).forEach(([kind,id])=>document.getElementById(id).addEventListener('click',()=>{setCodexTab('characters');showCodexKind(kind);}));
  document.getElementById('codex-tab-characters').addEventListener('click',()=>setCodexTab('characters'));
  document.getElementById('codex-tab-arenas').addEventListener('click',()=>setCodexTab('arenas'));
- document.getElementById('codex-back').addEventListener('click',()=>{if(activeCodexKind==='arena'){setCodexTab('characters');return;}codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');document.getElementById('codex-arena-tools').classList.add('hidden');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');});
+ document.getElementById('codex-back').addEventListener('click',()=>{if(activeCodexKind==='arena'){setCodexTab('characters');return;}codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');document.getElementById('codex-arena-tools').classList.add('hidden');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');syncCodexOverview();syncCodexTools();updateArenaCodexTools();});
  const handleCodexAction=e=>{const fav=e.target.closest('[data-codex-favorite]');if(fav){e.preventDefault();toggleFavorite(fav.dataset.codexFavorite);return;}const compare=e.target.closest('[data-codex-compare]');if(compare){e.preventDefault();toggleCompare(compare.dataset.codexCompare);return;}const remove=e.target.closest('[data-codex-compare-remove]');if(remove){compareIds=compareIds.filter(id=>id!==remove.dataset.codexCompareRemove);safeWrite('clashOfGods.codexCompare',compareIds);refreshCodex();syncCodexTools();return;}const related=e.target.closest('[data-codex-related]');if(related)openCodexDetail(related.dataset.codexRelated);};
  const handleCodexGridClick=e=>{const arenaOpen=e.target.closest('[data-codex-arena-open]');if(arenaOpen){openArenaCodexDetail(arenaOpen.dataset.codexArenaOpen);return;}const arenaFav=e.target.closest('[data-codex-arena-favorite]');if(arenaFav){e.preventDefault();toggleArenaFavorite(arenaFav.dataset.codexArenaFavorite);return;}const trigger=e.target.closest('[data-codex-open]');if(trigger){openCodexDetail(trigger.dataset.codexOpen);return;}handleCodexAction(e);};
  codexGrid.addEventListener('click',handleCodexGridClick);
@@ -476,11 +505,11 @@ function init(){
  document.getElementById('codex-clear-filters').addEventListener('click',()=>{codexSearch.value='';codexRole.value='all';codexSort.value='name';refreshCodex();codexSearch.focus();});
  const counts={god:countCodexKind('god'),hero:countCodexKind('hero'),titan:countCodexKind('titan'),monster:countCodexKind('monster')};
  document.querySelectorAll('[data-codex-count]').forEach(el=>el.textContent=counts[el.dataset.codexCount]??0);
- document.getElementById('codex-total-count').textContent=Object.values(GODS).length+ARENAS.length;
+ syncCodexOverview();
  document.getElementById('codex-character-tab-count').textContent=Object.values(GODS).length;
  document.getElementById('codex-arena-tab-count').textContent=ARENAS.length;
  syncCodexTools();
- document.getElementById('codex-button').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');setCodexTab('characters');document.getElementById('codex-arena-tools').classList.add('hidden');document.querySelector('.codex-extra-tools[aria-label="Herramientas adicionales del Códice"]').classList.remove('hidden');});
+ document.getElementById('codex-button').addEventListener('click',()=>{codexBrowser.classList.add('hidden');codexPicker.classList.remove('hidden');activeCodexKind='god';setCodexTab('characters');syncCodexOverview();syncCodexTools();updateArenaCodexTools();});
  const arenaSelect=document.getElementById('arena-select');
  const arenaGroups=new Map();for(const arena of ARENAS){const mythology=ARENA_MYTHOLOGIES[arena.id]||'Mitología por clasificar';if(!arenaGroups.has(mythology))arenaGroups.set(mythology,[]);arenaGroups.get(mythology).push(arena);}arenaSelect.innerHTML=[...arenaGroups.entries()].map(([mythology,arenas])=>`<optgroup label="${mythology}">${arenas.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}</optgroup>`).join('');if(!ARENAS.some(a=>a.id===state.arenaId))state.arenaId=LEGACY_ARENA_MIGRATION[state.arenaId]||'arena_japanese';arenaSelect.value=state.arenaId;arenaSelect.addEventListener('change',()=>{clearArenaEventState();clearArenaDirector();state.arenaId=arenaSelect.value;buildArenaCache();});
  buildArenaCache();setupInput();setupSettings();bindUI();renderSelection();state.preparationMode='classic';syncPreparationUI();updateHUD();updateSurvivalResumePanel();

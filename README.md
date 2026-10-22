@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.80 — Códice organizado por pestañas
+# Clash of Gods V0.2.81 — Códice organizado por pestañas
 
 ## Dificultad de la CPU
 
@@ -45,6 +45,25 @@
 - Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.
 
 
+## V0.2.81 — Contadores y paneles sincronizados con cada pestaña
+
+- El contador principal cambia según la pestaña activa: **124 registros** en Personajes y **17 registros** en Arenas de batalla.
+- El selector de dioses, héroes, titanes y monstruos se oculta por completo al entrar en Arenas de batalla.
+- Las herramientas complementarias de personajes y la exploración de escenarios solo aparecen en su sección correspondiente.
+- Los paneles abiertos de favoritos y comparación quedan limitados a su pestaña, y vuelven a mostrarse únicamente dentro de ella.
+- Se corrigieron reglas CSS que impedían que algunos elementos con la clase `hidden` desaparecieran por tener `display:grid`, `display:flex` o `display:block`.
+- Se actualizó la versión de caché de la PWA para que cargue la interfaz corregida.
+- Revisión estática de sintaxis JavaScript y validación de JSON/ZIP; no se ejecutaron pruebas automatizadas ni se abrió una partida en navegador.
+
+
+## V0.2.80 — Navegación principal del Códice
+
+- Se reorganizó la entrada al Códice con dos pestañas principales: **Personajes** y **Arenas de batalla**.
+- La pestaña Personajes conserva las cuatro categorías existentes (dioses, héroes, titanes y monstruos) y sus herramientas originales.
+- La pestaña Arenas de batalla abre directamente el catálogo de las 17 arenas, manteniendo búsqueda, filtro por tradición, fichas, favoritos y progreso independiente.
+- Se eliminó la tarjeta de arenas del selector de categorías de personajes para evitar duplicar la navegación.
+
+
 ## V0.2.79 — Códice de arenas de batalla
 
 - Se añadió la categoría **Arenas de batalla** al Códice, junto a dioses, héroes, titanes y monstruos.
@@ -54,11 +73,3 @@
 - Las fichas distinguen la inspiración mitológica de las mecánicas implementadas; no afirman que eventos o efectos estén activos si dependen de los ajustes de la partida.
 - Se actualizó el shell de la PWA para incluir el nuevo módulo `codex-arenas.js` y se incrementó la versión de caché a `0.2.79`.
 - Revisión estática de sintaxis de los módulos modificados. No se ejecutaron pruebas automatizadas ni una partida en navegador; queda pendiente la comprobación manual de navegación, favoritos y persistencia.
-
-
-## V0.2.80 — Navegación principal del Códice
-
-- Se reorganizó la entrada al Códice con dos pestañas principales: **Personajes** y **Arenas de batalla**.
-- La pestaña Personajes conserva las cuatro categorías existentes (dioses, héroes, titanes y monstruos) y sus herramientas originales.
-- La pestaña Arenas de batalla abre directamente el catálogo de las 17 arenas, manteniendo búsqueda, filtro por tradición, fichas, favoritos y progreso independiente.
-- Se eliminó la tarjeta de arenas del selector de categorías de personajes para evitar duplicar la navegación.
