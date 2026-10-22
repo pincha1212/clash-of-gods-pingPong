@@ -39,6 +39,11 @@ function ensureMutationState() {
   mutation.maxCharge = MUTATION_MAX_CHARGE;
   mutation.rot = Math.max(0, Math.min(100, Number(mutation.rot) || 0));
   mutation.rotElapsed = Math.max(0, Number(mutation.rotElapsed) || 0);
+  if (!mutation.chaos || typeof mutation.chaos !== 'object') mutation.chaos = { type: '', side: 'p1', time: 0, cooldown: 4.5, duration: 0 };
+  mutation.chaos = { type: '', side: 'p1', time: 0, cooldown: 4.5, duration: 0, ...mutation.chaos };
+  mutation.chaos.time = Math.max(0, Number(mutation.chaos.time) || 0);
+  mutation.chaos.cooldown = Math.max(0, Number(mutation.chaos.cooldown) || 0);
+  mutation.chaos.duration = Math.max(0, Number(mutation.chaos.duration) || 0);
   if (!state.mutationOptions || typeof state.mutationOptions !== 'object') state.mutationOptions = {};
   state.mutationOptions = { powersEnabled: true, ballPowersEnabled: true, defensePowersEnabled: true, avatarEnabled: true, arenaEventsEnabled: true, passiveRotEnabled: true, vaccinesEnabled: true, ...state.mutationOptions };
   if (!mutation.players || typeof mutation.players !== 'object') mutation.players = {};
@@ -111,7 +116,7 @@ export function resetMutationState(active = state.mutationMode === 'mutation') {
   state.mutationMode = active ? 'mutation' : 'off';
   state.mutation = {
     active: Boolean(active), maxCharge: MUTATION_MAX_CHARGE, rot: 0, rotElapsed: 0,
-    players: { p1: makePlayerMutation(), p2: makePlayerMutation() }, arenaEvent: makeArenaEvent()
+    players: { p1: makePlayerMutation(), p2: makePlayerMutation() }, arenaEvent: makeArenaEvent(), chaos: { type: '', side: 'p1', time: 0, cooldown: 4.5, duration: 0 }
   };
   const status = publicStatus(state.mutation);
   notify('mutation-state-changed', status);
@@ -220,7 +225,7 @@ export function applyMutationArenaForce(ball, dt) {
     if (!event.phaseFlipped && event.duration > 0 && event.elapsed >= event.duration * .5) {
       ball.vy *= -1;
       event.phaseFlipped = true;
-      notify('god-message', { text: 'FRACTURA DE FASE · VERTICAL INVERTIDA', color: '#d8b7ff' });
+      notify('god-message', { text: 'FRACTURA DE FASE · VERTICAL INVERTIDA', color: '#caffad' });
     }
     ball.vy += event.direction * (stage >= 4 ? .42 : .28) * dt;
   } else if (event.type === 'fracture') {
@@ -260,12 +265,34 @@ export function updateMutationEffects(dt, ball = state.ball) {
   // El tamaño físico de las pelotas mutantes escala gradualmente y tiene un límite estricto
   // del +16%; la base no se modifica, así no se acumula tamaño entre fotogramas o saques.
   const balls = Array.isArray(state.balls) && state.balls.length ? state.balls : (ball ? [ball] : []);
+  // Mutaciones caóticas temporales: tamaño extremo o deformación de una paleta.
+  // El evento tiene pausas claras y nunca cambia la corrupción ni las reglas de victoria.
+  const chaos = mutation.chaos;
+  if (state.mutationOptions?.ballPowersEnabled !== false) {
+    if (chaos.time > 0) chaos.time = Math.max(0, chaos.time - dt);
+    if (chaos.time <= 0 && chaos.type) {
+      chaos.type = '';
+      chaos.cooldown = 5.2 + Math.random() * 4.8;
+      notify('god-message', { title: 'RAYOS GAMMA', text: 'RAYOS GAMMA', color: '#baff80', category: 'arena' });
+    }
+    if (!chaos.type) {
+      chaos.cooldown = Math.max(0, chaos.cooldown - dt);
+      if (chaos.cooldown <= 0 && mutation.rot >= 18) {
+        const pool = mutation.rot >= 70 ? ['giant', 'tiny', 'spike', 'gamma'] : ['giant', 'tiny', 'spike'];
+        chaos.type = pool[Math.floor(Math.random() * pool.length)];
+        chaos.side = Math.random() < .5 ? 'p1' : 'p2';
+        chaos.time = chaos.duration = chaos.type === 'gamma' ? 2.8 : 3.4;
+        notify('god-message', { title: ({ giant: 'GIGANTISMO', tiny: 'MICROPELOTA', spike: 'DEFORMACIÓN DE PALETA', gamma: 'RAYOS GAMMA' })[chaos.type], color: '#baff80', category: 'arena' });
+      }
+    }
+  } else { chaos.type = ''; chaos.time = 0; chaos.cooldown = 5; }
   const mutationBallScale = 1 + (mutation.rot / 100) * 0.16;
   for (const activeBall of balls) {
     if (!activeBall) continue;
     const baseRadius = Math.max(4, Number(activeBall.baseR) || Number(activeBall.r) || 9);
     const persistentScale = Math.max(.65, Math.min(1.65, Number(activeBall.matchEffects?.sizeScale) || 1));
-    activeBall.r = Math.max(4, Math.min(18, baseRadius * persistentScale * mutationBallScale));
+    const chaosScale = chaos.time > 0 && chaos.type === 'giant' ? 1.72 : chaos.time > 0 && chaos.type === 'tiny' ? .42 : 1;
+    activeBall.r = Math.max(3, Math.min(18, baseRadius * persistentScale * mutationBallScale * chaosScale));
   }
   for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers;

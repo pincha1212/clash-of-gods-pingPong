@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.85 — Mutaciones visuales y defensa equilibrada
+# Clash of Gods V0.2.86 — Mutaciones visuales y defensa equilibrada
 
 ## Dificultad de la CPU
 
@@ -45,7 +45,7 @@
 - Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.
 
 
-## V0.2.85 — Paletas y pelotas mutantes
+## V0.2.86 — Paletas y pelotas mutantes
 
 - Las pelotas del modo Mutación cambian progresivamente de forma: polígonos, cristales y fragmentos angulares según la corrupción ambiental; los demás modos conservan su apariencia habitual.
 - El tamaño físico aumenta gradualmente con la corrupción, con un tope del 16% y un radio máximo controlado. La escala se calcula desde el radio base para evitar acumulaciones entre fotogramas o saques.
