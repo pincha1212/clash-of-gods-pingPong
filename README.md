@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.87 — Colores Gamma y mutaciones persistentes
+# Clash of Gods V0.2.88 — Ritmo de Mutación
 
 ## Dificultad de la CPU
 
@@ -104,3 +104,13 @@ Revisión de esta entrega: comprobación estática de sintaxis, JSON y archivos 
 - Cada pelota conserva su propio color de contacto, forma y escala mutante hasta que su siguiente efecto independiente la cambia.
 - Estela de grietas con el color de la última paleta tocada.
 - Siluetas mutantes de paleta dentro de su área de colisión, con cambios independientes y límites de forma.
+
+
+## V0.2.88 — Ritmo constante de Mutación
+
+- Las mutaciones visuales de cada pelota arrancan de forma escalonada, con temporizadores independientes, para evitar que todas cambien de forma o tamaño al mismo tiempo.
+- Cada efecto individual dura entre 7 y 9 segundos antes de cambiar, dando tiempo a leer el estado de la pelota sin volver estático el combate.
+- El efecto y su temporizador sobreviven a los saques; las pelotas nuevas obtienen una identidad de mutación independiente y no heredan la forma ni el reloj de la pelota que las generó.
+- Los grandes eventos de cancha y las deformaciones/rayos Gamma de paleta ya no se activan simultáneamente: se espera a que termine el fenómeno activo antes de anunciar el siguiente.
+- Se mantiene la selección aleatoria de efectos, con cambios de tamaño y forma limitados por las cotas físicas existentes.
+- Revisión estática de sintaxis y consistencia de versión; no se ejecutaron pruebas automatizadas ni se inició una partida en navegador.

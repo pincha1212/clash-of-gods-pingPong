@@ -277,12 +277,17 @@ export function updateMutationEffects(dt, ball = state.ball) {
     }
     if (!chaos.type) {
       chaos.cooldown = Math.max(0, chaos.cooldown - dt);
+      // Ritmo estable: un fenómeno grande por vez. La mutación de paleta espera
+      // a que termine el evento ambiental y su aviso, evitando apilar sobresaltos.
       if (chaos.cooldown <= 0 && mutation.rot >= 18) {
-        const pool = mutation.rot >= 70 ? ['spike', 'gamma'] : ['spike'];
-        chaos.type = pool[Math.floor(Math.random() * pool.length)];
-        chaos.side = Math.random() < .5 ? 'p1' : 'p2';
-        chaos.time = chaos.duration = chaos.type === 'gamma' ? 2.8 : 3.4;
-        notify('god-message', { title: ({ giant: 'GIGANTISMO', tiny: 'MICROPELOTA', spike: 'DEFORMACIÓN DE PALETA', gamma: 'RAYOS GAMMA' })[chaos.type], color: '#baff80', category: 'arena' });
+        if (mutation.arenaEvent.active > 0 || mutation.arenaEvent.warning > 0) chaos.cooldown = 0.35;
+        else {
+          const pool = mutation.rot >= 70 ? ['spike', 'gamma'] : ['spike'];
+          chaos.type = pool[Math.floor(Math.random() * pool.length)];
+          chaos.side = Math.random() < .5 ? 'p1' : 'p2';
+          chaos.time = chaos.duration = chaos.type === 'gamma' ? 2.8 : 3.4;
+          notify('god-message', { title: ({ giant: 'GIGANTISMO', tiny: 'MICROPELOTA', spike: 'DEFORMACIÓN DE PALETA', gamma: 'RAYOS GAMMA' })[chaos.type], color: '#baff80', category: 'arena' });
+        }
       }
     }
   } else { chaos.type = ''; chaos.time = 0; chaos.cooldown = 5; }
@@ -292,14 +297,24 @@ export function updateMutationEffects(dt, ball = state.ball) {
     if (!activeBall.matchEffects || typeof activeBall.matchEffects !== 'object') activeBall.matchEffects = { sizeScale: 1, trajectory: '', color: '', polygonSides: 0 };
     const fx = activeBall.matchEffects;
     if (state.mutationOptions?.ballPowersEnabled === false) {
-      fx.mutationEffect = ''; fx.mutationEffectTimer = 0; fx.sizeScale = 1; fx.polygonSides = 0; fx.mutationShape = '';
+      fx.mutationEffect = ''; fx.mutationEffectTimer = 0; fx.mutationClockStarted = false; fx.sizeScale = 1; fx.polygonSides = 0; fx.mutationShape = '';
     } else {
+      // Cada pelota obtiene reloj y estado propios, incluso si nació de otra pelota.
+      // El arranque escalonado evita que todas cambien de forma al mismo tiempo.
+      if (!activeBall.mutationIdentityInitialized) {
+        const ballIndex = Math.max(0, balls.indexOf(activeBall));
+        fx.mutationEffect = '';
+        fx.mutationEffectTimer = 0.7 + ballIndex * 1.25 + Math.random() * 0.8;
+        activeBall.mutationIdentityInitialized = true;
+        fx.sizeScale = 1; fx.polygonSides = 0; fx.mutationShape = '';
+      }
       fx.mutationEffectTimer = Math.max(0, (Number(fx.mutationEffectTimer) || 0) - dt);
-      if (!fx.mutationEffect || fx.mutationEffectTimer <= 0) {
+      if (fx.mutationEffectTimer <= 0) {
         const pool = mutation.rot >= 72 ? ['giant', 'tiny', 'diamond', 'shard', 'hex'] : mutation.rot >= 32 ? ['giant', 'tiny', 'diamond', 'hex'] : ['giant', 'tiny', 'diamond'];
         const choices = pool.filter(effect => effect !== fx.mutationEffect);
         fx.mutationEffect = choices[Math.floor(Math.random() * choices.length)] || 'diamond';
-        fx.mutationEffectTimer = 4.5 + Math.random() * 5.5;
+        // Ventana constante de 7–9 segundos: hay tiempo para leer la mutación antes del siguiente cambio.
+        fx.mutationEffectTimer = 7 + Math.random() * 2;
         fx.sizeScale = fx.mutationEffect === 'giant' ? 1.65 : fx.mutationEffect === 'tiny' ? .48 : 1;
         fx.mutationShape = fx.mutationEffect === 'shard' ? 'shard' : fx.mutationEffect === 'diamond' ? 'diamond' : fx.mutationEffect === 'hex' ? 'polygon' : '';
         fx.polygonSides = fx.mutationEffect === 'hex' ? 6 : fx.mutationEffect === 'diamond' ? 4 : fx.mutationEffect === 'shard' ? 5 : 0;
@@ -373,7 +388,8 @@ export function updateMutationEffects(dt, ball = state.ball) {
     }
   } else {
     event.cooldown = Math.max(0, event.cooldown - dt);
-    if (event.cooldown === 0) {
+    if (event.cooldown === 0 && chaos.time <= 0) {
+      // Los avisos ambientales no se solapan con la deformación de paleta/rayos gamma.
       event.warning = arenaStage >= 4 ? 1.15 : arenaStage >= 3 ? 1.25 : 1.45;
       event.direction = Math.random() < .5 ? -1 : 1;
       const roll = Math.random();
