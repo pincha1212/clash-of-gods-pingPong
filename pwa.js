@@ -1,6 +1,5 @@
 const installButton = document.getElementById('install-app-button');
 const updateButton = document.getElementById('update-app-button');
-const networkStatus = document.getElementById('network-status');
 const pwaHelp = document.getElementById('pwa-help');
 const pwaHelpText = document.getElementById('pwa-help-text');
 let deferredInstallPrompt = null;
@@ -21,16 +20,6 @@ function syncInstallButton() {
   const installed = isRunningInstalled() || hasInstallRecord();
   installButton.hidden = installed;
   if (installed && pwaHelp) pwaHelp.hidden = true;
-}
-
-function setNetworkStatus() {
-  const online = navigator.onLine;
-  document.documentElement.dataset.connection = online ? 'online' : 'offline';
-  if (networkStatus) {
-    networkStatus.textContent = online ? 'EN LÍNEA' : 'SIN CONEXIÓN';
-    networkStatus.setAttribute('aria-label', online ? 'Con conexión a internet' : 'Sin conexión a internet');
-    networkStatus.classList.toggle('is-offline', !online);
-  }
 }
 
 function showInstallHelp() {
@@ -81,8 +70,6 @@ window.addEventListener('appinstalled', () => {
   syncInstallButton();
   if (pwaHelp) pwaHelp.hidden = true;
 });
-window.addEventListener('online', setNetworkStatus);
-window.addEventListener('offline', setNetworkStatus);
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
   window.addEventListener('load', async () => {
@@ -104,6 +91,5 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   }, { once: true });
 }
 
-setNetworkStatus();
 syncInstallButton();
 window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', syncInstallButton);
