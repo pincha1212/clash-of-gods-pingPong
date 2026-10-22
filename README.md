@@ -1,6 +1,7 @@
 # Clash of Gods V0.2.88 — Ritmo de Mutación
 
-## Dificultad de la CPU
+## V0.2.75 — Dificultad de la CPU
+
 
 - **Iniciación:** conserva una CPU más permisiva, con movimiento moderado y sin anticipación de la trayectoria.
 - **Equilibrada:** mejora la velocidad de desplazamiento y anticipa brevemente la llegada de la pelota.
