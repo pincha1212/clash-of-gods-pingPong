@@ -1,4 +1,4 @@
-# Clash of Gods V0.2.84 — Renovación del modo Mutación
+# Clash of Gods V0.2.85 — Mutaciones visuales y defensa equilibrada
 
 ## Dificultad de la CPU
 
@@ -44,6 +44,14 @@
 - Actualizados versión visible, metadatos del paquete, README y caché de la PWA a `0.2.78`.
 - Revisión estática de registro de Power-ups, flujos y cambios de estado; no se ejecutaron pruebas automatizadas ni partida en navegador.
 
+
+## V0.2.85 — Paletas y pelotas mutantes
+
+- Las pelotas del modo Mutación cambian progresivamente de forma: polígonos, cristales y fragmentos angulares según la corrupción ambiental; los demás modos conservan su apariencia habitual.
+- El tamaño físico aumenta gradualmente con la corrupción, con un tope del 16% y un radio máximo controlado. La escala se calcula desde el radio base para evitar acumulaciones entre fotogramas o saques.
+- La estela mutante cambia de color, grosor y geometría: trazos elípticos en corrupción media y fragmentos triangulares con un trazo de energía en corrupción alta.
+- La defensa Escudo del Abismo gana una membrana visual dedicada, mantiene su activación una vez por rally y limita la ampliación de la paleta al 22% durante 0,78 segundos. Los multiplicadores de movilidad siguen acotados para evitar ventajas excesivas.
+- Revisión estática de sintaxis, versiones, JSON e integridad de paquetes. No se ejecutaron pruebas automatizadas ni una partida en navegador; la física visual y las colisiones quedan pendientes de validación manual.
 
 ## V0.2.84 — Renovación inicial del modo Mutación
 

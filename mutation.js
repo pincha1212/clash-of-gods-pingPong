@@ -257,6 +257,16 @@ export function updateMutationEffects(dt, ball = state.ball) {
     notify('mutation-rot-stage-changed', { stage: getMutationArenaStage(), rot: mutation.rot, reason: 'time' });
     notify('god-message', { text: `LA CANCHA MUTÓ · ${getArenaStageName()}`, color: '#aaff69' });
   }
+  // El tamaño físico de las pelotas mutantes escala gradualmente y tiene un límite estricto
+  // del +16%; la base no se modifica, así no se acumula tamaño entre fotogramas o saques.
+  const balls = Array.isArray(state.balls) && state.balls.length ? state.balls : (ball ? [ball] : []);
+  const mutationBallScale = 1 + (mutation.rot / 100) * 0.16;
+  for (const activeBall of balls) {
+    if (!activeBall) continue;
+    const baseRadius = Math.max(4, Number(activeBall.baseR) || Number(activeBall.r) || 9);
+    const persistentScale = Math.max(.65, Math.min(1.65, Number(activeBall.matchEffects?.sizeScale) || 1));
+    activeBall.r = Math.max(4, Math.min(18, baseRadius * persistentScale * mutationBallScale));
+  }
   for (const side of SIDES) {
     const player = mutation.players[side], power = player.powers;
     // La apariencia de la paleta persigue la carga real: la curación visual es gradual.
@@ -276,10 +286,10 @@ export function updateMutationEffects(dt, ball = state.ball) {
       ? ball.vx < 0 && ball.x <= 205 && ball.x >= 46
       : ball.vx > 0 && ball.x >= SETTINGS.width - 205 && ball.x <= SETTINGS.width - 46;
     if (threatened) {
-      power.shieldTime = .86;
+      power.shieldTime = .78;
       power.shieldUsedRally = true;
       // Usa la autoridad de escudo que ya consulta la resolución de goles en physics.js.
-      paddle.shield = .86;
+      paddle.shield = .78;
       paddle.shieldMode = 'mutation';
       notify('god-message', { text: 'ESCUDO DEL ABISMO · PROTECCIÓN ACTIVADA', color: '#9eff70' });
     }
@@ -342,7 +352,8 @@ export function consumeMutationShield(side) {
 
 export function getMutationShieldScale(side) {
   const player = ensureMutationState().players[side];
-  return state.mutationOptions?.powersEnabled !== false && state.mutationOptions?.defensePowersEnabled !== false && player?.unlocked?.[50] && player.powers.shieldTime > 0 ? 1.28 : 1;
+  // La membrana defensiva aumenta la paleta como máximo un 22% y dura menos de un segundo.
+  return state.mutationOptions?.powersEnabled !== false && state.mutationOptions?.defensePowersEnabled !== false && player?.unlocked?.[50] && player.powers.shieldTime > 0 ? 1.22 : 1;
 }
 
 export function applyMutationPaddleHit(side, ball) {
