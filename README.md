@@ -1,9 +1,9 @@
-# Clash of Gods V0.2.92 — Integridad de reinicio
+# Clash of Gods V0.2.93 — Integridad de reinicio
 
-## V0.2.92 — Limpieza de estados entre partidas
+## V0.2.93 — Limpieza de estados entre partidas
 - La cola de anuncios de habilidades, power-ups y eventos se vacía al iniciar una partida nueva; también se limpia al volver al menú. Los mensajes de un combate anterior no deberían reaparecer en una revancha.
 - El inicio de partida limpia explícitamente el estado del evento de arena antes de reiniciar el Director, para no depender únicamente de la ruta de salida del combate anterior.
-- Se sincronizan la versión visible, los metadatos del proyecto y la clave de caché de la PWA a `0.2.92`.
+- Se sincronizan la versión visible, los metadatos del proyecto y la clave de caché de la PWA a `0.2.93`.
 - Revisión estática de sintaxis; no se ejecutaron pruebas automatizadas ni se probó una partida en navegador.
 
 # Historial de Clash of Gods
