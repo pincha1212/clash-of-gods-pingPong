@@ -35,6 +35,19 @@ Duelos arcade de mitología en formato Pong competitivo construidos con React, T
 
 ## Historial de Versiones y Auditoría de Funciones
 
+### Versión 0.2.96 (Sincronización Centralizada de Versión y Auditoría de UI)
+- **Centralización de la Fuente de Verdad (`src/version.ts`)**:
+  - Creación del módulo central de versión `APP_VERSION = '0.2.96'`, `APP_VERSION_LABEL = 'V0.2.96'` y `APP_CODENAME = 'Divine Arena Cloud Edition'`.
+  - Se erradican las versiones quemadas en texto plano en componentes individuales para prevenir desincronizaciones en futuras auditorías.
+- **Sincronización Exhaustiva de la Interfaz**:
+  - `src/App.tsx`: Actualizado el pie de página del sistema (`.site-footer`) para enlazar directamente con `APP_VERSION_LABEL`, resolviendo la etiqueta obsoleta que mostraba `V0.2.93`.
+  - `src/components/TopBar.tsx`: Indicador de arena y versión vinculado a `APP_VERSION_LABEL` (`DIVINE ARENA • V0.2.96`).
+  - `src/components/SettingsModal.tsx`: Visualización de versión tanto en el encabezado (`.eyebrow`) como en el pie de auditoría del panel de ajustes.
+  - `package.json`: Versión actualizada a `0.2.96`.
+- **Verificación de Encabezado y Botones**:
+  - Botón de ajustes (`gear-button`) estilizado con icono SVG vectorial integrado, libre de colisiones tipográficas.
+  - Botones de sonido y pantalla completa adaptados a modos desktop y móvil con selectores de vista activa.
+
 ### Versión 0.2.95 (Arquitectura Cloud SQL PostgreSQL y Optimización de Carga Ligera)
 - **Aprovisionamiento de Base de Datos Cloud SQL en us-east1**:
   - Instancia `ai-studio-946859f1` de PostgreSQL Developer Edition aprovisionada en la región `us-east1` con escalado a cero y conexión mediante Cloud SQL Auth Proxy.

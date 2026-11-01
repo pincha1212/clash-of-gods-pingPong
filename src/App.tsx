@@ -19,6 +19,7 @@ import { ScreenResult } from './components/ScreenResult';
 import { ScreenCodex } from './components/ScreenCodex';
 import { CodexDetailModal } from './components/CodexDetailModal';
 import { SettingsModal } from './components/SettingsModal';
+import { APP_VERSION_LABEL } from './version.ts';
 
 const safeRead = (key: string, fallback: any) => {
   try {
@@ -439,7 +440,7 @@ export const App: React.FC = () => {
 
       <footer className="site-footer">
         <span>CLASH OF GODS <i>／</i> DIVINE ARENA</span>
-        <span>VERSIÓN · V0.2.93</span>
+        <span>VERSIÓN · {APP_VERSION_LABEL}</span>
       </footer>
     </>
   );

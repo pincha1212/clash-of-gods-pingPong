@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { state } from '../game/state.js';
 import { setSound, setVolume } from '../game/audio.js';
+import { APP_VERSION_LABEL, APP_CODENAME } from '../version.ts';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       <div className="settings-panel">
         <div className="settings-heading">
           <div>
-            <p className="eyebrow">DIVINE ARENA / PREFERENCIAS</p>
+            <p className="eyebrow">DIVINE ARENA / PREFERENCIAS · {APP_VERSION_LABEL}</p>
             <h2 id="settings-title">AJUSTES <em>DEL JUEGO</em></h2>
           </div>
           <button className="settings-close" aria-label="Cerrar ajustes" onClick={onClose}>
@@ -179,6 +180,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <p><b>Pausa</b><span>Esc o botón PAUSA</span></p>
           </div>
         </section>
+
+        <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.12em' }}>
+          <span>CLASH OF GODS · {APP_CODENAME}</span>
+          <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{APP_VERSION_LABEL}</span>
+        </div>
       </div>
     </div>
   );

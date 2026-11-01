@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { setSound, playTone } from '../game/audio.js';
 import { state } from '../game/state.js';
+import { APP_VERSION_LABEL } from '../version.ts';
 
 interface TopBarProps {
   onOpenSettings: () => void;
@@ -43,7 +44,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSettings, onNavigateHome }
         <span>CLASH <i>OF</i> GODS</span>
       </a>
 
-      <span className="top-tag">DIVINE ARENA <b>•</b> V0.2.95</span>
+      <span className="top-tag">DIVINE ARENA <b>•</b> {APP_VERSION_LABEL}</span>
 
       <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <button
