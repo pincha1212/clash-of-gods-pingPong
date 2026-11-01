@@ -35,6 +35,21 @@ Duelos arcade de mitología en formato Pong competitivo construidos con React, T
 
 ## Historial de Versiones y Auditoría de Funciones
 
+### Versión 0.2.98 (Automatización de Despliegue en GitHub Pages y Modo Estático Autónomo)
+- **Flujo de Integración y Despliegue Continuo (CI/CD) en GitHub Actions (`.github/workflows/deploy.yml`)**:
+  - Creación del flujo de trabajo automatizado para compilar y desplegar la aplicación React moderna a **GitHub Pages** en cada `push` a las ramas `main` o `master`, con soporte adicional para disparo manual (`workflow_dispatch`).
+  - Permisos oficiales de GitHub Pages configurados (`contents: read`, `pages: write`, `id-token: write`).
+  - Entorno de ejecución con Node.js 20, instalación resiliente de dependencias (`npm ci` con fallback a `npm install`), compilación de producción con Vite (`npm run build`) y publicación directa del artefacto `dist/` a través de `actions/deploy-pages@v4`.
+  - Grupo de concurrencia (`pages`, `cancel-in-progress: false`) para evitar condiciones de carrera entre despliegues sucesivos.
+- **Configuración de Rutas Relativas para GitHub Pages (`vite.config.ts`)**:
+  - Incorporación de `base: './'` en la configuración de Vite para que todos los activos empaquetados (scripts JS, estilos CSS, imágenes, fuentes) resuelvan con rutas relativas sin importar el subdirectorio de alojamiento del repositorio (`https://<usuario>.github.io/<repositorio>/`), eliminando pantallas blancas o errores 404.
+- **Arquitectura Híbrida: Modo Estático Autónomo y Resiliente (`src/services/api.ts`)**:
+  - Implementación de proveedores de respaldo (`getBundledCharacters` y `getBundledArenas`) para que, en ausencia del backend Node/Express y la base de datos Cloud SQL (como ocurre en entornos estáticos como GitHub Pages), la aplicación cargue íntegramente los **124 personajes** y las **17 arenas** con todos sus atributos, biografías, árboles mitológicos y poderes.
+  - Soporte de favoritos fuera de línea (`localStorage`) cuando el usuario navega en GitHub Pages o sin conexión al servidor, manteniendo la interactividad total del códice y la biblioteca divina.
+- **Actualización de Versión Centralizada**:
+  - `src/version.ts`: Incremento a `V0.2.98` (`Divine Arena Cloud & Pages Edition`).
+  - `package.json`: Versión `0.2.98`.
+
 ### Versión 0.2.97 (Auditoría Interactiva de Sistema y Diagnóstico de Logs)
 - **Panel de Diagnóstico y Glosario de Logs en Pantalla (`SettingsModal.tsx`)**:
   - Incorporación de la sección interactiva *Auditoría y Diccionario de Logs* dentro del modal de Ajustes.
