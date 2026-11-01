@@ -189,6 +189,36 @@ export class GameEngine {
     return options[Math.floor(Math.random() * options.length)] || '#42baff';
   }
 
+  public gestureStart(side: 'p1' | 'p2', canvasY: number) {
+    if (!state.running || state.paused) return;
+    state.touchDrag = state.touchDrag || { p1: null, p2: null };
+    state.touchDragDelta = state.touchDragDelta || { p1: 0, p2: 0 };
+    state.touchDrag[side] = true;
+    const p = state.paddles?.[side];
+    if (p) {
+      const targetY = canvasY - p.h / 2;
+      state.touchDragDelta[side] = (targetY - p.y);
+    }
+  }
+
+  public gestureMove(side: 'p1' | 'p2', deltaY: number) {
+    if (!state.running || state.paused) return;
+    state.touchDrag = state.touchDrag || { p1: null, p2: null };
+    state.touchDragDelta = state.touchDragDelta || { p1: 0, p2: 0 };
+    state.touchDrag[side] = true;
+    state.touchDragDelta[side] = (state.touchDragDelta[side] || 0) + deltaY;
+  }
+
+  public gestureEnd(side: 'p1' | 'p2') {
+    if (state.touchDrag) state.touchDrag[side] = null;
+    if (state.touchDragDelta) state.touchDragDelta[side] = 0;
+  }
+
+  public gestureTriggerAbility(side: 'p1' | 'p2') {
+    if (!state.running || state.paused) return;
+    activateAbility(side);
+  }
+
   public setTouchInput(side: 'p1' | 'p2', action: 'up' | 'down' | 'skill', active: boolean) {
     state.touch = state.touch || {};
     if (action === 'up') state.touch[`up${side === 'p1' ? '1' : '2'}`] = active;
@@ -753,12 +783,12 @@ export class GameEngine {
       this.callbacks.onHudUpdate?.({
         p1Skill: {
           name: g1?.skill?.name || 'PODER',
-          state: (p1?.cooldown || 0) <= 0 ? 'LISTA' : `${Math.ceil(p1.cooldown)}S`,
+          state: (p1?.cooldown || 0) <= 0 ? 'LISTA' : `${(p1.cooldown).toFixed(1)}s`,
           pct: p1Pct
         },
         p2Skill: {
           name: g2?.skill?.name || 'PODER',
-          state: (p2?.cooldown || 0) <= 0 ? 'LISTA' : `${Math.ceil(p2.cooldown)}S`,
+          state: (p2?.cooldown || 0) <= 0 ? 'LISTA' : `${(p2.cooldown).toFixed(1)}s`,
           pct: p2Pct
         },
         countdown: Math.max(0, Math.ceil(this.countdown)),

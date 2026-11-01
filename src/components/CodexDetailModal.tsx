@@ -3,6 +3,7 @@ import { GODS, ARENAS, ARENA_MYTHOLOGIES } from '../game/config.js';
 import { getCodexProfile } from '../game/codex-profiles.js';
 import { getCodexConnections, getCodexMyths } from '../game/codex-relations.js';
 import { getCodexArenaProfile } from '../game/codex-arenas.js';
+import { fetchCharacterDetail, fetchArenaDetail, DbCharacter, DbArena } from '../services/api.ts';
 
 interface CodexDetailModalProps {
   characterId: string | null;
@@ -29,6 +30,26 @@ export const CodexDetailModal: React.FC<CodexDetailModalProps> = ({
   onSelectRelatedCharacter,
   onClose
 }) => {
+  const [dbChar, setDbChar] = React.useState<DbCharacter | null>(null);
+  const [dbArena, setDbArena] = React.useState<DbArena | null>(null);
+
+  useEffect(() => {
+    if (characterId) {
+      fetchCharacterDetail(characterId).then(data => {
+        if (data) setDbChar(data);
+      });
+    } else {
+      setDbChar(null);
+    }
+    if (arenaId) {
+      fetchArenaDetail(arenaId).then(data => {
+        if (data) setDbArena(data);
+      });
+    } else {
+      setDbArena(null);
+    }
+  }, [characterId, arenaId]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();

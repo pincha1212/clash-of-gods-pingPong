@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { GODS, ARENAS, ARENA_MYTHOLOGIES } from '../game/config.js';
 import { getCodexProfile } from '../game/codex-profiles.js';
 import { getCodexArenaProfile } from '../game/codex-arenas.js';
+import { fetchCharacters, fetchArenas } from '../services/api.ts';
 
 interface ScreenCodexProps {
   onBack: () => void;
@@ -47,6 +48,11 @@ export const ScreenCodex: React.FC<ScreenCodexProps> = ({
   const [favoritesPanelOpen, setFavoritesPanelOpen] = useState(false);
   const [comparePanelOpen, setComparePanelOpen] = useState(compareIds.length > 0);
   const [arenaFavoritesOpen, setArenaFavoritesOpen] = useState(false);
+
+  useEffect(() => {
+    fetchCharacters().catch(() => {});
+    fetchArenas().catch(() => {});
+  }, []);
 
   const kindLabel = (g: any) => {
     const KIND_LABEL: Record<string, string> = { hero: 'HÉROE', titan: 'TITÁN', monster: 'MONSTRUO' };

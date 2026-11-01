@@ -10,3 +10,177 @@ body[data-mutation-mode="mutation"] #score-target-config{display:none!important}
 body[data-mutation-mode="mutation"] .mutation-status{border-color:#547c36;background:#0c180e;color:#d4ff9c}
 body[data-mutation-mode="mutation"] .mutation-charge-track i{background:linear-gradient(90deg,#4a9b36,#baff69)}
 body[data-mutation-mode="mutation"] .mutation-status-head b{color:#d9ff9a}
+
+/* Indicadores laterales de habilidades en los flancos de la arena */
+.lateral-skill {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(10, 15, 26, 0.84);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.55);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+  cursor: pointer;
+}
+
+.lateral-skill:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.lateral-skill-p1 {
+  left: 12px;
+  border-color: rgba(112, 228, 233, 0.4);
+}
+
+.lateral-skill-p2 {
+  right: 12px;
+  border-color: rgba(169, 154, 255, 0.4);
+}
+
+.lateral-skill-gauge {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+}
+
+.lateral-gauge-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.lateral-gauge-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 3.5;
+}
+
+.lateral-gauge-fill {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.lateral-skill-p1 .lateral-gauge-fill {
+  stroke: var(--p1, #70e4e9);
+}
+
+.lateral-skill-p2 .lateral-gauge-fill {
+  stroke: var(--p2, #a99aff);
+}
+
+.lateral-skill-symbol {
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text);
+  z-index: 1;
+}
+
+.lateral-skill-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  max-width: 78px;
+}
+
+.lateral-skill-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 78px;
+  text-transform: uppercase;
+}
+
+.lateral-skill-state {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  line-height: 1.3;
+}
+
+.lateral-skill-p1 .lateral-skill-state {
+  color: var(--p1, #70e4e9);
+  background: rgba(112, 228, 233, 0.14);
+}
+
+.lateral-skill-p2 .lateral-skill-state {
+  color: var(--p2, #a99aff);
+  background: rgba(169, 154, 255, 0.14);
+}
+
+.lateral-skill.is-ready {
+  box-shadow: 0 0 16px rgba(232, 189, 114, 0.25);
+}
+
+.lateral-skill-p1.is-ready {
+  border-color: var(--p1, #70e4e9);
+  animation: p1-ready-pulse 2s infinite ease-in-out;
+}
+
+.lateral-skill-p2.is-ready {
+  border-color: var(--p2, #a99aff);
+  animation: p2-ready-pulse 2s infinite ease-in-out;
+}
+
+@keyframes p1-ready-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(112, 228, 233, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(112, 228, 233, 0.7); }
+}
+
+@keyframes p2-ready-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(169, 154, 255, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(169, 154, 255, 0.7); }
+}
+
+.lateral-skill.is-cooldown {
+  opacity: 0.82;
+}
+
+@media (max-width: 620px) {
+  .lateral-skill {
+    padding: 5px 6px;
+    gap: 3px;
+  }
+  .lateral-skill-gauge {
+    width: 38px;
+    height: 38px;
+  }
+  .lateral-skill-symbol {
+    font-size: 16px;
+  }
+  .lateral-skill-name {
+    font-size: 9px;
+    max-width: 60px;
+  }
+  .lateral-skill-state {
+    font-size: 7px;
+  }
+  .lateral-skill-p1 { left: 6px; }
+  .lateral-skill-p2 { right: 6px; }
+}

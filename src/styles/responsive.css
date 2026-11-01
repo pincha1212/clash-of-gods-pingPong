@@ -31,7 +31,7 @@
  body.game-playing{height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:none;}
  body.game-playing .topbar,body.game-playing .site-footer{display:none!important;}
  body.game-playing main{height:100dvh;min-height:0;overflow:hidden;}
- body.game-playing #screen-game{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;min-height:0;margin:0;padding:5px clamp(6px,1.6vw,16px);overflow:hidden;display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto auto;align-content:stretch;gap:4px;}
+ body.game-playing #screen-game{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;min-height:0;margin:0;padding:5px clamp(6px,1.6vw,16px);overflow:hidden;display:grid!important;grid-template-rows:auto auto minmax(0,1fr) auto;align-content:stretch;gap:4px;}
  body.game-playing .game-heading{min-height:0;width:100%;margin:0;align-items:center;flex-shrink:0;}
  body.game-playing .game-heading .eyebrow{display:none;}
  body.game-playing .game-heading h2{font-size:clamp(14px,2.8vh,22px);line-height:1;}
@@ -48,25 +48,16 @@
  body.game-playing .arena-wrap canvas{width:auto!important;height:100%!important;max-width:100%!important;max-height:100%!important;aspect-ratio:5/3;object-fit:contain;flex:0 1 auto;}
  body.game-playing .arena-corner{width:12px;height:12px;}
  body.game-playing .combat-footer{width:100%;min-height:0;padding:3px 7px;gap:6px;grid-template-columns:1fr 1fr;flex-shrink:0;}
- body.game-playing .arena-hint{display:none;}
+ body.game-playing .arena-hint{display:block;font-size:clamp(7px,1.3vh,9px);letter-spacing:.08em;opacity:.85;grid-column:1 / -1;text-align:center;}
  body.game-playing .skill-status{grid-template-columns:25px minmax(0,1fr);gap:4px;}
  body.game-playing .skill-key{height:22px;font-size:7px;}
  body.game-playing .skill-status b{font-size:clamp(7px,1.3vh,9px);}
  body.game-playing .skill-status small{font-size:6px;margin-top:0;}
  body.game-playing .cooldown-track{height:2px;}
- body.game-playing .touch-controls{display:grid;width:100%;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin:0;min-height:0;flex-shrink:0;}
- body.game-playing .touch-player{padding:3px 5px;gap:4px;grid-template-columns:1fr 1fr 1.25fr;align-items:center;}
- body.game-playing .touch-player>span{font-size:6px;letter-spacing:.12em;}
- body.game-playing .touch-player button{min-height:clamp(28px,6.4vh,42px);padding:3px;font-size:clamp(10px,1.8vh,13px);}
+ body.game-playing .touch-controls{display:none!important;}
  body.game-playing .landscape-hint{display:none!important;}
  body.game-playing .arena-overlay,body.game-playing .pause-overlay{z-index:5;}
  body.game-playing .arena-overlay strong{font-size:clamp(35px,9vh,70px);}
-}
-@media (orientation:landscape) and (max-height:1100px) and (pointer:coarse){
- body.game-playing .touch-controls{display:grid;}
- body.game-playing[data-game-mode="cpu"] .touch-controls{grid-template-columns:minmax(150px,min(48vw,300px));justify-content:center;}
- body.game-playing[data-game-mode="cpu"] .touch-player-two{display:none;}
- body.game-playing .touch-player button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 }
 @media (orientation:landscape) and (max-height:430px){
  body.game-playing #screen-game{padding-top:3px;padding-bottom:3px;gap:2px;}
