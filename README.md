@@ -35,6 +35,17 @@ Duelos arcade de mitología en formato Pong competitivo construidos con React, T
 
 ## Historial de Versiones y Auditoría de Funciones
 
+### Versión 0.2.97 (Auditoría Interactiva de Sistema y Diagnóstico de Logs)
+- **Panel de Diagnóstico y Glosario de Logs en Pantalla (`SettingsModal.tsx`)**:
+  - Incorporación de la sección interactiva *Auditoría y Diccionario de Logs* dentro del modal de Ajustes.
+  - Botón de comprobación en tiempo real (`runDiagnostics`) con medición de latencia (ms) de ida y vuelta a la API `/api/health`.
+  - Verificación en vivo del catálogo relacional Cloud SQL PostgreSQL (124 personajes y 17 arenas).
+  - Estado del motor Web Audio en vivo (activo / suspendido por política de autoplay del navegador).
+  - Glosario de auditoría integrado que desglosa detalladamente qué significa cada log del sistema (HTTP 200/304, Autoplay Policy, Cloud SQL Auth Proxy, Vite HMR y motor de gestos).
+- **Actualización de Versión Centralizada**:
+  - `src/version.ts`: Incremento a `V0.2.97`.
+  - `package.json`: Versión `0.2.97`.
+
 ### Versión 0.2.96 (Sincronización Centralizada de Versión y Auditoría de UI)
 - **Centralización de la Fuente de Verdad (`src/version.ts`)**:
   - Creación del módulo central de versión `APP_VERSION = '0.2.96'`, `APP_VERSION_LABEL = 'V0.2.96'` y `APP_CODENAME = 'Divine Arena Cloud Edition'`.
